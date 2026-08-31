@@ -1,9 +1,39 @@
 import '../../global.css';
+import { useEffect, useState } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Colors } from '../lib/theme/colors';
+import { initDb } from '../lib/db/client';
 
 export default function RootLayout() {
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    initDb()
+      .then(() => setReady(true))
+      .catch((e) => setError(String(e?.message ?? e)));
+  }, []);
+
+  if (error) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background p-4">
+        <StatusBar style="dark" />
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  if (!ready) {
+    return (
+      <View className="flex-1 items-center justify-center bg-background">
+        <StatusBar style="dark" />
+        <ActivityIndicator color={Colors.primary[600]} />
+      </View>
+    );
+  }
+
   return (
     <>
       <StatusBar style="dark" />
@@ -36,10 +66,32 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
+          name="livestock/edit"
+          options={{
+            headerShown: true,
+            title: 'Edit Livestock',
+            headerTintColor: Colors.primary[700],
+            headerStyle: { backgroundColor: Colors.white },
+            headerShadowVisible: false,
+            presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
           name="expenses/new"
           options={{
             headerShown: true,
             title: 'Add Expense',
+            headerTintColor: Colors.primary[700],
+            headerStyle: { backgroundColor: Colors.white },
+            headerShadowVisible: false,
+            presentation: 'modal',
+          }}
+        />
+        <Stack.Screen
+          name="expenses/edit"
+          options={{
+            headerShown: true,
+            title: 'Edit Expense',
             headerTintColor: Colors.primary[700],
             headerStyle: { backgroundColor: Colors.white },
             headerShadowVisible: false,

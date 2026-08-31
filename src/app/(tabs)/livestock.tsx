@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui/Screen';
 import { SearchBar } from '../../components/ui/SearchBar';
@@ -8,7 +8,7 @@ import { FilterChip } from '../../components/ui/FilterChip';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { LivestockCard } from '../../features/livestock/components/LivestockCard';
 import { getAll } from '../../features/livestock/services/livestockService';
-import { LivestockCategory } from '../../features/livestock/types';
+import { Livestock, LivestockCategory } from '../../features/livestock/types';
 import { Colors } from '../../lib/theme/colors';
 
 const FILTER_OPTIONS: { label: string; value: LivestockCategory | 'all' }[] = [
@@ -23,8 +23,26 @@ export default function LivestockScreen() {
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<LivestockCategory | 'all'>('all');
+  const [livestock, setLivestock] = useState<Livestock[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredLivestock = getAll().filter((animal) => {
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getAll();
+      setLivestock(data);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
+
+  const filteredLivestock = livestock.filter((animal) => {
     const matchesSearch = search === '' || animal.name.toLowerCase().includes(search.toLowerCase()) || animal.breed?.toLowerCase().includes(search.toLowerCase()) || animal.location.toLowerCase().includes(search.toLowerCase());
     const matchesFilter = selectedFilter === 'all' || animal.category === selectedFilter;
     return matchesSearch && matchesFilter;
@@ -49,11 +67,18 @@ export default function LivestockScreen() {
         {filteredLivestock.length} {filteredLivestock.length === 1 ? 'record' : 'records'} found
       </Text>
 
-      {filteredLivestock.map((animal) => (
-        <LivestockCard key={animal.id} livestock={animal} onPress={() => router.push(`/livestock/${animal.id}`)} />
-      ))}
-
-      {filteredLivestock.length === 0 && <EmptyState icon="search" title="No livestock found" subtitle="Try adjusting your search or filters" />}
+      {loading ? (
+        <View className="py-10 items-center">
+          <ActivityIndicator color={Colors.primary[600]} />
+        </View>
+      ) : (
+        <>
+          {filteredLivestock.map((animal) => (
+            <LivestockCard key={animal.id} livestock={animal} onPress={() => router.push(`/livestock/${animal.id}`)} />
+          ))}
+          {filteredLivestock.length === 0 && <EmptyState icon="search" title="No livestock found" subtitle="Try adjusting your search or filters" />}
+        </>
+      )}
     </Screen>
   );
 }

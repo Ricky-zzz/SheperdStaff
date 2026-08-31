@@ -1,5 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui/Screen';
 import { Card } from '../../components/ui/Card';
@@ -26,16 +27,58 @@ const EXPENSE_CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function ReportsScreen() {
-  const livestockByCategoryMap = livestockByCategory();
-  const expensesByCategoryMap = expensesByCategory();
-  const totalLivestock = countLivestock();
-  const totalExpensesValue = totalExpenses();
+  const [loading, setLoading] = useState(true);
+  const [livestockByCategoryMap, setLivestockByCategoryMap] = useState<Record<string, number>>({});
+  const [expensesByCategoryMap, setExpensesByCategoryMap] = useState<Record<string, number>>({});
+  const [totalLivestock, setTotalLivestock] = useState(0);
+  const [totalExpensesValue, setTotalExpensesValue] = useState(0);
+  const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
+  const [recordCount, setRecordCount] = useState(0);
+  const [txCount, setTxCount] = useState(0);
 
-  const maxLivestock = Math.max(...Object.values(livestockByCategoryMap));
-  const maxExpense = Math.max(...Object.values(expensesByCategoryMap));
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [lByCat, eByCat, tL, tE, sCounts, allL, allE] = await Promise.all([
+        livestockByCategory(),
+        expensesByCategory(),
+        countLivestock(),
+        totalExpenses(),
+        countByStatus(),
+        getAllLivestock(),
+        getAllExpenses(),
+      ]);
+      setLivestockByCategoryMap(lByCat);
+      setExpensesByCategoryMap(eByCat);
+      setTotalLivestock(tL);
+      setTotalExpensesValue(tE);
+      setStatusCounts(sCounts);
+      setRecordCount(allL.length);
+      setTxCount(allE.length);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const statusCounts = countByStatus();
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
+
+  const maxLivestock = Math.max(1, ...Object.values(livestockByCategoryMap));
+  const maxExpense = Math.max(1, ...Object.values(expensesByCategoryMap));
   const statusColors: Record<string, string> = { growing: '#48BB78', breeding: '#9F7AEA', active: '#10B981', for_sale: '#F59E0B', sold: '#3B82F6', deceased: '#EF4444' };
+
+  if (loading) {
+    return (
+      <Screen>
+        <View className="flex-1 items-center justify-center py-20">
+          <ActivityIndicator color={Colors.primary[600]} />
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -44,8 +87,8 @@ export default function ReportsScreen() {
         <Card className="flex-1 items-center py-5"><Ionicons name="wallet" size={24} color={Colors.earth[600]} /><Text className="text-2xl font-bold text-neutral-800 mt-2">${totalExpensesValue.toFixed(0)}</Text><Text className="text-sm text-neutral-500 mt-1">Total Spent</Text></Card>
       </View>
       <View className="flex-row gap-3 mb-3">
-        <Card className="flex-1 items-center py-5"><Ionicons name="list" size={24} color={Colors.category.cattle} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{getAllLivestock().length}</Text><Text className="text-sm text-neutral-500 mt-1">Records</Text></Card>
-        <Card className="flex-1 items-center py-5"><Ionicons name="receipt" size={24} color={Colors.category.chicken} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{getAllExpenses().length}</Text><Text className="text-sm text-neutral-500 mt-1">Transactions</Text></Card>
+        <Card className="flex-1 items-center py-5"><Ionicons name="list" size={24} color={Colors.category.cattle} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{recordCount}</Text><Text className="text-sm text-neutral-500 mt-1">Records</Text></Card>
+        <Card className="flex-1 items-center py-5"><Ionicons name="receipt" size={24} color={Colors.category.chicken} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{txCount}</Text><Text className="text-sm text-neutral-500 mt-1">Transactions</Text></Card>
       </View>
 
       <SectionHeader title="Livestock by Type" />
@@ -81,7 +124,7 @@ export default function ReportsScreen() {
             <View className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: statusColors[status] || Colors.neutral[400] }} />
             <Text className="flex-1 text-base text-neutral-700 font-medium">{status.replace('_', ' ').charAt(0).toUpperCase() + status.replace('_', ' ').slice(1)}</Text>
             <Text className="text-sm text-neutral-500 mr-3">{count} records</Text>
-            <Text className="w-11 text-base font-bold text-neutral-800 text-right">{((count / getAllLivestock().length) * 100).toFixed(0)}%</Text>
+            <Text className="w-11 text-base font-bold text-neutral-800 text-right">{recordCount > 0 ? ((count / recordCount) * 100).toFixed(0) : 0}%</Text>
           </View>
         ))}
       </Card>

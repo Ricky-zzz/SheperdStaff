@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui/Screen';
 import { Card } from '../../components/ui/Card';
@@ -8,19 +8,47 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { ExpenseItem } from '../../features/expenses/components/ExpenseItem';
 import { EXPENSE_CATEGORY_META } from '../../features/expenses/expenseMeta';
 import { getAll, total, totalByCategory } from '../../features/expenses/services/expenseService';
-import { ExpenseCategory } from '../../features/expenses/types';
+import { Expense, ExpenseCategory } from '../../features/expenses/types';
 import { Colors } from '../../lib/theme/colors';
 
 export default function ExpensesScreen() {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategory | 'all'>('all');
+  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
+  const [totalExpenses, setTotalExpenses] = useState(0);
+  const [expensesByCategory, setExpensesByCategory] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
 
-  const allExpenses = getAll();
-  const totalExpenses = total();
-  const expensesByCategory = totalByCategory();
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [all, t, byCat] = await Promise.all([getAll(), total(), totalByCategory()]);
+      setAllExpenses(all);
+      setTotalExpenses(t);
+      setExpensesByCategory(byCat);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const filteredExpenses = selectedCategory === 'all' ? allExpenses : allExpenses.filter(e => e.category === selectedCategory);
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
+
+  const filteredExpenses = selectedCategory === 'all' ? allExpenses : allExpenses.filter((e) => e.category === selectedCategory);
   const sortedExpenses = [...filteredExpenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  if (loading) {
+    return (
+      <Screen>
+        <View className="flex-1 items-center justify-center py-20">
+          <ActivityIndicator color={Colors.primary[600]} />
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -60,7 +88,11 @@ export default function ExpensesScreen() {
         </TouchableOpacity>
       </View>
 
-      {sortedExpenses.map((expense) => <ExpenseItem key={expense.id} expense={expense} />)}
+      {sortedExpenses.map((expense) => (
+        <TouchableOpacity key={expense.id} activeOpacity={0.7} onPress={() => router.push({ pathname: '/expenses/edit', params: { id: expense.id } })}>
+          <ExpenseItem expense={expense} />
+        </TouchableOpacity>
+      ))}
 
       {sortedExpenses.length === 0 && <EmptyState icon="wallet-outline" title="No expenses found" subtitle="No expenses in this category" />}
     </Screen>

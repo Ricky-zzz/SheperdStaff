@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui/Screen';
 import { Card } from '../../components/ui/Card';
@@ -10,15 +10,55 @@ import { ActivityItem } from '../../features/activity/components/ActivityItem';
 import * as livestockService from '../../features/livestock/services/livestockService';
 import * as activityService from '../../features/activity/services/activityService';
 import * as expenseService from '../../features/expenses/services/expenseService';
+import { Activity } from '../../features/activity/types';
 import { Colors } from '../../lib/theme/colors';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const totalLivestock = livestockService.count();
-  const totalGroups = livestockService.countGroups();
-  const totalExpenses = expenseService.total();
-  const monthExpenses = expenseService.thisMonth();
-  const recentActivities = activityService.getRecent(5);
+  const [loading, setLoading] = useState(true);
+  const [totalLivestock, setTotalLivestock] = useState(0);
+  const [totalGroups, setTotalGroups] = useState(0);
+  const [totalExpenses, setTotalExpenses] = useState(0);
+  const [monthExpenses, setMonthExpenses] = useState(0);
+  const [activeCount, setActiveCount] = useState(0);
+  const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
+
+  const load = useCallback(async () => {
+    try {
+      const [tl, tg, te, me, rec, all] = await Promise.all([
+        livestockService.count(),
+        livestockService.countGroups(),
+        expenseService.total(),
+        expenseService.thisMonth(),
+        activityService.getRecent(5),
+        livestockService.getAll(),
+      ]);
+      setTotalLivestock(tl);
+      setTotalGroups(tg);
+      setTotalExpenses(te);
+      setMonthExpenses(me);
+      setRecentActivities(rec);
+      setActiveCount(all.filter((l) => l.status === 'active' || l.status === 'growing').length);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
+
+  if (loading) {
+    return (
+      <Screen>
+        <View className="flex-1 items-center justify-center py-20">
+          <ActivityIndicator color={Colors.primary[600]} />
+        </View>
+      </Screen>
+    );
+  }
 
   return (
     <Screen>
@@ -37,7 +77,7 @@ export default function HomeScreen() {
         <StatCard title="This Month" value={`$${monthExpenses.toFixed(0)}`} icon="trending-up" color={Colors.earth[600]} subtitle="Expenses" />
       </View>
       <View className="flex-row gap-3 mb-3">
-        <StatCard title="Active" value={livestockService.getAll().filter(l => l.status === 'active' || l.status === 'growing').length} icon="checkmark-circle" color={Colors.success} subtitle="Healthy & growing" />
+        <StatCard title="Active" value={activeCount} icon="checkmark-circle" color={Colors.success} subtitle="Healthy & growing" />
         <StatCard title="Total Spent" value={`$${totalExpenses.toFixed(0)}`} icon="wallet" color={Colors.category.cattle} subtitle="All time" />
       </View>
 
@@ -73,14 +113,20 @@ export default function HomeScreen() {
       <SectionHeader title="Recent Activity" actionLabel="See all" onAction={() => router.push('/activity')} />
 
       <Card className="p-0 mb-5">
-        {recentActivities.map((activity, index) => (
-          <ActivityItem
-            key={activity.id}
-            activity={activity}
-            showBorder={index < recentActivities.length - 1}
-            onPress={activity.livestockId ? () => router.push(`/livestock/${activity.livestockId}`) : undefined}
-          />
-        ))}
+        {recentActivities.length === 0 ? (
+          <View className="p-4">
+            <Text className="text-sm text-neutral-400 text-center">No recent activity</Text>
+          </View>
+        ) : (
+          recentActivities.map((activity, index) => (
+            <ActivityItem
+              key={activity.id}
+              activity={activity}
+              showBorder={index < recentActivities.length - 1}
+              onPress={activity.livestockId ? () => router.push(`/livestock/${activity.livestockId}`) : undefined}
+            />
+          ))
+        )}
       </Card>
     </Screen>
   );

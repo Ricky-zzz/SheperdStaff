@@ -2,6 +2,14 @@
 
 Mobile livestock-management prototype built with **Expo + React Native + TypeScript**.
 
+## Docs
+
+- `PRD.md` — what the app is and what it must do (entities, flows, scope).
+- `ARCHITECTURE.md` — how it's built (stack, structure, data/style/type conventions, migration path).
+- `.opencode/skills/shepherd-staff-dev/SKILL.md` — full dev workflow and "add a feature" checklist (load with the `shepherd-staff-dev` skill).
+
+Expo skills (router, NativeWind/tailwind, design-system, etc.) are in `.agents/skills/` via `npx skills add expo/skills`; the project skill is in `.opencode/skills/`.
+
 ## Stack
 
 - Expo SDK 54, React Native 0.79, React 19, Expo Router, TypeScript (strict)
