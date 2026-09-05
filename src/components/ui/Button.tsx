@@ -1,7 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, StyleProp, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../lib/theme/colors';
+import { useTheme } from '../../lib/theme/ThemeContext';
 
 interface ButtonProps {
   title: string;
@@ -54,11 +54,12 @@ export const Button: React.FC<ButtonProps> = ({
   className,
   style,
 }) => {
+  const { colors } = useTheme();
   const iconColor = disabled
-    ? Colors.neutral[400]
+    ? colors.neutral[400]
     : variant === 'primary'
-    ? Colors.white
-    : Colors.primary[600];
+    ? colors.white
+    : colors.primary[600];
 
   const iconSize = size === 'sm' ? 16 : size === 'lg' ? 22 : 18;
 

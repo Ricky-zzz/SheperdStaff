@@ -6,12 +6,15 @@ import { Screen } from '../../components/ui/Screen';
 import { Card } from '../../components/ui/Card';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { ExpenseItem } from '../../features/expenses/components/ExpenseItem';
-import { EXPENSE_CATEGORY_META } from '../../features/expenses/expenseMeta';
+import { getExpenseCategoryMeta } from '../../features/expenses/expenseMeta';
 import { getAll, total, totalByCategory } from '../../features/expenses/services/expenseService';
 import { Expense, ExpenseCategory } from '../../features/expenses/types';
-import { Colors } from '../../lib/theme/colors';
+import { useTheme } from '../../lib/theme/ThemeContext';
+
+const CATEGORIES: ExpenseCategory[] = ['feed', 'medicine', 'supplies', 'maintenance', 'labor', 'other'];
 
 export default function ExpensesScreen() {
+  const { colors } = useTheme();
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategory | 'all'>('all');
   const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
@@ -57,7 +60,7 @@ export default function ExpensesScreen() {
     return (
       <Screen>
         <View className="flex-1 items-center justify-center py-20">
-          <ActivityIndicator color={Colors.primary[600]} />
+          <ActivityIndicator color={colors.primary[600]} />
         </View>
       </Screen>
     );
@@ -72,13 +75,14 @@ export default function ExpensesScreen() {
       </Card>
 
       <View className="flex-row flex-wrap gap-2 mb-5">
-        {(Object.entries(EXPENSE_CATEGORY_META) as [ExpenseCategory, (typeof EXPENSE_CATEGORY_META)[ExpenseCategory]][]).map(([key, info]) => {
+{CATEGORIES.map((key) => {
+          const info = getExpenseCategoryMeta(key, colors);
           const amount = expensesByCategory[key] || 0;
           const isSelected = selectedCategory === key;
           return (
             <TouchableOpacity
               key={key}
-              className={`w-[31%] bg-white rounded-xl p-3 items-center shadow-sm ${isSelected ? 'border-2 border-primary-500' : ''}`}
+              className={`w-[31%] bg-card rounded-xl p-3 items-center shadow-sm ${isSelected ? 'border-2 border-primary-500' : ''}`}
               onPress={() => setSelectedCategory(isSelected ? 'all' : key)}
             >
               <View className="w-9 h-9 rounded-lg justify-center items-center mb-2" style={{ backgroundColor: info.color + '15' }}>
@@ -93,10 +97,10 @@ export default function ExpensesScreen() {
 
       <View className="flex-row justify-between items-center mb-3">
         <Text className="text-lg font-semibold text-neutral-800">
-          {selectedCategory === 'all' ? 'All Expenses' : EXPENSE_CATEGORY_META[selectedCategory].label}
+          {selectedCategory === 'all' ? 'All Expenses' : getExpenseCategoryMeta(selectedCategory, colors).label}
         </Text>
         <TouchableOpacity className="flex-row items-center bg-primary-600 px-3 py-2 rounded-lg gap-1" onPress={() => router.push('/expenses/new')}>
-          <Ionicons name="add" size={18} color={Colors.white} />
+          <Ionicons name="add" size={18} color={colors.white} />
           <Text className="text-sm text-white font-semibold">Add</Text>
         </TouchableOpacity>
       </View>

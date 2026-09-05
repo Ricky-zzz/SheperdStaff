@@ -1,38 +1,37 @@
 import '../../global.css';
-import { useEffect, useState } from 'react';
+import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { Stack } from 'expo-router';
+import { Stack, Redirect } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Colors } from '../lib/theme/colors';
-import { initDb } from '../lib/db/client';
+import { AuthProvider, useAuth } from '../lib/auth/AuthContext';
+import { ThemeProvider, useTheme } from '../lib/theme/ThemeContext';
 
-export default function RootLayout() {
-  const [ready, setReady] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+function LoadingView() {
+  return (
+    <View className="flex-1 items-center justify-center bg-background">
+      <StatusBar style="dark" />
+      <ActivityIndicator color="#2F855A" />
+    </View>
+  );
+}
 
-  useEffect(() => {
-    initDb()
-      .then(() => setReady(true))
-      .catch((e) => setError(String(e?.message ?? e)));
-  }, []);
+function RootNavigator() {
+  const { state } = useAuth();
+  const { colors } = useTheme();
 
-  if (error) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background p-4">
-        <StatusBar style="dark" />
-        <ActivityIndicator />
-      </View>
-    );
-  }
+  if (state === 'loading') return <LoadingView />;
 
-  if (!ready) {
-    return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <StatusBar style="dark" />
-        <ActivityIndicator color={Colors.primary[600]} />
-      </View>
-    );
-  }
+  const headerOptions = {
+    headerShown: true,
+    headerTintColor: colors.primary[700],
+    headerStyle: { backgroundColor: colors.card },
+    headerShadowVisible: false,
+  };
+
+  const modalOptions = {
+    ...headerOptions,
+    presentation: 'modal' as const,
+  };
 
   return (
     <>
@@ -40,75 +39,57 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: Colors.background },
+          contentStyle: { backgroundColor: colors.background },
         }}
       >
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen
-          name="livestock/[id]"
-          options={{
-            headerShown: true,
-            title: 'Livestock Details',
-            headerTintColor: Colors.primary[700],
-            headerStyle: { backgroundColor: Colors.white },
-            headerShadowVisible: false,
-          }}
-        />
-        <Stack.Screen
-          name="livestock/new"
-          options={{
-            headerShown: true,
-            title: 'Add Livestock',
-            headerTintColor: Colors.primary[700],
-            headerStyle: { backgroundColor: Colors.white },
-            headerShadowVisible: false,
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="livestock/edit"
-          options={{
-            headerShown: true,
-            title: 'Edit Livestock',
-            headerTintColor: Colors.primary[700],
-            headerStyle: { backgroundColor: Colors.white },
-            headerShadowVisible: false,
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="expenses/new"
-          options={{
-            headerShown: true,
-            title: 'Add Expense',
-            headerTintColor: Colors.primary[700],
-            headerStyle: { backgroundColor: Colors.white },
-            headerShadowVisible: false,
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="expenses/edit"
-          options={{
-            headerShown: true,
-            title: 'Edit Expense',
-            headerTintColor: Colors.primary[700],
-            headerStyle: { backgroundColor: Colors.white },
-            headerShadowVisible: false,
-            presentation: 'modal',
-          }}
-        />
-        <Stack.Screen
-          name="activity"
-          options={{
-            headerShown: true,
-            title: 'Activity History',
-            headerTintColor: Colors.primary[700],
-            headerStyle: { backgroundColor: Colors.white },
-            headerShadowVisible: false,
-          }}
-        />
+        <Stack.Protected guard={state === 'onboarding'}>
+          <Stack.Screen name="onboarding/index" options={{ ...headerOptions, title: 'Welcome' }} />
+          <Stack.Screen name="onboarding/password" options={{ ...headerOptions, title: 'Create Password' }} />
+          <Stack.Screen name="onboarding/theme" options={{ ...headerOptions, title: 'Choose Theme' }} />
+        </Stack.Protected>
+
+        <Stack.Protected guard={state === 'unlocked'}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen
+            name="livestock/[id]"
+            options={{ ...headerOptions, title: 'Livestock Details' }}
+          />
+          <Stack.Screen name="livestock/new" options={{ ...modalOptions, title: 'Add Livestock' }} />
+          <Stack.Screen name="livestock/edit" options={{ ...modalOptions, title: 'Edit Livestock' }} />
+          <Stack.Screen name="expenses/new" options={{ ...modalOptions, title: 'Add Expense' }} />
+          <Stack.Screen name="expenses/edit" options={{ ...modalOptions, title: 'Edit Expense' }} />
+          <Stack.Screen
+            name="activity"
+            options={{ ...headerOptions, title: 'Activity History' }}
+          />
+          <Stack.Screen name="profile/edit" options={{ ...modalOptions, title: 'Edit Profile' }} />
+          <Stack.Screen name="profile/password" options={{ ...modalOptions, title: 'Change Password' }} />
+          <Stack.Screen name="profile/theme" options={{ ...modalOptions, title: 'Theme' }} />
+          <Stack.Screen
+            name="tasks"
+            options={{ ...headerOptions, title: 'Tasks' }}
+          />
+          <Stack.Screen name="tasks/form" options={{ ...modalOptions, title: 'Task' }} />
+        </Stack.Protected>
+
+        <Stack.Protected guard={state === 'locked'}>
+          <Stack.Screen name="lock" />
+        </Stack.Protected>
+
+        {state === 'onboarding' && <Redirect href="/onboarding" />}
+        {state === 'locked' && <Redirect href="/lock" />}
+        {state === 'unlocked' && <Redirect href="/(tabs)" />}
       </Stack>
     </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <ThemeProvider>
+        <RootNavigator />
+      </ThemeProvider>
+    </AuthProvider>
   );
 }

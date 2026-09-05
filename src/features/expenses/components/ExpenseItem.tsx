@@ -3,6 +3,7 @@ import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../../../components/ui/Card';
 import { formatCurrency } from '../../../lib/utils/format';
+import { useTheme } from '../../../lib/theme/ThemeContext';
 import { Expense } from '../types';
 import { getExpenseCategoryMeta } from '../expenseMeta';
 
@@ -13,7 +14,8 @@ interface ExpenseItemProps {
 }
 
 export const ExpenseItem: React.FC<ExpenseItemProps> = ({ expense, highlightLivestockId }) => {
-  const meta = getExpenseCategoryMeta(expense.category);
+  const { colors } = useTheme();
+  const meta = getExpenseCategoryMeta(expense.category, colors);
   const isBulk = !!(expense.allocations && expense.allocations.length > 0);
   const share = highlightLivestockId ? expense.allocations?.find((a) => a.livestockId === highlightLivestockId)?.amount : undefined;
   const displayAmount = share ?? expense.amount;

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../lib/theme/colors';
+import { useTheme } from '../../lib/theme/ThemeContext';
 import { LivestockCategory, LivestockType, LivestockStatus } from '../../features/livestock/types';
 import { getById, update } from '../../features/livestock/services/livestockService';
 import { log as logActivity } from '../../features/activity/services/activityService';
@@ -28,9 +28,10 @@ const STATUSES: { label: string; value: LivestockStatus }[] = [
   { label: 'Deceased', value: 'deceased' },
 ];
 
-const baseInput = 'bg-white border rounded-lg px-4 py-3 text-base text-neutral-800 mb-1';
+const baseInput = 'bg-card border rounded-lg px-4 py-3 text-base text-neutral-800 mb-1';
 
 export default function EditLivestockScreen() {
+  const { colors } = useTheme();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
@@ -123,7 +124,7 @@ export default function EditLivestockScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-background items-center justify-center py-20">
-        <ActivityIndicator color={Colors.primary[600]} />
+        <ActivityIndicator color={colors.primary[600]} />
       </View>
     );
   }
@@ -138,17 +139,17 @@ export default function EditLivestockScreen() {
         <Text className="text-lg font-semibold text-neutral-800 mb-4">Edit Information</Text>
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Name *</Text>
-        <TextInput className={inputClass('name')} placeholder="Name" placeholderTextColor={Colors.neutral[400]} value={name} onChangeText={(v) => { setName(v); if (errors.name) setErrors((p) => ({ ...p, name: '' })); }} />
+        <TextInput className={inputClass('name')} placeholder="Name" placeholderTextColor={colors.neutral[400]} value={name} onChangeText={(v) => { setName(v); if (errors.name) setErrors((p) => ({ ...p, name: '' })); }} />
         {errors.name ? <Text className="text-xs text-error mb-3">{errors.name}</Text> : <View className="mb-3" />}
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Type</Text>
         <View className="flex-row gap-3 mb-4">
-          <TouchableOpacity className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg border ${type === 'individual' ? 'bg-primary-600 border-primary-600' : 'bg-white border-border'}`} onPress={() => setType('individual')}>
-            <Ionicons name="person" size={18} color={type === 'individual' ? Colors.white : Colors.neutral[500]} />
+          <TouchableOpacity className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg border ${type === 'individual' ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setType('individual')}>
+            <Ionicons name="person" size={18} color={type === 'individual' ? colors.white : colors.neutral[500]} />
             <Text className={`text-base font-medium ${type === 'individual' ? 'text-white' : 'text-neutral-500'}`}>Individual</Text>
           </TouchableOpacity>
-          <TouchableOpacity className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg border ${type === 'group' ? 'bg-primary-600 border-primary-600' : 'bg-white border-border'}`} onPress={() => setType('group')}>
-            <Ionicons name="people" size={18} color={type === 'group' ? Colors.white : Colors.neutral[500]} />
+          <TouchableOpacity className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg border ${type === 'group' ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setType('group')}>
+            <Ionicons name="people" size={18} color={type === 'group' ? colors.white : colors.neutral[500]} />
             <Text className={`text-base font-medium ${type === 'group' ? 'text-white' : 'text-neutral-500'}`}>Group/Batch</Text>
           </TouchableOpacity>
         </View>
@@ -156,20 +157,20 @@ export default function EditLivestockScreen() {
         <Text className="text-sm font-medium text-neutral-600 mb-2">Category *</Text>
         <View className="flex-row flex-wrap gap-2 mb-4">
           {CATEGORIES.map((cat) => (
-            <TouchableOpacity key={cat.value} className={`px-3 py-2 rounded-full border ${category === cat.value ? 'bg-primary-600 border-primary-600' : 'bg-white border-border'}`} onPress={() => setCategory(cat.value)}>
+            <TouchableOpacity key={cat.value} className={`px-3 py-2 rounded-full border ${category === cat.value ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setCategory(cat.value)}>
               <Text className={`text-sm font-medium ${category === cat.value ? 'text-white' : 'text-neutral-600'}`}>{cat.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Breed</Text>
-        <TextInput className={inputClass('breed')} placeholder="Breed" placeholderTextColor={Colors.neutral[400]} value={breed} onChangeText={setBreed} />
+        <TextInput className={inputClass('breed')} placeholder="Breed" placeholderTextColor={colors.neutral[400]} value={breed} onChangeText={setBreed} />
         <View className="mb-3" />
 
         {type === 'group' && (
           <>
             <Text className="text-sm font-medium text-neutral-600 mb-2">Quantity *</Text>
-            <TextInput className={inputClass('quantity')} placeholder="Number" placeholderTextColor={Colors.neutral[400]} value={quantity} onChangeText={(v) => { setQuantity(v); if (errors.quantity) setErrors((p) => ({ ...p, quantity: '' })); }} keyboardType="numeric" />
+            <TextInput className={inputClass('quantity')} placeholder="Number" placeholderTextColor={colors.neutral[400]} value={quantity} onChangeText={(v) => { setQuantity(v); if (errors.quantity) setErrors((p) => ({ ...p, quantity: '' })); }} keyboardType="numeric" />
             {errors.quantity ? <Text className="text-xs text-error mb-3">{errors.quantity}</Text> : <View className="mb-3" />}
           </>
         )}
@@ -177,7 +178,7 @@ export default function EditLivestockScreen() {
         <Text className="text-sm font-medium text-neutral-600 mb-2">Sex</Text>
         <View className="flex-row flex-wrap gap-2 mb-4">
           {(['male', 'female', 'mixed'] as const).map((s) => (
-            <TouchableOpacity key={s} className={`px-3 py-2 rounded-full border ${sex === s ? 'bg-primary-600 border-primary-600' : 'bg-white border-border'}`} onPress={() => setSex(s)}>
+            <TouchableOpacity key={s} className={`px-3 py-2 rounded-full border ${sex === s ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setSex(s)}>
               <Text className={`text-sm font-medium ${sex === s ? 'text-white' : 'text-neutral-600'}`}>{s.charAt(0).toUpperCase() + s.slice(1)}</Text>
             </TouchableOpacity>
           ))}
@@ -186,11 +187,11 @@ export default function EditLivestockScreen() {
 
       <View className="mb-5">
         <Text className="text-sm font-medium text-neutral-600 mb-2">Location *</Text>
-        <TextInput className={inputClass('location')} placeholder="Location" placeholderTextColor={Colors.neutral[400]} value={location} onChangeText={(v) => { setLocation(v); if (errors.location) setErrors((p) => ({ ...p, location: '' })); }} />
+        <TextInput className={inputClass('location')} placeholder="Location" placeholderTextColor={colors.neutral[400]} value={location} onChangeText={(v) => { setLocation(v); if (errors.location) setErrors((p) => ({ ...p, location: '' })); }} />
         {errors.location ? <Text className="text-xs text-error mb-3">{errors.location}</Text> : <View className="mb-3" />}
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Purpose</Text>
-        <TextInput className={inputClass('purpose')} placeholder="Purpose" placeholderTextColor={Colors.neutral[400]} value={purpose} onChangeText={setPurpose} />
+        <TextInput className={inputClass('purpose')} placeholder="Purpose" placeholderTextColor={colors.neutral[400]} value={purpose} onChangeText={setPurpose} />
         <View className="mb-3" />
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Start Date</Text>
@@ -199,7 +200,7 @@ export default function EditLivestockScreen() {
         <Text className="text-sm font-medium text-neutral-600 mb-2">Status</Text>
         <View className="flex-row flex-wrap gap-2 mb-4">
           {STATUSES.map((s) => (
-            <TouchableOpacity key={s.value} className={`px-3 py-2 rounded-full border ${status === s.value ? 'bg-primary-600 border-primary-600' : 'bg-white border-border'}`} onPress={() => setStatus(s.value)}>
+            <TouchableOpacity key={s.value} className={`px-3 py-2 rounded-full border ${status === s.value ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setStatus(s.value)}>
               <Text className={`text-sm font-medium ${status === s.value ? 'text-white' : 'text-neutral-600'}`}>{s.label}</Text>
             </TouchableOpacity>
           ))}
@@ -208,7 +209,7 @@ export default function EditLivestockScreen() {
 
       <View className="mb-5">
         <Text className="text-sm font-medium text-neutral-600 mb-2">Notes</Text>
-        <TextInput className={`${baseInput} min-h-[100px] pt-3 mb-4 border-border`} placeholder="Notes..." placeholderTextColor={Colors.neutral[400]} value={notes} onChangeText={setNotes} multiline numberOfLines={4} textAlignVertical="top" />
+        <TextInput className={`${baseInput} min-h-[100px] pt-3 mb-4 border-border`} placeholder="Notes..." placeholderTextColor={colors.neutral[400]} value={notes} onChangeText={setNotes} multiline numberOfLines={4} textAlignVertical="top" />
       </View>
 
       <View className="flex-row gap-3 mt-4">
@@ -216,7 +217,7 @@ export default function EditLivestockScreen() {
           <Text className="text-base font-semibold text-neutral-600">Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-[2] flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600" onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator color={Colors.white} /> : <Ionicons name="checkmark" size={20} color={Colors.white} />}
+          {saving ? <ActivityIndicator color={colors.white} /> : <Ionicons name="checkmark" size={20} color={colors.white} />}
           <Text className="text-base font-semibold text-white">{saving ? 'Saving...' : 'Update'}</Text>
         </TouchableOpacity>
       </View>

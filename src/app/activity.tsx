@@ -6,9 +6,10 @@ import { Card } from '../components/ui/Card';
 import { ActivityItem } from '../features/activity/components/ActivityItem';
 import { groupByDate } from '../features/activity/services/activityService';
 import { Activity } from '../features/activity/types';
-import { Colors } from '../lib/theme/colors';
+import { useTheme } from '../lib/theme/ThemeContext';
 
 export default function ActivityScreen() {
+  const { colors } = useTheme();
   const router = useRouter();
   const [grouped, setGrouped] = useState<Record<string, Activity[]>>({});
   const [loading, setLoading] = useState(true);
@@ -44,7 +45,7 @@ export default function ActivityScreen() {
     <Screen refreshing={refreshing} onRefresh={refresh}>
       {loading ? (
         <View className="flex-1 items-center justify-center py-20">
-          <ActivityIndicator color={Colors.primary[600]} />
+          <ActivityIndicator color={colors.primary[600]} />
         </View>
       ) : entries.length === 0 ? (
         <View className="flex-1 items-center justify-center py-20">

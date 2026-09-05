@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { TouchableOpacity, Text, View } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../lib/theme/colors';
+import { useTheme } from '../../lib/theme/ThemeContext';
 
 interface DateInputProps {
   value: string;
@@ -24,6 +24,7 @@ function toISO(date: Date): string {
 
 export const DateInput: React.FC<DateInputProps> = ({ value, onChange, error }) => {
   const [show, setShow] = useState(false);
+  const { colors } = useTheme();
 
   const handleChange = (event: DateTimePickerEvent, selected?: Date) => {
     setShow(false);
@@ -35,11 +36,11 @@ export const DateInput: React.FC<DateInputProps> = ({ value, onChange, error }) 
   return (
     <>
       <TouchableOpacity
-        className={`flex-row items-center justify-between bg-white border rounded-lg px-4 py-3 mb-1 ${error ? 'border-error' : 'border-border'}`}
+        className={`flex-row items-center justify-between bg-card border rounded-lg px-4 py-3 mb-1 ${error ? 'border-error' : 'border-border'}`}
         onPress={() => setShow(true)}
       >
         <Text className={`text-base ${value ? 'text-neutral-800' : 'text-neutral-400'}`}>{value || 'Select date'}</Text>
-        <Ionicons name="calendar-outline" size={18} color={Colors.neutral[400]} />
+        <Ionicons name="calendar-outline" size={18} color={colors.neutral[400]} />
       </TouchableOpacity>
       {error ? <Text className="text-xs text-error mb-3">{error}</Text> : <View className="mb-3" />}
       {show && (

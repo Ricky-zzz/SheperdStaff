@@ -4,7 +4,8 @@ export type ActivityType =
   | 'health_note'
   | 'status_change'
   | 'feeding'
-  | 'sale';
+  | 'sale'
+  | 'task_completed';
 
 export interface Activity {
   id: string;

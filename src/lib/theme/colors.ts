@@ -1,55 +1,23 @@
-export const Colors = {
-  primary: {
-    50: '#F0FFF4',
-    100: '#C6F6D5',
-    200: '#9AE6B4',
-    300: '#68D391',
-    400: '#48BB78',
-    500: '#38A169',
-    600: '#2F855A',
-    700: '#276749',
-    800: '#22543D',
-    900: '#1C4532',
-  },
-  earth: {
-    50: '#FFFBEB',
-    100: '#FEF3C7',
-    200: '#FDE68A',
-    300: '#FCD34D',
-    400: '#FBBF24',
-    500: '#F59E0B',
-    600: '#D97706',
-    700: '#B45309',
-    800: '#92400E',
-    900: '#78350F',
-  },
-  neutral: {
-    50: '#FAFAF9',
-    100: '#F5F5F4',
-    200: '#E7E5E4',
-    300: '#D6D3D1',
-    400: '#A8A29E',
-    500: '#78716C',
-    600: '#57534E',
-    700: '#44403C',
-    800: '#292524',
-    900: '#1C1917',
-  },
-  category: {
-    cattle: '#8B5CF6',
-    pig: '#EC4899',
-    chicken: '#F59E0B',
-    goat: '#10B981',
-    sheep: '#6366F1',
-    duck: '#06B6D4',
-    other: '#78716C',
-  },
-  white: '#FFFFFF',
-  black: '#000000',
-  background: '#F5F5F4',
-  card: '#FFFFFF',
-  border: '#E7E5E4',
-  error: '#EF4444',
-  success: '#10B981',
-  warning: '#F59E0B',
-};
+import { ThemeColors, getTheme } from './themes';
+
+function clonePalette(p: ThemeColors): ThemeColors {
+  return {
+    ...p,
+    primary: { ...p.primary },
+    earth: { ...p.earth },
+    neutral: { ...p.neutral },
+    category: { ...p.category },
+  };
+}
+
+const initial = getTheme('earth').light;
+
+export const Colors: ThemeColors = clonePalette(initial);
+
+export function setActiveColors(palette: ThemeColors): void {
+  Object.assign(Colors, palette);
+  Object.assign(Colors.primary, palette.primary);
+  Object.assign(Colors.earth, palette.earth);
+  Object.assign(Colors.neutral, palette.neutral);
+  Object.assign(Colors.category, palette.category);
+}

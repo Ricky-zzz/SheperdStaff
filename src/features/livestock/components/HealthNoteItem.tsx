@@ -2,22 +2,33 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../../../components/ui/Card';
-import { Colors } from '../../../lib/theme/colors';
+import { useTheme } from '../../../lib/theme/ThemeContext';
 import { HealthNote, HealthNoteType } from '../types';
-
-const NOTE_META: Record<HealthNoteType, { icon: keyof typeof Ionicons.glyphMap; color: string }> = {
-  illness: { icon: 'warning', color: Colors.error },
-  treatment: { icon: 'medkit', color: Colors.primary[600] },
-  vaccination: { icon: 'shield-checkmark', color: Colors.success },
-  observation: { icon: 'eye', color: Colors.category.cattle },
-};
 
 interface HealthNoteItemProps {
   note: HealthNote;
 }
 
+const NOTE_ICONS: Record<HealthNoteType, keyof typeof Ionicons.glyphMap> = {
+  illness: 'warning',
+  treatment: 'medkit',
+  vaccination: 'shield-checkmark',
+  observation: 'eye',
+};
+
 export const HealthNoteItem: React.FC<HealthNoteItemProps> = ({ note }) => {
-  const meta = NOTE_META[note.type];
+  const { colors } = useTheme();
+  const meta = {
+    icon: NOTE_ICONS[note.type],
+    color:
+      note.type === 'illness'
+        ? colors.error
+        : note.type === 'treatment'
+        ? colors.primary[600]
+        : note.type === 'vaccination'
+        ? colors.success
+        : colors.category.cattle,
+  };
   return (
     <Card className="mb-2 p-3">
       <View className="flex-row items-center gap-2 mb-2">

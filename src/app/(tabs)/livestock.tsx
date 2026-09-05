@@ -9,7 +9,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { LivestockCard } from '../../features/livestock/components/LivestockCard';
 import { getAll } from '../../features/livestock/services/livestockService';
 import { Livestock, LivestockCategory } from '../../features/livestock/types';
-import { Colors } from '../../lib/theme/colors';
+import { useTheme } from '../../lib/theme/ThemeContext';
 
 const FILTER_OPTIONS: { label: string; value: LivestockCategory | 'all' }[] = [
   { label: 'All', value: 'all' },
@@ -20,6 +20,7 @@ const FILTER_OPTIONS: { label: string; value: LivestockCategory | 'all' }[] = [
 ];
 
 export default function LivestockScreen() {
+  const { colors } = useTheme();
   const router = useRouter();
   const [search, setSearch] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<LivestockCategory | 'all'>('all');
@@ -63,7 +64,7 @@ export default function LivestockScreen() {
       <View className="flex-row gap-2 mb-4">
         <SearchBar value={search} onChangeText={setSearch} placeholder="Search livestock..." />
         <TouchableOpacity className="w-11 h-11 rounded-lg bg-primary-600 justify-center items-center shadow-sm" onPress={() => router.push('/livestock/new')}>
-          <Ionicons name="add" size={22} color={Colors.white} />
+          <Ionicons name="add" size={22} color={colors.white} />
         </TouchableOpacity>
       </View>
 
@@ -79,7 +80,7 @@ export default function LivestockScreen() {
 
       {loading ? (
         <View className="py-10 items-center">
-          <ActivityIndicator color={Colors.primary[600]} />
+          <ActivityIndicator color={colors.primary[600]} />
         </View>
       ) : (
         <>

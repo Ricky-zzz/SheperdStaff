@@ -43,6 +43,30 @@ CREATE TABLE IF NOT EXISTS activities (
   FOREIGN KEY (expenseId) REFERENCES expenses(id) ON DELETE SET NULL
 );
 
+CREATE TABLE IF NOT EXISTS tasks (
+  id TEXT PRIMARY KEY NOT NULL,
+  title TEXT NOT NULL,
+  dueDate TEXT NOT NULL,
+  notes TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  livestockId TEXT,
+  createdAt TEXT NOT NULL,
+  completedAt TEXT,
+  FOREIGN KEY (livestockId) REFERENCES livestock(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS user_profile (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  passwordHash TEXT NOT NULL,
+  salt TEXT NOT NULL,
+  themeKey TEXT NOT NULL DEFAULT 'earth',
+  darkMode INTEGER NOT NULL DEFAULT 0,
+  createdAt TEXT NOT NULL,
+  updatedAt TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS pens (
   id TEXT PRIMARY KEY NOT NULL,
   name TEXT NOT NULL,
@@ -57,6 +81,8 @@ CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
 CREATE INDEX IF NOT EXISTS idx_activities_date ON activities(date);
 CREATE INDEX IF NOT EXISTS idx_livestock_category ON livestock(category);
 CREATE INDEX IF NOT EXISTS idx_livestock_status ON livestock(status);
+CREATE INDEX IF NOT EXISTS idx_tasks_dueDate ON tasks(dueDate);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
 `;
 
 export async function ensureSchema(database: SQLiteDatabase): Promise<void> {

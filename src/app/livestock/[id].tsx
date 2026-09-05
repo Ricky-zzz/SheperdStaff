@@ -16,7 +16,7 @@ import { getById as getLivestockById, remove, updateStatus, addHealthNote, addFe
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { Livestock, HealthNoteType } from '../../features/livestock/types';
 import { Expense } from '../../features/expenses/types';
-import { Colors } from '../../lib/theme/colors';
+import { useTheme } from '../../lib/theme/ThemeContext';
 
 const STATUSES = [
   { label: 'Active', value: 'active' as const },
@@ -35,6 +35,7 @@ const HEALTH_TYPES: { label: string; value: HealthNoteType }[] = [
 ];
 
 export default function LivestockDetailScreen() {
+  const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [animal, setAnimal] = useState<Livestock | null>(null);
@@ -190,7 +191,7 @@ export default function LivestockDetailScreen() {
   if (loading) {
     return (
       <View className="flex-1 bg-background items-center justify-center py-20">
-        <ActivityIndicator color={Colors.primary[600]} />
+        <ActivityIndicator color={colors.primary[600]} />
       </View>
     );
   }
@@ -199,8 +200,8 @@ export default function LivestockDetailScreen() {
     return <View className="flex-1 justify-center items-center"><Text className="text-lg text-neutral-500">Livestock not found</Text></View>;
   }
 
-  const statusColors = getStatusBadgeColor(animal.status);
-  const categoryColors = getCategoryBadgeColor(animal.category);
+const statusColors = getStatusBadgeColor(animal.status, colors);
+  const categoryColors = getCategoryBadgeColor(animal.category, colors);
   const totalExpense = expenses.reduce((sum, e) => {
     const share = e.allocations?.find((a) => a.livestockId === animal.id)?.amount;
     return sum + (share ?? e.amount);
@@ -212,18 +213,18 @@ export default function LivestockDetailScreen() {
         <View className="flex-row flex-wrap gap-2 mb-4">
           <Badge label={getStatusLabel(animal.status).toUpperCase()} color={statusColors.bg} textColor={statusColors.text} size="md" />
           <Badge label={getCategoryLabel(animal.category).toUpperCase()} color={categoryColors.bg} textColor={categoryColors.text} size="md" />
-          {animal.type === 'group' && <Badge label="GROUP" color={Colors.neutral[100]} textColor={Colors.neutral[600]} size="md" />}
+          {animal.type === 'group' && <Badge label="GROUP" color={colors.neutral[100]} textColor={colors.neutral[600]} size="md" />}
         </View>
 
         {/* Actions */}
         <View className="flex-row gap-3 mb-4">
           <TouchableOpacity className="flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg bg-primary-600" onPress={() => router.push({ pathname: '/livestock/edit', params: { id: animal.id } })}>
-            <Ionicons name="create-outline" size={18} color={Colors.white} />
+            <Ionicons name="create-outline" size={18} color={colors.white} />
             <Text className="text-sm font-semibold text-white">Edit</Text>
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg border border-error bg-white" onPress={handleDelete}>
-            <Ionicons name="trash-outline" size={18} color={Colors.error} />
-            <Text className="text-sm font-semibold" style={{ color: Colors.error }}>Delete</Text>
+          <TouchableOpacity className="flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg border border-error bg-card" onPress={handleDelete}>
+            <Ionicons name="trash-outline" size={18} color={colors.error} />
+            <Text className="text-sm font-semibold" style={{ color: colors.error }}>Delete</Text>
           </TouchableOpacity>
         </View>
 
@@ -240,7 +241,7 @@ export default function LivestockDetailScreen() {
               { icon: 'time', label: 'Since', value: animal.startDate },
             ].map((item) => (
               <View key={item.label} className="flex-row items-center gap-3">
-                <Ionicons name={item.icon as any} size={16} color={Colors.neutral[400]} />
+                <Ionicons name={item.icon as any} size={16} color={colors.neutral[400]} />
                 <Text className="text-sm text-neutral-500 w-20">{item.label}</Text>
                 <Text className="text-sm font-semibold text-neutral-800 flex-1">{item.value}</Text>
               </View>
@@ -263,7 +264,7 @@ export default function LivestockDetailScreen() {
                 key={s.value}
                 disabled={statusSaving}
                 onPress={() => handleStatus(s.value)}
-                className={`px-3 py-2 rounded-full border ${animal.status === s.value ? 'bg-primary-600 border-primary-600' : 'bg-white border-border'}`}
+                className={`px-3 py-2 rounded-full border ${animal.status === s.value ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
               >
                 <Text className={`text-xs font-medium ${animal.status === s.value ? 'text-white' : 'text-neutral-600'}`}>{s.label}</Text>
               </TouchableOpacity>
@@ -308,25 +309,25 @@ export default function LivestockDetailScreen() {
       {/* Health Note Modal */}
       <Modal visible={showHealth} transparent animationType="slide" onRequestClose={() => setShowHealth(false)}>
         <View className="flex-1 bg-black/40 justify-end">
-          <View className="bg-white rounded-t-2xl p-4">
+          <View className="bg-card rounded-t-2xl p-4">
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-lg font-semibold text-neutral-800">Add Health Note</Text>
-              <TouchableOpacity onPress={() => setShowHealth(false)}><Ionicons name="close" size={22} color={Colors.neutral[500]} /></TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowHealth(false)}><Ionicons name="close" size={22} color={colors.neutral[500]} /></TouchableOpacity>
             </View>
             <Text className="text-sm font-medium text-neutral-600 mb-2">Type</Text>
             <View className="flex-row flex-wrap gap-2 mb-4">
               {HEALTH_TYPES.map((h) => (
-                <TouchableOpacity key={h.value} onPress={() => setHealthType(h.value)} className={`px-3 py-2 rounded-full border ${healthType === h.value ? 'bg-primary-600 border-primary-600' : 'bg-white border-border'}`}>
+                <TouchableOpacity key={h.value} onPress={() => setHealthType(h.value)} className={`px-3 py-2 rounded-full border ${healthType === h.value ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}>
                   <Text className={`text-sm ${healthType === h.value ? 'text-white font-medium' : 'text-neutral-600'}`}>{h.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
             <Text className="text-sm font-medium text-neutral-600 mb-2">Note *</Text>
-            <TextInput className="bg-white border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-4 min-h-[90px] pt-3" placeholder="Describe observation, treatment, etc." placeholderTextColor={Colors.neutral[400]} value={healthNote} onChangeText={setHealthNote} multiline numberOfLines={4} textAlignVertical="top" />
+            <TextInput className="bg-card border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-4 min-h-[90px] pt-3" placeholder="Describe observation, treatment, etc." placeholderTextColor={colors.neutral[400]} value={healthNote} onChangeText={setHealthNote} multiline numberOfLines={4} textAlignVertical="top" />
             <View className="flex-row gap-3">
               <TouchableOpacity className="flex-1 py-3 rounded-lg border border-border items-center" onPress={() => setShowHealth(false)} disabled={healthSaving}><Text className="font-semibold text-neutral-600">Cancel</Text></TouchableOpacity>
               <TouchableOpacity className="flex-1 py-3 rounded-lg bg-primary-600 items-center flex-row justify-center gap-2" onPress={handleAddHealth} disabled={healthSaving}>
-                {healthSaving ? <ActivityIndicator color={Colors.white} /> : null}
+                {healthSaving ? <ActivityIndicator color={colors.white} /> : null}
                 <Text className="font-semibold text-white">{healthSaving ? 'Saving...' : 'Save'}</Text>
               </TouchableOpacity>
             </View>
@@ -337,21 +338,21 @@ export default function LivestockDetailScreen() {
       {/* Feeding Modal */}
       <Modal visible={showFeeding} transparent animationType="slide" onRequestClose={() => setShowFeeding(false)}>
         <View className="flex-1 bg-black/40 justify-end">
-          <View className="bg-white rounded-t-2xl p-4">
+          <View className="bg-card rounded-t-2xl p-4">
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-lg font-semibold text-neutral-800">Add Feeding</Text>
-              <TouchableOpacity onPress={() => setShowFeeding(false)}><Ionicons name="close" size={22} color={Colors.neutral[500]} /></TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowFeeding(false)}><Ionicons name="close" size={22} color={colors.neutral[500]} /></TouchableOpacity>
             </View>
             <Text className="text-sm font-medium text-neutral-600 mb-2">Feed Type *</Text>
-            <TextInput className="bg-white border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-3" placeholder="e.g., Hay + Grain mix" placeholderTextColor={Colors.neutral[400]} value={feedType} onChangeText={setFeedType} />
+            <TextInput className="bg-card border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-3" placeholder="e.g., Hay + Grain mix" placeholderTextColor={colors.neutral[400]} value={feedType} onChangeText={setFeedType} />
             <Text className="text-sm font-medium text-neutral-600 mb-2">Amount *</Text>
-            <TextInput className="bg-white border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-3" placeholder="e.g., 15 kg" placeholderTextColor={Colors.neutral[400]} value={feedAmount} onChangeText={setFeedAmount} />
+            <TextInput className="bg-card border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-3" placeholder="e.g., 15 kg" placeholderTextColor={colors.neutral[400]} value={feedAmount} onChangeText={setFeedAmount} />
             <Text className="text-sm font-medium text-neutral-600 mb-2">Notes</Text>
-            <TextInput className="bg-white border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-4" placeholder="Optional notes" placeholderTextColor={Colors.neutral[400]} value={feedNotes} onChangeText={setFeedNotes} />
+            <TextInput className="bg-card border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-4" placeholder="Optional notes" placeholderTextColor={colors.neutral[400]} value={feedNotes} onChangeText={setFeedNotes} />
             <View className="flex-row gap-3">
               <TouchableOpacity className="flex-1 py-3 rounded-lg border border-border items-center" onPress={() => setShowFeeding(false)} disabled={feedingSaving}><Text className="font-semibold text-neutral-600">Cancel</Text></TouchableOpacity>
               <TouchableOpacity className="flex-1 py-3 rounded-lg bg-primary-600 items-center flex-row justify-center gap-2" onPress={handleAddFeeding} disabled={feedingSaving}>
-                {feedingSaving ? <ActivityIndicator color={Colors.white} /> : null}
+                {feedingSaving ? <ActivityIndicator color={colors.white} /> : null}
                 <Text className="font-semibold text-white">{feedingSaving ? 'Saving...' : 'Save'}</Text>
               </TouchableOpacity>
             </View>

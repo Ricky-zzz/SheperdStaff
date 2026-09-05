@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../../lib/theme/colors';
+import { useTheme } from '../../../lib/theme/ThemeContext';
 import { Activity } from '../types';
 import { getActivityIcon, getActivityColor, getActivityLabel } from '../activityMeta';
 
@@ -16,7 +16,8 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
   onPress,
   showBorder = false,
 }) => {
-  const color = getActivityColor(activity.type);
+  const { colors } = useTheme();
+  const color = getActivityColor(activity.type, colors);
 
   const content = (
     <>
@@ -34,7 +35,7 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
           {getActivityLabel(activity.type)} • {activity.date}
         </Text>
       </View>
-      {onPress && <Ionicons name="chevron-forward" size={16} color={Colors.neutral[300]} />}
+      {onPress && <Ionicons name="chevron-forward" size={16} color={colors.neutral[300]} />}
     </>
   );
 

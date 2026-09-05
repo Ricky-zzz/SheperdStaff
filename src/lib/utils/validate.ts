@@ -53,3 +53,39 @@ export function validateExpense(input: { description: string; amount: string; da
   if (dt) errors.date = dt;
   return errors;
 }
+
+export function emailValid(value: string): string | null {
+  if (!value.trim()) return 'Required';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())) return 'Enter a valid email';
+  return null;
+}
+
+export function passwordValid(value: string): string | null {
+  if (!value) return 'Required';
+  if (value.length < 8) return 'At least 8 characters';
+  return null;
+}
+
+export function confirmValid(password: string, confirm: string): string | null {
+  if (!confirm) return 'Required';
+  if (password !== confirm) return 'Passwords do not match';
+  return null;
+}
+
+export function validateProfile(input: { name: string; email: string }): Record<string, string> {
+  const errors: Record<string, string> = {};
+  const n = required(input.name);
+  if (n) errors.name = n;
+  const e = emailValid(input.email);
+  if (e) errors.email = e;
+  return errors;
+}
+
+export function validateNewPassword(input: { password: string; confirm: string }): Record<string, string> {
+  const errors: Record<string, string> = {};
+  const p = passwordValid(input.password);
+  if (p) errors.password = p;
+  const c = confirmValid(input.password, input.confirm);
+  if (c) errors.confirm = c;
+  return errors;
+}

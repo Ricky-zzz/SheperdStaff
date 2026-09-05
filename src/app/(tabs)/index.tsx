@@ -10,10 +10,13 @@ import { ActivityItem } from '../../features/activity/components/ActivityItem';
 import * as livestockService from '../../features/livestock/services/livestockService';
 import * as activityService from '../../features/activity/services/activityService';
 import * as expenseService from '../../features/expenses/services/expenseService';
+import * as taskService from '../../features/tasks/services/taskService';
+import { Task } from '../../features/tasks/types';
 import { Activity } from '../../features/activity/types';
-import { Colors } from '../../lib/theme/colors';
+import { useTheme } from '../../lib/theme/ThemeContext';
 
 export default function HomeScreen() {
+  const { colors } = useTheme();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [totalLivestock, setTotalLivestock] = useState(0);
@@ -22,16 +25,20 @@ export default function HomeScreen() {
   const [monthExpenses, setMonthExpenses] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
+  const [taskCounts, setTaskCounts] = useState({ overdue: 0, today: 0, upcoming: 0, done: 0 });
+  const [nextDue, setNextDue] = useState<Task | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const [tl, tg, te, me, rec, all] = await Promise.all([
+      const [tl, tg, te, me, rec, all, tc, nd] = await Promise.all([
         livestockService.count(),
         livestockService.countGroups(),
         expenseService.total(),
         expenseService.thisMonth(),
         activityService.getRecent(5),
         livestockService.getAll(),
+        taskService.counts(),
+        taskService.nextDue(),
       ]);
       setTotalLivestock(tl);
       setTotalGroups(tg);
@@ -39,6 +46,8 @@ export default function HomeScreen() {
       setMonthExpenses(me);
       setRecentActivities(rec);
       setActiveCount(all.filter((l) => l.status === 'active' || l.status === 'growing').length);
+      setTaskCounts(tc);
+      setNextDue(nd ?? null);
     } finally {
       setLoading(false);
     }
@@ -54,7 +63,7 @@ export default function HomeScreen() {
     return (
       <Screen>
         <View className="flex-1 items-center justify-center py-20">
-          <ActivityIndicator color={Colors.primary[600]} />
+          <ActivityIndicator color={colors.primary[600]} />
         </View>
       </Screen>
     );
@@ -68,31 +77,52 @@ export default function HomeScreen() {
           <Text className="text-base text-neutral-500 mt-1">{'Here\u2019s your farm overview'}</Text>
         </View>
         <TouchableOpacity className="w-11 h-11 rounded-full bg-primary-50 justify-center items-center" onPress={() => router.push('/activity')}>
-          <Ionicons name="notifications-outline" size={22} color={Colors.primary[700]} />
+          <Ionicons name="notifications-outline" size={22} color={colors.primary[700]} />
         </TouchableOpacity>
       </View>
 
       <View className="flex-row gap-3 mb-3">
-        <StatCard title="Total Livestock" value={totalLivestock} icon="paw" color={Colors.primary[600]} subtitle={`${totalGroups} groups`} />
-        <StatCard title="This Month" value={`$${monthExpenses.toFixed(0)}`} icon="trending-up" color={Colors.earth[600]} subtitle="Expenses" />
+        <StatCard title="Total Livestock" value={totalLivestock} icon="paw" color={colors.primary[600]} subtitle={`${totalGroups} groups`} />
+        <StatCard title="This Month" value={`$${monthExpenses.toFixed(0)}`} icon="trending-up" color={colors.earth[600]} subtitle="Expenses" />
       </View>
       <View className="flex-row gap-3 mb-3">
-        <StatCard title="Active" value={activeCount} icon="checkmark-circle" color={Colors.success} subtitle="Healthy & growing" />
-        <StatCard title="Total Spent" value={`$${totalExpenses.toFixed(0)}`} icon="wallet" color={Colors.category.cattle} subtitle="All time" />
-      </View>
+        <StatCard title="Active" value={activeCount} icon="checkmark-circle" color={colors.success} subtitle="Healthy & growing" />
+        <StatCard title="Total Spent" value={`$${totalExpenses.toFixed(0)}`} icon="wallet" color={colors.category.cattle} subtitle="All time" />
+</View>
+
+      <TouchableOpacity onPress={() => router.push('/tasks')}>
+        <Card className="mb-5 flex-row items-center">
+          <View className="w-11 h-11 rounded-xl justify-center items-center mr-3" style={{ backgroundColor: colors.earth[100] }}>
+            <Ionicons name="checkbox" size={22} color={colors.earth[600]} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-neutral-800">{'Today\u2019s Tasks'}</Text>
+            <Text className="text-sm text-neutral-500 mt-0.5">
+              {taskCounts.today > 0
+                ? `${taskCounts.today} due today${taskCounts.overdue > 0 ? ` · ${taskCounts.overdue} overdue` : ''}`
+                : taskCounts.overdue > 0
+                ? `${taskCounts.overdue} overdue — catch up!`
+                : nextDue
+                ? `Next: ${nextDue.title} (${nextDue.dueDate})`
+                : 'No pending tasks'}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.neutral[300]} />
+        </Card>
+      </TouchableOpacity>
 
       <SectionHeader title="Quick Actions" />
 
       <View className="flex-row gap-3">
         <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/livestock/new')}>
-          <View className="w-[52px] h-[52px] rounded-xl justify-center items-center" style={{ backgroundColor: Colors.primary[100] }}>
-            <Ionicons name="add-circle" size={24} color={Colors.primary[600]} />
+          <View className="w-[52px] h-[52px] rounded-xl justify-center items-center" style={{ backgroundColor: colors.primary[100] }}>
+            <Ionicons name="add-circle" size={24} color={colors.primary[600]} />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">Add Animal</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/expenses/new')}>
-          <View className="w-[52px] h-[52px] rounded-xl justify-center items-center" style={{ backgroundColor: Colors.earth[100] }}>
-            <Ionicons name="cash" size={24} color={Colors.earth[600]} />
+          <View className="w-[52px] h-[52px] rounded-xl justify-center items-center" style={{ backgroundColor: colors.earth[100] }}>
+            <Ionicons name="cash" size={24} color={colors.earth[600]} />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">Add Expense</Text>
         </TouchableOpacity>

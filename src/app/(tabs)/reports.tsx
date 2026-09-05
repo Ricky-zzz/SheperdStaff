@@ -15,7 +15,7 @@ import {
 import { getAll as getAllExpenses } from '../../features/expenses/services/expenseService';
 import { Livestock } from '../../features/livestock/types';
 import { Expense } from '../../features/expenses/types';
-import { Colors } from '../../lib/theme/colors';
+import { useTheme } from '../../lib/theme/ThemeContext';
 
 const CATEGORY_COLORS: Record<string, string> = {
   cattle: '#8B5CF6', pig: '#EC4899', chicken: '#F59E0B', goat: '#10B981', sheep: '#6366F1', duck: '#06B6D4',
@@ -34,6 +34,7 @@ function isoDaysAgo(days: number): string {
 }
 
 export default function ReportsScreen() {
+  const { colors } = useTheme();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [range, setRange] = useState<Range>('all');
@@ -106,7 +107,7 @@ export default function ReportsScreen() {
     return (
       <Screen>
         <View className="flex-1 items-center justify-center py-20">
-          <ActivityIndicator color={Colors.primary[600]} />
+          <ActivityIndicator color={colors.primary[600]} />
         </View>
       </Screen>
     );
@@ -120,12 +121,12 @@ export default function ReportsScreen() {
       </View>
 
       <View className="flex-row gap-3 mb-3">
-        <Card className="flex-1 items-center py-5"><Ionicons name="paw" size={24} color={Colors.primary[600]} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{totalLivestock}</Text><Text className="text-sm text-neutral-500 mt-1">Total Animals</Text></Card>
-        <Card className="flex-1 items-center py-5"><Ionicons name="wallet" size={24} color={Colors.earth[600]} /><Text className="text-2xl font-bold text-neutral-800 mt-2">${totalSpent.toFixed(0)}</Text><Text className="text-sm text-neutral-500 mt-1">{range === '30d' ? 'Spent 30d' : 'Total Spent'}</Text></Card>
+        <Card className="flex-1 items-center py-5"><Ionicons name="paw" size={24} color={colors.primary[600]} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{totalLivestock}</Text><Text className="text-sm text-neutral-500 mt-1">Total Animals</Text></Card>
+        <Card className="flex-1 items-center py-5"><Ionicons name="wallet" size={24} color={colors.earth[600]} /><Text className="text-2xl font-bold text-neutral-800 mt-2">${totalSpent.toFixed(0)}</Text><Text className="text-sm text-neutral-500 mt-1">{range === '30d' ? 'Spent 30d' : 'Total Spent'}</Text></Card>
       </View>
       <View className="flex-row gap-3 mb-3">
-        <Card className="flex-1 items-center py-5"><Ionicons name="list" size={24} color={Colors.category.cattle} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{allLivestock.length}</Text><Text className="text-sm text-neutral-500 mt-1">Records</Text></Card>
-        <Card className="flex-1 items-center py-5"><Ionicons name="receipt" size={24} color={Colors.category.chicken} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{txCount}</Text><Text className="text-sm text-neutral-500 mt-1">Transactions</Text></Card>
+        <Card className="flex-1 items-center py-5"><Ionicons name="list" size={24} color={colors.category.cattle} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{allLivestock.length}</Text><Text className="text-sm text-neutral-500 mt-1">Records</Text></Card>
+        <Card className="flex-1 items-center py-5"><Ionicons name="receipt" size={24} color={colors.category.chicken} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{txCount}</Text><Text className="text-sm text-neutral-500 mt-1">Transactions</Text></Card>
       </View>
 
       <SectionHeader title="Livestock by Type" />
@@ -134,7 +135,7 @@ export default function ReportsScreen() {
           <View key={category} className="flex-row items-center mb-3">
             <Text className="w-20 text-sm text-neutral-600 font-medium">{category.charAt(0).toUpperCase() + category.slice(1)}</Text>
             <View className="flex-1 h-5 bg-neutral-100 rounded-sm overflow-hidden mx-2">
-              <View style={[styles.bar, { width: `${(count / maxLivestock) * 100}%`, backgroundColor: CATEGORY_COLORS[category] || Colors.neutral[400] }]} />
+              <View style={[styles.bar, { width: `${(count / maxLivestock) * 100}%`, backgroundColor: CATEGORY_COLORS[category] || colors.neutral[400] }]} />
             </View>
             <Text className="w-12 text-sm font-semibold text-neutral-700 text-right">{count}</Text>
           </View>
@@ -147,7 +148,7 @@ export default function ReportsScreen() {
           <View key={category} className="flex-row items-center mb-3">
             <Text className="w-20 text-sm text-neutral-600 font-medium">{category.charAt(0).toUpperCase() + category.slice(1)}</Text>
             <View className="flex-1 h-5 bg-neutral-100 rounded-sm overflow-hidden mx-2">
-              <View style={[styles.bar, { width: `${(amount / maxExpense) * 100}%`, backgroundColor: EXPENSE_CATEGORY_COLORS[category] || Colors.neutral[400] }]} />
+              <View style={[styles.bar, { width: `${(amount / maxExpense) * 100}%`, backgroundColor: EXPENSE_CATEGORY_COLORS[category] || colors.neutral[400] }]} />
             </View>
             <Text className="w-12 text-sm font-semibold text-neutral-700 text-right">${amount.toFixed(0)}</Text>
           </View>
@@ -161,7 +162,7 @@ export default function ReportsScreen() {
       <Card className="mb-2">
         {Object.entries(statusCounts).map(([status, count]) => (
           <View key={status} className="flex-row items-center mb-3">
-            <View className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: statusColors[status] || Colors.neutral[400] }} />
+            <View className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: statusColors[status] || colors.neutral[400] }} />
             <Text className="flex-1 text-base text-neutral-700 font-medium">{status.replace('_', ' ').charAt(0).toUpperCase() + status.replace('_', ' ').slice(1)}</Text>
             <Text className="text-sm text-neutral-500 mr-3">{count} records</Text>
             <Text className="w-11 text-base font-bold text-neutral-800 text-right">{allLivestock.length > 0 ? ((count / allLivestock.length) * 100).toFixed(0) : 0}%</Text>
