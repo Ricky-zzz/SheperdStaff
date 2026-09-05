@@ -65,7 +65,7 @@ export default function HomeScreen() {
       <View className="flex-row justify-between items-center mb-5">
         <View>
           <Text className="text-2xl font-bold text-neutral-900">Good morning!</Text>
-          <Text className="text-base text-neutral-500 mt-1">Here's your farm overview</Text>
+          <Text className="text-base text-neutral-500 mt-1">{'Here\u2019s your farm overview'}</Text>
         </View>
         <TouchableOpacity className="w-11 h-11 rounded-full bg-primary-50 justify-center items-center" onPress={() => router.push('/activity')}>
           <Ionicons name="notifications-outline" size={22} color={Colors.primary[700]} />

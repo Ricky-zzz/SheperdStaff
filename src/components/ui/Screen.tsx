@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, ScrollView, StyleProp, ViewStyle } from 'react-native';
-
+import { View, ScrollView, StyleProp, ViewStyle, RefreshControl } from 'react-native';
+import { Colors } from '../../lib/theme/colors';
 
 interface ScreenProps {
   children: React.ReactNode;
@@ -8,6 +8,8 @@ interface ScreenProps {
   style?: StyleProp<ViewStyle>;
   scrollable?: boolean;
   padded?: boolean;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
 
 export const Screen: React.FC<ScreenProps> = ({
@@ -16,6 +18,8 @@ export const Screen: React.FC<ScreenProps> = ({
   style,
   scrollable = true,
   padded = true,
+  refreshing,
+  onRefresh,
 }) => {
   const content = (
     <View className={`flex-1 ${padded ? 'p-4' : ''} ${className ?? ''}`} style={style}>
@@ -30,6 +34,11 @@ export const Screen: React.FC<ScreenProps> = ({
           className="flex-1"
           contentContainerStyle={{ flexGrow: 1 }}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            refreshing !== undefined && onRefresh ? (
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Colors.primary[600]} colors={[Colors.primary[600]]} />
+            ) : undefined
+          }
         >
           {content}
         </ScrollView>

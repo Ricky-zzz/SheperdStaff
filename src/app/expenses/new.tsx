@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../lib/theme/colors';
@@ -9,6 +9,7 @@ import { getAll as getAllLivestock } from '../../features/livestock/services/liv
 import { Livestock } from '../../features/livestock/types';
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { validateExpense } from '../../lib/utils/validate';
+import { DateInput } from '../../components/ui/DateInput';
 
 const CATEGORIES: { label: string; value: ExpenseCategory; icon: keyof typeof Ionicons.glyphMap }[] = [
   { label: 'Feed', value: 'feed', icon: 'restaurant' },
@@ -125,8 +126,7 @@ export default function AddExpenseScreen() {
         {errors.amount ? <Text className="text-xs text-error mb-3">{errors.amount}</Text> : <View className="mb-3" />}
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Date</Text>
-        <TextInput className={inputCls('date')} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.neutral[400]} value={date} onChangeText={(v) => { setDate(v); if (errors.date) setErrors((p) => ({ ...p, date: '' })); }} />
-        {errors.date ? <Text className="text-xs text-error mb-3">{errors.date}</Text> : <View className="mb-3" />}
+        <DateInput value={date} onChange={(d) => { setDate(d); if (errors.date) setErrors((p) => ({ ...p, date: '' })); }} error={errors.date} />
       </View>
 
       <View className="mb-5">

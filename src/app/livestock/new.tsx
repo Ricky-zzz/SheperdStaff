@@ -7,6 +7,7 @@ import { LivestockCategory, LivestockType, LivestockStatus } from '../../feature
 import { create as createLivestock } from '../../features/livestock/services/livestockService';
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { validateLivestock } from '../../lib/utils/validate';
+import { DateInput } from '../../components/ui/DateInput';
 
 const CATEGORIES: { label: string; value: LivestockCategory }[] = [
   { label: 'Cattle', value: 'cattle' },
@@ -37,6 +38,7 @@ export default function AddLivestockScreen() {
   const [sex, setSex] = useState<'male' | 'female' | 'mixed'>('female');
   const [location, setLocation] = useState('');
   const [purpose, setPurpose] = useState('');
+  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [status, setStatus] = useState<LivestockStatus>('active');
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -61,7 +63,7 @@ export default function AddLivestockScreen() {
         quantity: type === 'group' ? parseInt(quantity, 10) : 1,
         breed: breed.trim() || undefined,
         sex,
-        startDate: today,
+        startDate,
         location: location.trim(),
         purpose: purpose.trim() || 'General',
         status,
@@ -206,6 +208,9 @@ export default function AddLivestockScreen() {
           onChangeText={setPurpose}
         />
         <View className="mb-3" />
+
+        <Text className="text-sm font-medium text-neutral-600 mb-2">Start Date</Text>
+        <DateInput value={startDate} onChange={setStartDate} />
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Status</Text>
         <View className="flex-row flex-wrap gap-2 mb-4">

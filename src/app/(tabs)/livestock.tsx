@@ -25,6 +25,7 @@ export default function LivestockScreen() {
   const [selectedFilter, setSelectedFilter] = useState<LivestockCategory | 'all'>('all');
   const [livestock, setLivestock] = useState<Livestock[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -33,6 +34,15 @@ export default function LivestockScreen() {
       setLivestock(data);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      setLivestock(await getAll());
+    } finally {
+      setRefreshing(false);
     }
   }, []);
 
@@ -49,7 +59,7 @@ export default function LivestockScreen() {
   });
 
   return (
-    <Screen>
+    <Screen refreshing={refreshing} onRefresh={refresh}>
       <View className="flex-row gap-2 mb-4">
         <SearchBar value={search} onChangeText={setSearch} placeholder="Search livestock..." />
         <TouchableOpacity className="w-11 h-11 rounded-lg bg-primary-600 justify-center items-center shadow-sm" onPress={() => router.push('/livestock/new')}>

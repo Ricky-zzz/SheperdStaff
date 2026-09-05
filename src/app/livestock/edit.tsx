@@ -7,6 +7,7 @@ import { LivestockCategory, LivestockType, LivestockStatus } from '../../feature
 import { getById, update } from '../../features/livestock/services/livestockService';
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { validateLivestock } from '../../lib/utils/validate';
+import { DateInput } from '../../components/ui/DateInput';
 
 const CATEGORIES: { label: string; value: LivestockCategory }[] = [
   { label: 'Cattle', value: 'cattle' },
@@ -41,6 +42,7 @@ export default function EditLivestockScreen() {
   const [sex, setSex] = useState<'male' | 'female' | 'mixed'>('female');
   const [location, setLocation] = useState('');
   const [purpose, setPurpose] = useState('');
+  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [status, setStatus] = useState<LivestockStatus>('active');
   const [notes, setNotes] = useState('');
   const [initialStatus, setInitialStatus] = useState<LivestockStatus>('active');
@@ -65,13 +67,14 @@ export default function EditLivestockScreen() {
       setSex(l.sex ?? 'female');
       setLocation(l.location);
       setPurpose(l.purpose);
+      setStartDate(l.startDate);
       setStatus(l.status);
       setInitialStatus(l.status);
       setNotes(l.notes ?? '');
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, router]);
 
   useEffect(() => {
     load();
@@ -93,6 +96,7 @@ export default function EditLivestockScreen() {
         quantity: type === 'group' ? parseInt(quantity, 10) : 1,
         breed: breed.trim() || undefined,
         sex,
+        startDate,
         location: location.trim(),
         purpose: purpose.trim() || 'General',
         status,
@@ -188,6 +192,9 @@ export default function EditLivestockScreen() {
         <Text className="text-sm font-medium text-neutral-600 mb-2">Purpose</Text>
         <TextInput className={inputClass('purpose')} placeholder="Purpose" placeholderTextColor={Colors.neutral[400]} value={purpose} onChangeText={setPurpose} />
         <View className="mb-3" />
+
+        <Text className="text-sm font-medium text-neutral-600 mb-2">Start Date</Text>
+        <DateInput value={startDate} onChange={setStartDate} />
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Status</Text>
         <View className="flex-row flex-wrap gap-2 mb-4">

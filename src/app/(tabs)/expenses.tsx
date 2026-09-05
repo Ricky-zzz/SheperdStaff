@@ -18,6 +18,7 @@ export default function ExpensesScreen() {
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [expensesByCategory, setExpensesByCategory] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -28,6 +29,18 @@ export default function ExpensesScreen() {
       setExpensesByCategory(byCat);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const [all, t, byCat] = await Promise.all([getAll(), total(), totalByCategory()]);
+      setAllExpenses(all);
+      setTotalExpenses(t);
+      setExpensesByCategory(byCat);
+    } finally {
+      setRefreshing(false);
     }
   }, []);
 
@@ -51,7 +64,7 @@ export default function ExpensesScreen() {
   }
 
   return (
-    <Screen>
+    <Screen refreshing={refreshing} onRefresh={refresh}>
       <Card className="bg-primary-700 mb-5 items-center">
         <Text className="text-sm text-primary-200 font-medium">Total Expenses</Text>
         <Text className="text-3xl font-bold text-white mt-1">${totalExpenses.toFixed(2)}</Text>

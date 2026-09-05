@@ -9,6 +9,7 @@ import { getAll as getAllLivestock } from '../../features/livestock/services/liv
 import { Livestock } from '../../features/livestock/types';
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { validateExpense } from '../../lib/utils/validate';
+import { DateInput } from '../../components/ui/DateInput';
 
 const CATEGORIES: { label: string; value: ExpenseCategory; icon: keyof typeof Ionicons.glyphMap }[] = [
   { label: 'Feed', value: 'feed', icon: 'restaurant' },
@@ -130,7 +131,15 @@ export default function EditExpenseScreen() {
         onPress: async () => {
           setDeleting(true);
           try {
+            const desc = description.trim() || 'Expense';
             await remove(id as string);
+            await logActivity({
+              id: `act-${Date.now()}`,
+              date: new Date().toISOString().slice(0, 10),
+              type: 'expense_added',
+              description: `Expense deleted: ${desc}`,
+              expenseId: id as string,
+            });
             router.replace('/(tabs)/expenses');
           } catch (err: any) {
             Alert.alert('Error', String(err?.message ?? 'Failed'));
@@ -166,8 +175,7 @@ export default function EditExpenseScreen() {
         {errors.amount ? <Text className="text-xs text-error mb-3">{errors.amount}</Text> : <View className="mb-3" />}
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Date</Text>
-        <TextInput className={inputCls('date')} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.neutral[400]} value={date} onChangeText={(v) => { setDate(v); if (errors.date) setErrors((p) => ({ ...p, date: '' })); }} />
-        {errors.date ? <Text className="text-xs text-error mb-3">{errors.date}</Text> : <View className="mb-3" />}
+        <DateInput value={date} onChange={(d) => { setDate(d); if (errors.date) setErrors((p) => ({ ...p, date: '' })); }} error={errors.date} />
       </View>
 
       <View className="mb-5">
