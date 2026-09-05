@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui/Screen';
@@ -14,12 +14,35 @@ interface MenuItem {
   subtitle?: string;
   route?: string;
   color?: string;
+  onPress?: () => void;
 }
 
 export default function MoreScreen() {
   const router = useRouter();
   const { profile } = useAuth();
   const { colors } = useTheme();
+
+  const handleLoadSampleData = () => {
+    Alert.alert('Load sample data?', 'Adds demo livestock, expenses, and tasks. Only runs if the database is empty — your existing data is never touched.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Load',
+        onPress: async () => {
+          try {
+            const { seedIfNeeded } = await import('../../lib/db/seed');
+            const { getDb } = await import('../../lib/db/client');
+            const seeded = await seedIfNeeded(await getDb());
+            Alert.alert(
+              seeded ? 'Sample data loaded' : 'Nothing to load',
+              seeded ? 'Demo livestock, expenses, and tasks have been added.' : 'The database already has data, so nothing was seeded.'
+            );
+          } catch {
+            Alert.alert('Failed', 'Could not load sample data.');
+          }
+        },
+      },
+    ]);
+  };
 
   const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
     {
@@ -33,6 +56,7 @@ export default function MoreScreen() {
     {
       title: 'Data & Reports',
       items: [
+        { icon: 'flask', label: 'Load Sample Data', subtitle: 'Add demo records (only if empty)', color: colors.category.duck, onPress: handleLoadSampleData },
         { icon: 'download', label: 'Export Data', subtitle: 'Download farm records', color: colors.category.chicken },
         { icon: 'cloud-upload', label: 'Backup', subtitle: 'Save your data', color: colors.category.goat },
       ],
@@ -77,7 +101,7 @@ export default function MoreScreen() {
                 subtitle={item.subtitle}
                 showChevron={!!item.route}
                 showBorder={index < section.items.length - 1}
-                onPress={item.route ? () => router.push(item.route as any) : undefined}
+                onPress={item.onPress ?? (item.route ? () => router.push(item.route as any) : undefined)}
               />
             ))}
           </Card>

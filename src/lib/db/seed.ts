@@ -1,5 +1,5 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
-import { mockLivestock, mockPens, mockExpenses, mockActivities } from '../../data/mock';
+import { mockLivestock, mockPens, mockExpenses, mockActivities, mockTasks } from '../../data/mock';
 
 export async function seedIfNeeded(database: SQLiteDatabase): Promise<boolean> {
   const row = await database.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM livestock');
@@ -52,6 +52,14 @@ export async function seedIfNeeded(database: SQLiteDatabase): Promise<boolean> {
         `INSERT INTO pens (id, name, location, capacity, livestockIds, notes)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [p.id, p.name, p.location, p.capacity, JSON.stringify(p.livestockIds), p.notes ?? null]
+      );
+    }
+
+    for (const t of mockTasks) {
+      await database.runAsync(
+        `INSERT INTO tasks (id, title, dueDate, notes, status, livestockId, createdAt, completedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [t.id, t.title, t.dueDate, t.notes ?? null, t.status, t.livestockId ?? null, t.createdAt, t.completedAt ?? null]
       );
     }
   });

@@ -20,8 +20,6 @@ export async function initDb(): Promise<SQLite.SQLiteDatabase> {
   const database = await getDb();
   const { ensureSchema } = await import('./schema');
   await ensureSchema(database);
-  const { seedIfNeeded } = await import('./seed');
-  await seedIfNeeded(database);
   return database;
 }
 

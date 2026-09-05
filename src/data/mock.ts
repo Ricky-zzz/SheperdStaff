@@ -1,6 +1,15 @@
 import { Livestock, Pen } from '../features/livestock/types';
 import { Expense } from '../features/expenses/types';
 import { Activity } from '../features/activity/types';
+import { Task } from '../features/tasks/types';
+
+function isoDaysFromNow(days: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${m}-${day}`;
+}
 
 export const mockPens: Pen[] = [
   {
@@ -16,7 +25,7 @@ export const mockPens: Pen[] = [
     name: 'Pig Pen A',
     location: 'Barn Area',
     capacity: 8,
-    livestockIds: ['pig-group-1'],
+    livestockIds: ['pig-group-1', 'pig-group-2'],
     notes: 'Covered shelter with feeding station',
   },
   {
@@ -34,6 +43,22 @@ export const mockPens: Pen[] = [
     capacity: 12,
     livestockIds: ['goat-1', 'goat-group-1'],
     notes: 'Fenced area with climbing structures',
+  },
+  {
+    id: 'pen-5',
+    name: 'Sheep Paddock',
+    location: 'West Hill',
+    capacity: 15,
+    livestockIds: ['sheep-group-1'],
+    notes: 'Hillside grazing with shelter',
+  },
+  {
+    id: 'pen-6',
+    name: 'Duck Pond',
+    location: 'Creek Side',
+    capacity: 30,
+    livestockIds: ['duck-group-1'],
+    notes: 'Fenced pond area',
   },
 ];
 
@@ -183,6 +208,67 @@ export const mockLivestock: Livestock[] = [
     expenseIds: ['exp-9'],
     notes: 'Gentle temperament, used for pasture breeding',
   },
+  {
+    id: 'sheep-group-1',
+    name: 'Merino Flock',
+    category: 'sheep',
+    type: 'group',
+    quantity: 8,
+    breed: 'Merino',
+    sex: 'mixed',
+    startDate: '2025-02-10',
+    location: 'Sheep Paddock',
+    purpose: 'Wool & meat',
+    status: 'for_sale',
+    healthNotes: [
+      { id: 'hn-7', date: '2025-12-10', note: 'Hooves trimmed, ready for sale', type: 'treatment' },
+    ],
+    feedings: [
+      { id: 'f-9', date: '2026-01-10', feedType: 'Grazing + mineral block', amount: 'Free range' },
+    ],
+    expenseIds: ['exp-13'],
+    notes: 'Marked for sale at the market',
+  },
+  {
+    id: 'duck-group-1',
+    name: 'Pekin Ducks',
+    category: 'duck',
+    type: 'group',
+    quantity: 15,
+    breed: 'Pekin',
+    sex: 'mixed',
+    startDate: '2025-09-01',
+    location: 'Duck Pond',
+    purpose: 'Eggs & meat',
+    status: 'active',
+    healthNotes: [],
+    feedings: [
+      { id: 'f-10', date: '2026-01-10', feedType: 'Duck pellets + greens', amount: '2 kg' },
+    ],
+    expenseIds: ['exp-14'],
+    notes: 'Laying well, about 10 eggs/day',
+  },
+  {
+    id: 'pig-group-2',
+    name: 'Pig Batch 2024-B',
+    category: 'pig',
+    type: 'group',
+    quantity: 4,
+    breed: 'Landrace',
+    sex: 'mixed',
+    startDate: '2024-09-15',
+    location: 'Pig Pen A',
+    purpose: 'Sold at market',
+    status: 'sold',
+    healthNotes: [
+      { id: 'hn-8', date: '2025-08-20', note: 'Final weigh-in before sale', type: 'observation' },
+    ],
+    feedings: [
+      { id: 'f-11', date: '2025-09-01', feedType: 'Commercial pig feed', amount: '18 kg' },
+    ],
+    expenseIds: ['exp-15'],
+    notes: 'Sold October 2025, average 95 kg',
+  },
 ];
 
 export const mockExpenses: Expense[] = [
@@ -198,6 +284,9 @@ export const mockExpenses: Expense[] = [
   { id: 'exp-10', date: '2026-01-10', category: 'supplies', description: 'Water trough cleaner', amount: 15.00 },
   { id: 'exp-11', date: '2025-11-20', category: 'labor', description: 'Part-time farm helper (weekend)', amount: 150.00, notes: 'Helped with hay storage' },
   { id: 'exp-12', date: '2025-10-05', category: 'maintenance', description: 'Chicken coop roof patch', amount: 65.00 },
+  { id: 'exp-13', date: '2025-12-12', category: 'supplies', description: 'Sheep dip + shearing tools', amount: 40.00, livestockId: 'sheep-group-1' },
+  { id: 'exp-14', date: '2026-01-09', category: 'feed', description: 'Duck pellets 20kg', amount: 18.00, livestockId: 'duck-group-1' },
+  { id: 'exp-15', date: '2025-09-05', category: 'supplies', description: 'Pig transport to market', amount: 25.00, livestockId: 'pig-group-2' },
 ];
 
 export const mockActivities: Activity[] = [
@@ -213,6 +302,55 @@ export const mockActivities: Activity[] = [
   { id: 'act-10', date: '2025-11-15', type: 'status_change', description: 'Bessie observed with slight limp - resolved', livestockId: 'cow-1' },
   { id: 'act-11', date: '2025-11-10', type: 'health_note', description: '2 does confirmed pregnant, expected Feb 2026', livestockId: 'goat-group-1' },
   { id: 'act-12', date: '2025-10-05', type: 'expense_added', description: 'Chicken coop roof patch - $65.00', expenseId: 'exp-12' },
+  { id: 'act-13', date: '2025-12-12', type: 'health_note', description: 'Hooves trimmed for Merino flock, ready for sale', livestockId: 'sheep-group-1' },
+  { id: 'act-14', date: '2026-01-09', type: 'expense_added', description: 'Purchased duck pellets - $18.00', expenseId: 'exp-14' },
+  { id: 'act-15', date: '2025-10-02', type: 'sale', description: 'Pig Batch 2024-B sold at market (4 hogs)', livestockId: 'pig-group-2' },
+];
+
+export const mockTasks: Task[] = [
+  {
+    id: 'task-1',
+    title: 'Deworm the goat herd',
+    dueDate: isoDaysFromNow(-2),
+    notes: 'Use the broad-spectrum paste',
+    status: 'pending',
+    livestockId: 'goat-group-1',
+    createdAt: isoDaysFromNow(-3),
+  },
+  {
+    id: 'task-2',
+    title: 'Collect eggs and clean the coop',
+    dueDate: isoDaysFromNow(0),
+    status: 'pending',
+    livestockId: 'chicken-group-1',
+    createdAt: isoDaysFromNow(-1),
+  },
+  {
+    id: 'task-3',
+    title: 'Buy 25kg broiler starter feed',
+    dueDate: isoDaysFromNow(3),
+    notes: 'Check price at the feed store first',
+    status: 'pending',
+    livestockId: 'chicken-group-2',
+    createdAt: isoDaysFromNow(-2),
+  },
+  {
+    id: 'task-4',
+    title: 'Vaccinate pigs against swine fever',
+    dueDate: isoDaysFromNow(7),
+    status: 'pending',
+    livestockId: 'pig-group-1',
+    createdAt: isoDaysFromNow(-4),
+  },
+  {
+    id: 'task-5',
+    title: 'Trim Bessie\u2019s hooves',
+    dueDate: isoDaysFromNow(-1),
+    status: 'done',
+    livestockId: 'cow-1',
+    createdAt: isoDaysFromNow(-2),
+    completedAt: isoDaysFromNow(-1),
+  },
 ];
 
 export const getLivestockById = (id: string): Livestock | undefined =>
