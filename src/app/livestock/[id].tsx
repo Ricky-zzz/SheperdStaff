@@ -286,21 +286,25 @@ const statusColors = getStatusBadgeColor(animal.status, colors);
           <EmptyState icon="restaurant-outline" title="No feeding records" />
         )}
 
-      <SectionHeader title="Expenses" />
+      <TouchableOpacity onPress={() => Alert.alert('navigate to tab')}>
+        <SectionHeader title="Expenses" />
+      </TouchableOpacity>
       {expenses.length > 0 ? (
         <>
           {expenses.map((expense) => (
-            <TouchableOpacity key={expense.id} activeOpacity={0.7} onPress={() => router.push({ pathname: '/expenses/edit', params: { id: expense.id } })}>
+            <View key={expense.id} style={{ opacity: 0.6 }}>
               <ExpenseItem expense={expense} highlightLivestockId={animal.id} />
-            </TouchableOpacity>
+            </View>
           ))}
-            <Card className="flex-row justify-between items-center bg-primary-50 mt-2">
+            <Card className="flex-row justify-between items-center bg-primary-50 mt-2 opacity-60">
               <Text className="text-base font-semibold text-primary-700">Total Expenses</Text>
               <Text className="text-xl font-bold text-primary-700">${totalExpense.toFixed(2)}</Text>
             </Card>
           </>
         ) : (
-          <EmptyState icon="wallet-outline" title="No expenses recorded" />
+          <View style={{ opacity: 0.6 }}>
+            <EmptyState icon="wallet-outline" title="No expenses recorded" />
+          </View>
         )}
 
         <View className="h-8" />
