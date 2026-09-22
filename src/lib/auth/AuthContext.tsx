@@ -31,6 +31,7 @@ interface AuthContextValue {
   updateNameEmail: (name: string, email: string) => Promise<void>;
   changePassword: (current: string, next: string) => Promise<boolean>;
   setTheme: (themeKey: string, darkMode: boolean) => Promise<void>;
+  resetDemo: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -132,9 +133,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [profile]
   );
 
+  const resetDemo = useCallback(async () => {
+    const { getDb } = await import('../db/client');
+    const db = await getDb();
+    await db.execAsync(
+      'DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM user_profile;'
+    );
+    setProfile(null);
+    setDraftState({ name: '', email: '', password: '', themeKey: 'earth', darkMode: false });
+    setState('onboarding');
+  }, []);
+
   const value = useMemo<AuthContextValue>(
-    () => ({ state, profile, draft, setDraft, completeOnboarding, unlock, reload, updateNameEmail, changePassword, setTheme }),
-    [state, profile, draft, setDraft, completeOnboarding, unlock, reload, updateNameEmail, changePassword, setTheme]
+    () => ({ state, profile, draft, setDraft, completeOnboarding, unlock, reload, updateNameEmail, changePassword, setTheme, resetDemo }),
+    [state, profile, draft, setDraft, completeOnboarding, unlock, reload, updateNameEmail, changePassword, setTheme, resetDemo]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

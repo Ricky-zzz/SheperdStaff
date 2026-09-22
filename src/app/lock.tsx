@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../lib/auth/AuthContext';
 import { useTheme } from '../lib/theme/ThemeContext';
 
 export default function LockScreen() {
-  const { profile, unlock } = useAuth();
+  const { profile, unlock, resetDemo } = useAuth();
   const { colors } = useTheme();
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
@@ -69,6 +69,27 @@ export default function LockScreen() {
       <Text className="text-xs text-primary-300 text-center mt-6">
         Password is stored only on this device.
       </Text>
+      <TouchableOpacity
+        className="mt-3 p-2"
+        onPress={() =>
+          Alert.alert('Start over?', 'This deletes the profile and all data on this device so you can create a fresh account.', [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Delete & restart',
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  await resetDemo();
+                } catch {
+                  Alert.alert('Failed', 'Could not reset. Clear the app data instead.');
+                }
+              },
+            },
+          ])
+        }
+      >
+        <Text className="text-sm text-primary-200 underline">Forgot password? Start over</Text>
+      </TouchableOpacity>
     </View>
   );
 }
