@@ -38,11 +38,7 @@ export default function TabLayout() {
     >
       <Tabs.Screen name="index" options={{ title: 'Home', headerTitle: 'Shepherd Staff', tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} /> }} />
       <Tabs.Screen name="livestock" options={{ title: 'Livestock', tabBarIcon: ({ color, size }) => <Ionicons name="paw" size={size} color={color} /> }} />
-      <Tabs.Screen
-        name="expenses"
-        options={{ title: 'Expenses', tabBarIcon: ({ color, size }) => <Ionicons name="wallet" size={size} color={color} /> }}
-        listeners={{ tabPress: (e) => { e.preventDefault(); comingSoon(); } }}
-      />
+      <Tabs.Screen name="expenses" options={{ title: 'Expenses', tabBarIcon: ({ color, size }) => <Ionicons name="wallet" size={size} color={color} /> }} />
       <Tabs.Screen
         name="reports"
         options={{ title: 'Reports', tabBarIcon: ({ color, size }) => <Ionicons name="bar-chart" size={size} color={color} /> }}

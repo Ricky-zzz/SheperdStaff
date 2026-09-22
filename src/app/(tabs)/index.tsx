@@ -9,6 +9,7 @@ import { SectionHeader } from '../../components/ui/SectionHeader';
 import { ActivityItem } from '../../features/activity/components/ActivityItem';
 import * as livestockService from '../../features/livestock/services/livestockService';
 import * as activityService from '../../features/activity/services/activityService';
+import * as expenseService from '../../features/expenses/services/expenseService';
 import { Activity } from '../../features/activity/types';
 import { useTheme } from '../../lib/theme/ThemeContext';
 
@@ -18,19 +19,25 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [totalLivestock, setTotalLivestock] = useState(0);
   const [totalGroups, setTotalGroups] = useState(0);
+  const [totalExpenses, setTotalExpenses] = useState(0);
+  const [monthExpenses, setMonthExpenses] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
 
   const load = useCallback(async () => {
     try {
-      const [tl, tg, rec, all] = await Promise.all([
+      const [tl, tg, te, me, rec, all] = await Promise.all([
         livestockService.count(),
         livestockService.countGroups(),
+        expenseService.total(),
+        expenseService.thisMonth(),
         activityService.getRecent(5),
         livestockService.getAll(),
       ]);
       setTotalLivestock(tl);
       setTotalGroups(tg);
+      setTotalExpenses(te);
+      setMonthExpenses(me);
       setRecentActivities(rec);
       setActiveCount(all.filter((l) => l.status === 'active' || l.status === 'growing').length);
     } finally {
@@ -66,9 +73,13 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      <View className="flex-row gap-3 mb-5">
+      <View className="flex-row gap-3 mb-3">
         <StatCard title="Total Livestock" value={totalLivestock} icon="paw" color={colors.primary[600]} subtitle={`${totalGroups} groups`} />
+        <StatCard title="This Month" value={`$${monthExpenses.toFixed(0)}`} icon="trending-up" color={colors.earth[600]} subtitle="Expenses" />
+      </View>
+      <View className="flex-row gap-3 mb-5">
         <StatCard title="Active" value={activeCount} icon="checkmark-circle" color={colors.success} subtitle="Healthy & growing" />
+        <StatCard title="Total Spent" value={`$${totalExpenses.toFixed(0)}`} icon="wallet" color={colors.category.cattle} subtitle="All time" />
       </View>
 
       <SectionHeader title="Quick Actions" />
@@ -80,7 +91,7 @@ export default function HomeScreen() {
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">Add Animal</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => Alert.alert('navigate to tab')}>
+        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/expenses/new')}>
           <View className="w-[52px] h-[52px] rounded-lg justify-center items-center" style={{ backgroundColor: colors.earth[100] }}>
             <Ionicons name="cash" size={24} color={colors.earth[600]} />
           </View>
