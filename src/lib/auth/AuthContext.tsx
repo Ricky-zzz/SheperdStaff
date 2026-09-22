@@ -84,13 +84,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       themeKey: draft.themeKey,
       darkMode: draft.darkMode,
     });
-    try {
-      const { seedIfNeeded } = await import('../db/seed');
-      const { getDb } = await import('../db/client');
-      await seedIfNeeded(await getDb());
-    } catch {
-      // Sample data is optional — never block entry to the app.
-    }
+    // NOTE (presentation branch): seeding disabled so the livestock demo starts empty.
+    // Main still seeds sample data here. "Load Sample Data" in More works on demand.
     setProfile(await getProfile());
     setState('unlocked');
   }, [draft]);

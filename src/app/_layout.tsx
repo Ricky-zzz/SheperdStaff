@@ -1,7 +1,7 @@
 import '../../global.css';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
-import { Stack, Redirect } from 'expo-router';
+import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '../lib/auth/AuthContext';
 import { ThemeProvider, useTheme } from '../lib/theme/ThemeContext';
@@ -18,6 +18,21 @@ function LoadingView() {
 function RootNavigator() {
   const { state } = useAuth();
   const { colors } = useTheme();
+  const router = useRouter();
+  const segments = useSegments();
+  const navState = useRootNavigationState();
+
+  useEffect(() => {
+    if (state === 'loading' || !navState?.key) return;
+    const root = segments[0];
+    if (state === 'onboarding' && root !== 'onboarding') {
+      router.replace('/onboarding');
+    } else if (state === 'locked' && root !== 'lock') {
+      router.replace('/lock');
+    } else if (state === 'unlocked' && (root === 'onboarding' || root === 'lock' || root === undefined)) {
+      router.replace('/(tabs)');
+    }
+  }, [state, segments, navState?.key, router]);
 
   if (state === 'loading') return <LoadingView />;
 
@@ -76,9 +91,6 @@ function RootNavigator() {
           <Stack.Screen name="lock" />
         </Stack.Protected>
 
-        {state === 'onboarding' && <Redirect href="/onboarding" />}
-        {state === 'locked' && <Redirect href="/lock" />}
-        {state === 'unlocked' && <Redirect href="/(tabs)" />}
       </Stack>
     </>
   );
