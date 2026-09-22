@@ -31,16 +31,15 @@ export default function OnboardingIndexScreen() {
   return (
     <View className="flex-1 bg-background p-6 justify-center">
       <View className="items-center mb-6">
-        <View className="w-20 h-20 rounded-full bg-primary-100 items-center justify-center mb-4">
+        <View className="w-20 h-20 rounded-full bg-primary-100 items-center justify-center">
           <Ionicons name="leaf" size={40} color={colors.primary[600]} />
         </View>
-        <Text className="text-2xl font-bold text-neutral-800 text-center">Welcome to{'\n'}Shepherd Staff</Text>
-        <Text className="text-sm text-neutral-500 text-center mt-2">
-          Set up your farm profile to get started. Your data stays on this device.
-        </Text>
       </View>
 
       <Card className="mb-4">
+        <Text className="text-xl font-bold text-neutral-800 text-center">Shepherd Staff</Text>
+        <Text className="text-sm text-neutral-500 text-center mt-1 mb-5">Create your account</Text>
+
         <Text className="text-sm font-medium text-neutral-600 mb-2">Your name *</Text>
         <TextInput
           className={`${inputClass} ${errors.name ? 'border-error' : 'border-border'}`}
@@ -77,7 +76,7 @@ export default function OnboardingIndexScreen() {
         </TouchableOpacity>
       </Card>
       <Text className="text-xs text-neutral-400 text-center">
-        No email verification for now. Step 1 of 3
+        Step 1 of 3
       </Text>
     </View>
   );
