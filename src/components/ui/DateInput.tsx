@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, View } from 'react-native';
+import { TouchableOpacity, Text, View, Platform } from 'react-native';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
@@ -32,6 +32,37 @@ export const DateInput: React.FC<DateInputProps> = ({ value, onChange, error }) 
       onChange(toISO(selected));
     }
   };
+
+  if (Platform.OS === 'web') {
+    return (
+      <>
+        <View
+          className={`flex-row items-center bg-card border rounded-lg px-4 py-3 mb-1 ${error ? 'border-error' : 'border-border'}`}
+        >
+          {React.createElement('input' as any, {
+            type: 'date',
+            value: value || '',
+            max: toISO(new Date()),
+            onChange: (e: any) => {
+              const v = e?.target?.value;
+              if (v) onChange(v);
+            },
+            style: {
+              flex: 1,
+              fontSize: 16,
+              color: colors.neutral[800],
+              backgroundColor: 'transparent',
+              borderWidth: 0,
+              outline: 'none',
+              padding: 0,
+            },
+          } as any)}
+          <Ionicons name="calendar-outline" size={18} color={colors.neutral[400]} />
+        </View>
+        {error ? <Text className="text-xs text-error mb-3">{error}</Text> : <View className="mb-3" />}
+      </>
+    );
+  }
 
   return (
     <>
