@@ -313,7 +313,7 @@ const statusColors = getStatusBadgeColor(animal.status, colors);
       {/* Health Note Modal */}
       <Modal visible={showHealth} transparent animationType="slide" onRequestClose={() => setShowHealth(false)}>
         <View className="flex-1 bg-black/40 justify-end">
-          <View className="bg-card rounded-t-2xl p-4">
+          <View className="bg-card rounded-t-lg p-4">
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-lg font-semibold text-neutral-800">Add Health Note</Text>
               <TouchableOpacity onPress={() => setShowHealth(false)}><Ionicons name="close" size={22} color={colors.neutral[500]} /></TouchableOpacity>
@@ -342,7 +342,7 @@ const statusColors = getStatusBadgeColor(animal.status, colors);
       {/* Feeding Modal */}
       <Modal visible={showFeeding} transparent animationType="slide" onRequestClose={() => setShowFeeding(false)}>
         <View className="flex-1 bg-black/40 justify-end">
-          <View className="bg-card rounded-t-2xl p-4">
+          <View className="bg-card rounded-t-lg p-4">
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-lg font-semibold text-neutral-800">Add Feeding</Text>
               <TouchableOpacity onPress={() => setShowFeeding(false)}><Ionicons name="close" size={22} color={colors.neutral[500]} /></TouchableOpacity>

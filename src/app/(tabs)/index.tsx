@@ -75,25 +75,25 @@ export default function HomeScreen() {
 
       <View className="flex-row gap-3">
         <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/livestock/new')}>
-          <View className="w-[52px] h-[52px] rounded-xl justify-center items-center" style={{ backgroundColor: colors.primary[100] }}>
+          <View className="w-[52px] h-[52px] rounded-lg justify-center items-center" style={{ backgroundColor: colors.primary[100] }}>
             <Ionicons name="add-circle" size={24} color={colors.primary[600]} />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">Add Animal</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => Alert.alert('navigate to tab')}>
-          <View className="w-[52px] h-[52px] rounded-xl justify-center items-center" style={{ backgroundColor: colors.earth[100] }}>
+          <View className="w-[52px] h-[52px] rounded-lg justify-center items-center" style={{ backgroundColor: colors.earth[100] }}>
             <Ionicons name="cash" size={24} color={colors.earth[600]} />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">Add Expense</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/(tabs)/livestock')}>
-          <View className="w-[52px] h-[52px] rounded-xl justify-center items-center bg-purple-100">
+          <View className="w-[52px] h-[52px] rounded-lg justify-center items-center bg-purple-100">
             <Ionicons name="list" size={24} color="#7C3AED" />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">View All</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => Alert.alert('navigate to tab')}>
-          <View className="w-[52px] h-[52px] rounded-xl justify-center items-center bg-blue-100">
+          <View className="w-[52px] h-[52px] rounded-lg justify-center items-center bg-blue-100">
             <Ionicons name="bar-chart" size={24} color="#2563EB" />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">Reports</Text>

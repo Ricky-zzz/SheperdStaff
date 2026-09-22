@@ -185,7 +185,7 @@ export default function EditExpenseScreen() {
           {CATEGORIES.map((cat) => {
             const sel = category === cat.value;
             return (
-              <TouchableOpacity key={cat.value} className={`w-[30%] items-center py-4 rounded-xl border gap-2 ${sel ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setCategory(cat.value)}>
+              <TouchableOpacity key={cat.value} className={`w-[30%] items-center py-4 rounded-lg border gap-2 ${sel ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setCategory(cat.value)}>
                 <Ionicons name={cat.icon} size={22} color={sel ? colors.white : colors.neutral[500]} />
                 <Text className={`text-sm font-medium ${sel ? 'text-white' : 'text-neutral-600'}`}>{cat.label}</Text>
               </TouchableOpacity>
@@ -236,7 +236,7 @@ export default function EditExpenseScreen() {
             </View>
             {errors.bulk ? <Text className="text-xs text-error mb-2">{errors.bulk}</Text> : null}
             {preview.length > 0 && (
-              <View className="bg-card rounded-xl border border-border p-3 mt-2">
+              <View className="bg-card rounded-lg border border-border p-3 mt-2">
                 <Text className="text-sm font-semibold text-neutral-700 mb-2">Auto-split preview:</Text>
                 {preview.map((p) => {
                   const l = livestock.find((x) => x.id === p.livestockId);

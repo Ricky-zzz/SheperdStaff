@@ -82,7 +82,7 @@ export default function ExpensesScreen() {
           return (
             <TouchableOpacity
               key={key}
-              className={`w-[31%] bg-card rounded-xl p-3 items-center shadow-sm ${isSelected ? 'border-2 border-primary-500' : ''}`}
+              className={`w-[31%] bg-card rounded-lg p-3 items-center shadow-sm ${isSelected ? 'border-2 border-primary-500' : ''}`}
               onPress={() => setSelectedCategory(isSelected ? 'all' : key)}
             >
               <View className="w-9 h-9 rounded-lg justify-center items-center mb-2" style={{ backgroundColor: info.color + '15' }}>

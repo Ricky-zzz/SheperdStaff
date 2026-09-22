@@ -34,7 +34,7 @@ export default function LockScreen() {
         {profile ? `${profile.name} · locked` : 'Enter your password to continue'}
       </Text>
 
-      <View className={`flex-row items-center bg-card rounded-xl px-4 py-3 w-full mb-3 ${error ? 'border-2 border-error' : ''}`}>
+      <View className={`flex-row items-center bg-card rounded-lg px-4 py-3 w-full mb-3 ${error ? 'border-2 border-error' : ''}`}>
         <TextInput
           className="flex-1 text-base text-neutral-800 py-0"
           placeholder="Password"
@@ -55,7 +55,7 @@ export default function LockScreen() {
       </View>
       {error && <Text className="text-error mb-3">{error}</Text>}
 
-      <TouchableOpacity className="flex-row items-center justify-center gap-2 py-4 rounded-xl bg-white/15 w-full" onPress={handleUnlock} disabled={checking}>
+      <TouchableOpacity className="flex-row items-center justify-center gap-2 py-4 rounded-lg bg-white/15 w-full" onPress={handleUnlock} disabled={checking}>
         {checking ? (
           <ActivityIndicator size="small" color={colors.white} />
         ) : (

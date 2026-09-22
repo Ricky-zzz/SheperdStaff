@@ -33,7 +33,7 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({ selected, onSelect, da
         })}
       </View>
 
-      <View className="flex-row items-center justify-between bg-card border border-border rounded-xl px-4 py-3 mt-4">
+      <View className="flex-row items-center justify-between bg-card border border-border rounded-lg px-4 py-3 mt-4">
         <View className="flex-row items-center gap-2">
           <Ionicons name="moon" size={18} color={colors.neutral[600]} />
           <Text className="text-sm font-medium text-neutral-700">Dark mode</Text>

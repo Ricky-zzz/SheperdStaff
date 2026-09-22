@@ -24,7 +24,7 @@ export const LivestockCard: React.FC<LivestockCardProps> = ({ livestock, onPress
       <Card className="mb-4">
         <View className="flex-row items-center mb-3">
           <View
-            className="w-11 h-11 rounded-xl justify-center items-center mr-3"
+            className="w-11 h-11 rounded-lg justify-center items-center mr-3"
             style={{ backgroundColor: categoryColors.bg }}
           >
             <Ionicons name={getCategoryIcon(livestock.category)} size={20} color={categoryColors.text} />
