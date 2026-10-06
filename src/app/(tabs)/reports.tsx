@@ -129,7 +129,7 @@ export default function ReportsScreen() {
 
       <View className="flex-row gap-3 mb-3">
         <Card className="flex-1 items-center py-5"><Ionicons name="paw" size={24} color={colors.primary[600]} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{totalLivestock}</Text><Text className="text-sm text-neutral-500 mt-1">Total Animals</Text></Card>
-        <Card className="flex-1 items-center py-5"><Ionicons name="wallet" size={24} color={colors.earth[600]} /><Text className="text-2xl font-bold text-neutral-800 mt-2">${totalSpent.toFixed(0)}</Text><Text className="text-sm text-neutral-500 mt-1">{range === '30d' ? 'Spent 30d' : 'Total Spent'}</Text></Card>
+        <Card className="flex-1 items-center py-5"><Ionicons name="wallet" size={24} color={colors.earth[600]} /><Text className="text-2xl font-bold text-neutral-800 mt-2">₱{totalSpent.toFixed(0)}</Text><Text className="text-sm text-neutral-500 mt-1">{range === '30d' ? 'Spent 30d' : 'Total Spent'}</Text></Card>
       </View>
       <View className="flex-row gap-3 mb-3">
         <Card className="flex-1 items-center py-5"><Ionicons name="list" size={24} color={colors.category.cattle} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{allLivestock.length}</Text><Text className="text-sm text-neutral-500 mt-1">Records</Text></Card>
@@ -157,7 +157,7 @@ export default function ReportsScreen() {
             <View className="flex-1 h-5 bg-neutral-100 rounded-sm overflow-hidden mx-2">
               <View style={[styles.bar, { width: `${(amount / maxExpense) * 100}%`, backgroundColor: EXPENSE_CATEGORY_COLORS[category] || colors.neutral[400] }]} />
             </View>
-            <Text className="w-12 text-sm font-semibold text-neutral-700 text-right">${amount.toFixed(0)}</Text>
+            <Text className="w-12 text-sm font-semibold text-neutral-700 text-right">₱{amount.toFixed(0)}</Text>
           </View>
         ))}
         {Object.keys(expensesByCategoryMap).length === 0 && (

@@ -77,7 +77,7 @@ export default function EditLivestockScreen() {
 
   const typeOptions: AnimalType[] = types.some((t) => t.id === category)
     ? types
-    : [{ id: category, name: category, icon: 'paw', color: '#78716C', createdAt: '' }, ...types];
+    : [{ id: category, name: category, color: '#78716C', createdAt: '' }, ...types];
   const locationOptions: Location[] = locations.some((l) => l.name === location) || !location
     ? locations
     : [{ id: 'current', name: location, createdAt: '' }, ...locations];

@@ -83,11 +83,11 @@ export default function HomeScreen() {
 
       <View className="flex-row gap-3 mb-3">
         <StatCard title="Total Livestock" value={totalLivestock} icon="paw" color={colors.primary[600]} subtitle={`${totalGroups} groups`} />
-        <StatCard title="This Month" value={`$${monthExpenses.toFixed(0)}`} icon="trending-up" color={colors.earth[600]} subtitle="Expenses" />
+        <StatCard title="This Month" value={`₱${monthExpenses.toFixed(0)}`} icon="trending-up" color={colors.earth[600]} subtitle="Expenses" />
       </View>
       <View className="flex-row gap-3 mb-5">
         <StatCard title="Active" value={activeCount} icon="checkmark-circle" color={colors.success} subtitle="Healthy & growing" />
-        <StatCard title="Total Spent" value={`$${totalExpenses.toFixed(0)}`} icon="wallet" color={colors.category.cattle} subtitle="All time" />
+        <StatCard title="Total Spent" value={`₱${totalExpenses.toFixed(0)}`} icon="wallet" color={colors.category.cattle} subtitle="All time" />
       </View>
 
       <TouchableOpacity onPress={() => router.push('/tasks')}>

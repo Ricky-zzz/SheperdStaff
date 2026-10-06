@@ -71,9 +71,7 @@ export default function AnimalTypesScreen() {
               onPress={() => router.push({ pathname: '/animal-types/form', params: { id: t.id } })}
               activeOpacity={0.7}
             >
-              <View className="w-10 h-10 rounded-lg justify-center items-center mr-3" style={{ backgroundColor: t.color + '1F' }}>
-                <Ionicons name={t.icon as any} size={20} color={t.color} />
-              </View>
+              <View className="w-10 h-10 rounded-full justify-center items-center mr-3" style={{ backgroundColor: t.color }} />
               <Text className="flex-1 text-base font-medium text-neutral-800">{t.name}</Text>
               <Ionicons name="chevron-forward" size={18} color={colors.neutral[300]} />
             </TouchableOpacity>

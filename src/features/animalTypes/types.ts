@@ -1,7 +1,6 @@
 export interface AnimalType {
   id: string;
   name: string;
-  icon: string;
   color: string;
   createdAt: string;
 }
@@ -9,24 +8,8 @@ export interface AnimalType {
 export interface CreateAnimalTypeInput {
   id: string;
   name: string;
-  icon: string;
   color: string;
 }
-
-export const ANIMAL_TYPE_ICONS = [
-  'paw',
-  'leaf',
-  'egg',
-  'fish',
-  'bug',
-  'water',
-  'sunny',
-  'home',
-  'star',
-  'heart',
-  'nutrition',
-  'fitness',
-] as const;
 
 export const ANIMAL_TYPE_COLORS = [
   '#8B5CF6',

@@ -91,8 +91,8 @@ export default function AddExpenseScreen() {
       const today = new Date().toISOString().slice(0, 10);
       const desc =
         scope === 'bulk'
-          ? `Bulk ${category} $${numericAmount.toFixed(2)} split ${preview.length} ways`
-          : `Expense: ${description.trim()} $${numericAmount.toFixed(2)}`;
+          ? `Bulk ${category} ₱${numericAmount.toFixed(2)} split ${preview.length} ways`
+          : `Expense: ${description.trim()} ₱${numericAmount.toFixed(2)}`;
       await logActivity({
         id: `act-${Date.now()}`,
         date: today,
@@ -122,7 +122,7 @@ export default function AddExpenseScreen() {
         <TextInput className={inputCls('description')} placeholder="e.g., Hay bales, Dewormer, Fence repair" placeholderTextColor={colors.neutral[400]} value={description} onChangeText={(v) => { setDescription(v); if (errors.description) setErrors((p) => ({ ...p, description: '' })); }} />
         {errors.description ? <Text className="text-xs text-error mb-3">{errors.description}</Text> : <View className="mb-3" />}
 
-        <Text className="text-sm font-medium text-neutral-600 mb-2">Amount ($) *</Text>
+          <Text className="text-sm font-medium text-neutral-600 mb-2">Amount (₱) *</Text>
         <TextInput className={inputCls('amount')} placeholder="0.00" placeholderTextColor={colors.neutral[400]} value={amount} onChangeText={(v) => { setAmount(v); if (errors.amount) setErrors((p) => ({ ...p, amount: '' })); }} keyboardType="decimal-pad" />
         {errors.amount ? <Text className="text-xs text-error mb-3">{errors.amount}</Text> : <View className="mb-3" />}
 

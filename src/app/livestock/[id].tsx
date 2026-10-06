@@ -300,7 +300,7 @@ const statusColors = getStatusBadgeColor(animal.status, colors);
           ))}
             <Card className="flex-row justify-between items-center bg-primary-50 mt-2">
               <Text className="text-base font-semibold text-primary-700">Total Expenses</Text>
-              <Text className="text-xl font-bold text-primary-700">${totalExpense.toFixed(2)}</Text>
+              <Text className="text-xl font-bold text-primary-700">₱{totalExpense.toFixed(2)}</Text>
             </Card>
           </>
         ) : (

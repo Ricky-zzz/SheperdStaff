@@ -65,13 +65,13 @@ export const mockPens: Pen[] = [
 ];
 
 export const mockAnimalTypes: AnimalType[] = [
-  { id: 'cattle', name: 'Cattle', icon: 'fitness', color: '#8B5CF6', createdAt: '2025-01-01' },
-  { id: 'pig', name: 'Pig', icon: 'nutrition', color: '#EC4899', createdAt: '2025-01-01' },
-  { id: 'chicken', name: 'Chicken', icon: 'egg', color: '#F59E0B', createdAt: '2025-01-01' },
-  { id: 'goat', name: 'Goat', icon: 'leaf', color: '#10B981', createdAt: '2025-01-01' },
-  { id: 'sheep', name: 'Sheep', icon: 'paw', color: '#6366F1', createdAt: '2025-01-01' },
-  { id: 'duck', name: 'Duck', icon: 'water', color: '#06B6D4', createdAt: '2025-01-01' },
-  { id: 'other', name: 'Other', icon: 'paw', color: '#78716C', createdAt: '2025-01-01' },
+  { id: 'cattle', name: 'Cattle', color: '#8B5CF6', createdAt: '2025-01-01' },
+  { id: 'pig', name: 'Pig', color: '#EC4899', createdAt: '2025-01-01' },
+  { id: 'chicken', name: 'Chicken', color: '#F59E0B', createdAt: '2025-01-01' },
+  { id: 'goat', name: 'Goat', color: '#10B981', createdAt: '2025-01-01' },
+  { id: 'sheep', name: 'Sheep', color: '#6366F1', createdAt: '2025-01-01' },
+  { id: 'duck', name: 'Duck', color: '#06B6D4', createdAt: '2025-01-01' },
+  { id: 'other', name: 'Other', color: '#78716C', createdAt: '2025-01-01' },
 ];
 
 export const mockLocations: Location[] = [
@@ -312,9 +312,9 @@ export const mockExpenses: Expense[] = [
 
 export const mockActivities: Activity[] = [
   { id: 'act-1', date: '2026-01-10', type: 'feeding', description: 'Morning feeding completed for all livestock', livestockId: 'cow-1' },
-  { id: 'act-2', date: '2026-01-08', type: 'expense_added', description: 'Purchased pig feed 50kg bag - $45.00', expenseId: 'exp-3' },
-  { id: 'act-3', date: '2026-01-06', type: 'expense_added', description: 'Purchased broiler starter feed - $28.00', expenseId: 'exp-6' },
-  { id: 'act-4', date: '2026-01-05', type: 'expense_added', description: 'Purchased hay bales - $180.00', expenseId: 'exp-1' },
+  { id: 'act-2', date: '2026-01-08', type: 'expense_added', description: 'Purchased pig feed 50kg bag - ?45.00', expenseId: 'exp-3' },
+  { id: 'act-3', date: '2026-01-06', type: 'expense_added', description: 'Purchased broiler starter feed - ?28.00', expenseId: 'exp-6' },
+  { id: 'act-4', date: '2026-01-05', type: 'expense_added', description: 'Purchased hay bales - ?180.00', expenseId: 'exp-1' },
   { id: 'act-5', date: '2026-01-03', type: 'health_note', description: 'Deworming treatment given to Bessie', livestockId: 'cow-1' },
   { id: 'act-6', date: '2025-12-20', type: 'health_note', description: 'Hoof trimming completed for Billy', livestockId: 'goat-1' },
   { id: 'act-7', date: '2025-12-15', type: 'health_note', description: 'Newcastle vaccination booster for laying hens', livestockId: 'chicken-group-1' },
@@ -322,9 +322,9 @@ export const mockActivities: Activity[] = [
   { id: 'act-9', date: '2025-11-20', type: 'livestock_added', description: 'Broiler Batch B added (30 birds)', livestockId: 'chicken-group-2' },
   { id: 'act-10', date: '2025-11-15', type: 'status_change', description: 'Bessie observed with slight limp - resolved', livestockId: 'cow-1' },
   { id: 'act-11', date: '2025-11-10', type: 'health_note', description: '2 does confirmed pregnant, expected Feb 2026', livestockId: 'goat-group-1' },
-  { id: 'act-12', date: '2025-10-05', type: 'expense_added', description: 'Chicken coop roof patch - $65.00', expenseId: 'exp-12' },
+  { id: 'act-12', date: '2025-10-05', type: 'expense_added', description: 'Chicken coop roof patch - ?65.00', expenseId: 'exp-12' },
   { id: 'act-13', date: '2025-12-12', type: 'health_note', description: 'Hooves trimmed for Merino flock, ready for sale', livestockId: 'sheep-group-1' },
-  { id: 'act-14', date: '2026-01-09', type: 'expense_added', description: 'Purchased duck pellets - $18.00', expenseId: 'exp-14' },
+  { id: 'act-14', date: '2026-01-09', type: 'expense_added', description: 'Purchased duck pellets - ?18.00', expenseId: 'exp-14' },
   { id: 'act-15', date: '2025-10-02', type: 'sale', description: 'Pig Batch 2024-B sold at market (4 hogs)', livestockId: 'pig-group-2' },
 ];
 

@@ -88,11 +88,10 @@ export function validateLocation(input: { name: string }): Record<string, string
   return errors;
 }
 
-export function validateAnimalType(input: { name: string; icon: string; color: string }): Record<string, string> {
+export function validateAnimalType(input: { name: string; color: string }): Record<string, string> {
   const errors: Record<string, string> = {};
   const n = required(input.name);
   if (n) errors.name = n;
-  if (!input.icon) errors.icon = 'Pick an icon';
   if (!input.color) errors.color = 'Pick a color';
   return errors;
 }

@@ -2,25 +2,35 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { mockLivestock, mockPens, mockExpenses, mockActivities, mockTasks, mockAnimalTypes, mockLocations } from '../../data/mock';
 
 export async function seedIfNeeded(database: SQLiteDatabase): Promise<boolean> {
-  const row = await database.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM livestock');
-  if (row && row.c > 0) return false;
+  const [lv, at, loc] = await Promise.all([
+    database.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM livestock'),
+    database.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM animal_types'),
+    database.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM locations'),
+  ]);
+  if ((lv?.c ?? 0) > 0 && (at?.c ?? 0) > 0 && (loc?.c ?? 0) > 0) return false;
 
   await database.withTransactionAsync(async () => {
-    for (const t of mockAnimalTypes) {
-      await database.runAsync(
-        `INSERT INTO animal_types (id, name, icon, color, createdAt)
-         VALUES (?, ?, ?, ?, ?)`,
-        [t.id, t.name, t.icon, t.color, t.createdAt]
-      );
+    if ((at?.c ?? 0) === 0) {
+      for (const t of mockAnimalTypes) {
+        await database.runAsync(
+          `INSERT INTO animal_types (id, name, color, createdAt)
+           VALUES (?, ?, ?, ?)`,
+          [t.id, t.name, t.color, t.createdAt]
+        );
+      }
     }
 
-    for (const loc of mockLocations) {
-      await database.runAsync(
-        `INSERT INTO locations (id, name, notes, createdAt)
-         VALUES (?, ?, ?, ?)`,
-        [loc.id, loc.name, loc.notes ?? null, loc.createdAt]
-      );
+    if ((loc?.c ?? 0) === 0) {
+      for (const l of mockLocations) {
+        await database.runAsync(
+          `INSERT INTO locations (id, name, notes, createdAt)
+           VALUES (?, ?, ?, ?)`,
+          [l.id, l.name, l.notes ?? null, l.createdAt]
+        );
+      }
     }
+
+    if ((lv?.c ?? 0) > 0) return;
 
     for (const l of mockLivestock) {
       await database.runAsync(

@@ -4,7 +4,6 @@ import { getDb } from '../../../lib/db/client';
 type AnimalTypeRow = {
   id: string;
   name: string;
-  icon: string;
   color: string;
   createdAt: string;
 };
@@ -40,19 +39,18 @@ export async function create(input: CreateAnimalTypeInput): Promise<AnimalType> 
   const db = await getDb();
   const row: AnimalType = { ...input, createdAt: new Date().toISOString() };
   await db.runAsync(
-    'INSERT INTO animal_types (id, name, icon, color, createdAt) VALUES (?, ?, ?, ?, ?)',
-    [row.id, row.name, row.icon, row.color, row.createdAt]
+    'INSERT INTO animal_types (id, name, color, createdAt) VALUES (?, ?, ?, ?)',
+    [row.id, row.name, row.color, row.createdAt]
   );
   return row;
 }
 
-export async function update(id: string, patch: Partial<Pick<AnimalType, 'name' | 'icon' | 'color'>>): Promise<void> {
+export async function update(id: string, patch: Partial<Pick<AnimalType, 'name' | 'color'>>): Promise<void> {
   const existing = await getById(id);
   if (!existing) throw new Error(`Animal type ${id} not found`);
   const next = { ...existing, ...patch, id };
-  await (await getDb()).runAsync('UPDATE animal_types SET name=?, icon=?, color=? WHERE id=?', [
+  await (await getDb()).runAsync('UPDATE animal_types SET name=?, color=? WHERE id=?', [
     next.name,
-    next.icon,
     next.color,
     id,
   ]);

@@ -58,7 +58,6 @@ CREATE TABLE IF NOT EXISTS tasks (
 CREATE TABLE IF NOT EXISTS animal_types (
   id TEXT PRIMARY KEY NOT NULL,
   name TEXT NOT NULL UNIQUE,
-  icon TEXT NOT NULL,
   color TEXT NOT NULL,
   createdAt TEXT NOT NULL
 );
@@ -108,5 +107,14 @@ export async function ensureSchema(database: SQLiteDatabase): Promise<void> {
     await database.execAsync('ALTER TABLE expenses ADD COLUMN allocations TEXT');
   } catch {
     // column already exists
+  }
+  // Migration: drop animal_types.icon (icons removed from animal types)
+  try {
+    const cols = await database.getAllAsync<{ name: string }>('PRAGMA table_info(animal_types)');
+    if (cols.some((c) => c.name === 'icon')) {
+      await database.execAsync('ALTER TABLE animal_types DROP COLUMN icon');
+    }
+  } catch {
+    // table missing or already migrated
   }
 }

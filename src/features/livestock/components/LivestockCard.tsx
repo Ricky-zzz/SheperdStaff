@@ -7,7 +7,7 @@ import { calculateAgeInMonths } from '../../../lib/utils/age';
 import { useTheme } from '../../../lib/theme/ThemeContext';
 import { Livestock } from '../types';
 import { AnimalType } from '../../animalTypes/types';
-import { getCategoryLabel, getCategoryIcon, getStatusLabel } from '../livestockMeta';
+import { getCategoryLabel, getStatusLabel } from '../livestockMeta';
 
 interface LivestockCardProps {
   livestock: Livestock;
@@ -29,7 +29,7 @@ export const LivestockCard: React.FC<LivestockCardProps> = ({ livestock, onPress
             className="w-11 h-11 rounded-lg justify-center items-center mr-3"
             style={{ backgroundColor: categoryColors.bg }}
           >
-            <Ionicons name={getCategoryIcon(livestock.category, types)} size={20} color={categoryColors.text} />
+            <Ionicons name="paw" size={20} color={categoryColors.text} />
           </View>
           <View className="flex-1">
             <Text className="text-lg font-semibold text-neutral-800">{livestock.name}</Text>

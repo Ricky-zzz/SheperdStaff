@@ -70,7 +70,7 @@ export default function ExpensesScreen() {
     <Screen refreshing={refreshing} onRefresh={refresh}>
       <Card className="bg-primary-700 mb-5 items-center">
         <Text className="text-sm text-primary-200 font-medium">Total Expenses</Text>
-        <Text className="text-3xl font-bold text-white mt-1">${totalExpenses.toFixed(2)}</Text>
+        <Text className="text-3xl font-bold text-white mt-1">₱{totalExpenses.toFixed(2)}</Text>
         <Text className="text-sm text-primary-300 mt-1">{allExpenses.length} transactions</Text>
       </Card>
 
@@ -89,7 +89,7 @@ export default function ExpensesScreen() {
                 <Ionicons name={info.icon} size={18} color={info.color} />
               </View>
               <Text className="text-xs text-neutral-600 font-medium mb-0.5">{info.label}</Text>
-              <Text className="text-sm font-bold" style={{ color: info.color }}>${amount.toFixed(0)}</Text>
+              <Text className="text-sm font-bold" style={{ color: info.color }}>₱{amount.toFixed(0)}</Text>
             </TouchableOpacity>
           );
         })}
