@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui/Screen';
@@ -10,6 +10,8 @@ import { ActivityItem } from '../../features/activity/components/ActivityItem';
 import * as livestockService from '../../features/livestock/services/livestockService';
 import * as activityService from '../../features/activity/services/activityService';
 import * as expenseService from '../../features/expenses/services/expenseService';
+import * as taskService from '../../features/tasks/services/taskService';
+import { Task } from '../../features/tasks/types';
 import { Activity } from '../../features/activity/types';
 import { useTheme } from '../../lib/theme/ThemeContext';
 
@@ -23,16 +25,20 @@ export default function HomeScreen() {
   const [monthExpenses, setMonthExpenses] = useState(0);
   const [activeCount, setActiveCount] = useState(0);
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
+  const [taskCounts, setTaskCounts] = useState({ overdue: 0, today: 0, upcoming: 0, done: 0 });
+  const [nextDue, setNextDue] = useState<Task | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const [tl, tg, te, me, rec, all] = await Promise.all([
+      const [tl, tg, te, me, rec, all, tc, nd] = await Promise.all([
         livestockService.count(),
         livestockService.countGroups(),
         expenseService.total(),
         expenseService.thisMonth(),
         activityService.getRecent(5),
         livestockService.getAll(),
+        taskService.counts(),
+        taskService.nextDue(),
       ]);
       setTotalLivestock(tl);
       setTotalGroups(tg);
@@ -40,6 +46,8 @@ export default function HomeScreen() {
       setMonthExpenses(me);
       setRecentActivities(rec);
       setActiveCount(all.filter((l) => l.status === 'active' || l.status === 'growing').length);
+      setTaskCounts(tc);
+      setNextDue(nd ?? null);
     } finally {
       setLoading(false);
     }
@@ -82,6 +90,27 @@ export default function HomeScreen() {
         <StatCard title="Total Spent" value={`$${totalExpenses.toFixed(0)}`} icon="wallet" color={colors.category.cattle} subtitle="All time" />
       </View>
 
+      <TouchableOpacity onPress={() => router.push('/tasks')}>
+        <Card className="mb-5 flex-row items-center">
+          <View className="w-11 h-11 rounded-lg justify-center items-center mr-3" style={{ backgroundColor: colors.earth[100] }}>
+            <Ionicons name="checkbox" size={22} color={colors.earth[600]} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-base font-semibold text-neutral-800">{'Today\u2019s Tasks'}</Text>
+            <Text className="text-sm text-neutral-500 mt-0.5">
+              {taskCounts.today > 0
+                ? `${taskCounts.today} due today${taskCounts.overdue > 0 ? ` · ${taskCounts.overdue} overdue` : ''}`
+                : taskCounts.overdue > 0
+                ? `${taskCounts.overdue} overdue — catch up!`
+                : nextDue
+                ? `Next: ${nextDue.title} (${nextDue.dueDate})`
+                : 'No pending tasks'}
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={colors.neutral[300]} />
+        </Card>
+      </TouchableOpacity>
+
       <SectionHeader title="Quick Actions" />
 
       <View className="flex-row gap-3">
@@ -103,7 +132,7 @@ export default function HomeScreen() {
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">View All</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => Alert.alert('navigate to tab')}>
+        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/(tabs)/reports')}>
           <View className="w-[52px] h-[52px] rounded-lg justify-center items-center bg-blue-100">
             <Ionicons name="bar-chart" size={24} color="#2563EB" />
           </View>

@@ -15,11 +15,10 @@ import {
 import { getAll as getAllExpenses } from '../../features/expenses/services/expenseService';
 import { Livestock } from '../../features/livestock/types';
 import { Expense } from '../../features/expenses/types';
+import { AnimalType } from '../../features/animalTypes/types';
+import { getAll as getAllTypes } from '../../features/animalTypes/services/animalTypeService';
+import { getCategoryLabel } from '../../features/livestock/livestockMeta';
 import { useTheme } from '../../lib/theme/ThemeContext';
-
-const CATEGORY_COLORS: Record<string, string> = {
-  cattle: '#8B5CF6', pig: '#EC4899', chicken: '#F59E0B', goat: '#10B981', sheep: '#6366F1', duck: '#06B6D4',
-};
 
 const EXPENSE_CATEGORY_COLORS: Record<string, string> = {
   feed: '#D97706', medicine: '#EF4444', supplies: '#8B5CF6', maintenance: '#10B981', labor: '#F59E0B', other: '#78716C',
@@ -43,22 +42,25 @@ export default function ReportsScreen() {
   const [livestockByCategoryMap, setLivestockByCategoryMap] = useState<Record<string, number>>({});
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [totalLivestock, setTotalLivestock] = useState(0);
+  const [types, setTypes] = useState<AnimalType[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [lByCat, sCounts, tL, allL, allE] = await Promise.all([
+      const [lByCat, sCounts, tL, allL, allE, t] = await Promise.all([
         livestockByCategory(),
         countByStatus(),
         countLivestock(),
         getAllLivestock(),
         getAllExpenses(),
+        getAllTypes(),
       ]);
       setLivestockByCategoryMap(lByCat);
       setStatusCounts(sCounts);
       setTotalLivestock(tL);
       setAllLivestock(allL);
       setAllExpenses(allE);
+      setTypes(t);
     } finally {
       setLoading(false);
     }
@@ -67,22 +69,27 @@ export default function ReportsScreen() {
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [lByCat, sCounts, tL, allL, allE] = await Promise.all([
+      const [lByCat, sCounts, tL, allL, allE, t] = await Promise.all([
         livestockByCategory(),
         countByStatus(),
         countLivestock(),
         getAllLivestock(),
         getAllExpenses(),
+        getAllTypes(),
       ]);
       setLivestockByCategoryMap(lByCat);
       setStatusCounts(sCounts);
       setTotalLivestock(tL);
       setAllLivestock(allL);
       setAllExpenses(allE);
+      setTypes(t);
     } finally {
       setRefreshing(false);
     }
   }, []);
+
+  const categoryColors: Record<string, string> = {};
+  for (const t of types) categoryColors[t.id] = t.color;
 
   useFocusEffect(
     useCallback(() => {
@@ -133,9 +140,9 @@ export default function ReportsScreen() {
       <Card className="mb-2">
         {Object.entries(livestockByCategoryMap).map(([category, count]) => (
           <View key={category} className="flex-row items-center mb-3">
-            <Text className="w-20 text-sm text-neutral-600 font-medium">{category.charAt(0).toUpperCase() + category.slice(1)}</Text>
+            <Text className="w-20 text-sm text-neutral-600 font-medium">{getCategoryLabel(category, types)}</Text>
             <View className="flex-1 h-5 bg-neutral-100 rounded-sm overflow-hidden mx-2">
-              <View style={[styles.bar, { width: `${(count / maxLivestock) * 100}%`, backgroundColor: CATEGORY_COLORS[category] || colors.neutral[400] }]} />
+              <View style={[styles.bar, { width: `${(count / maxLivestock) * 100}%`, backgroundColor: categoryColors[category] || colors.neutral[400] }]} />
             </View>
             <Text className="w-12 text-sm font-semibold text-neutral-700 text-right">{count}</Text>
           </View>

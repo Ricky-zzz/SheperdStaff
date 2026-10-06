@@ -55,6 +55,21 @@ CREATE TABLE IF NOT EXISTS tasks (
   FOREIGN KEY (livestockId) REFERENCES livestock(id) ON DELETE SET NULL
 );
 
+CREATE TABLE IF NOT EXISTS animal_types (
+  id TEXT PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL UNIQUE,
+  icon TEXT NOT NULL,
+  color TEXT NOT NULL,
+  createdAt TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS locations (
+  id TEXT PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL UNIQUE,
+  notes TEXT,
+  createdAt TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS user_profile (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   name TEXT NOT NULL,
@@ -83,6 +98,7 @@ CREATE INDEX IF NOT EXISTS idx_livestock_category ON livestock(category);
 CREATE INDEX IF NOT EXISTS idx_livestock_status ON livestock(status);
 CREATE INDEX IF NOT EXISTS idx_tasks_dueDate ON tasks(dueDate);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+CREATE INDEX IF NOT EXISTS idx_livestock_category ON livestock(category);
 `;
 
 export async function ensureSchema(database: SQLiteDatabase): Promise<void> {

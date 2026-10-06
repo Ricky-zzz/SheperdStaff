@@ -13,6 +13,8 @@ import { getStatusLabel, getCategoryLabel } from '../../features/livestock/lives
 import { formatAge } from '../../lib/utils/age';
 import { getByLivestockId as getExpensesForLivestock } from '../../features/expenses/services/expenseService';
 import { getById as getLivestockById, remove, updateStatus, addHealthNote, addFeeding } from '../../features/livestock/services/livestockService';
+import { AnimalType } from '../../features/animalTypes/types';
+import { getAll as getAllTypes } from '../../features/animalTypes/services/animalTypeService';
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { Livestock, HealthNoteType } from '../../features/livestock/types';
 import { Expense } from '../../features/expenses/types';
@@ -40,6 +42,7 @@ export default function LivestockDetailScreen() {
   const router = useRouter();
   const [animal, setAnimal] = useState<Livestock | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [types, setTypes] = useState<AnimalType[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -60,13 +63,14 @@ export default function LivestockDetailScreen() {
     if (!id) return;
     setLoading(true);
     try {
-      const [a, e] = await Promise.all([getLivestockById(id as string), getExpensesForLivestock(id as string)]);
+      const [a, e, t] = await Promise.all([getLivestockById(id as string), getExpensesForLivestock(id as string), getAllTypes()]);
       if (!a) setNotFound(true);
       else {
         setAnimal(a);
         setNotFound(false);
       }
       setExpenses(e);
+      setTypes(t);
     } finally {
       setLoading(false);
     }
@@ -201,7 +205,7 @@ export default function LivestockDetailScreen() {
   }
 
 const statusColors = getStatusBadgeColor(animal.status, colors);
-  const categoryColors = getCategoryBadgeColor(animal.category, colors);
+  const categoryColors = getCategoryBadgeColor(animal.category, colors, types);
   const totalExpense = expenses.reduce((sum, e) => {
     const share = e.allocations?.find((a) => a.livestockId === animal.id)?.amount;
     return sum + (share ?? e.amount);
@@ -212,7 +216,7 @@ const statusColors = getStatusBadgeColor(animal.status, colors);
       <ScrollView className="flex-1 bg-background p-4" showsVerticalScrollIndicator={false}>
         <View className="flex-row flex-wrap gap-2 mb-4">
           <Badge label={getStatusLabel(animal.status).toUpperCase()} color={statusColors.bg} textColor={statusColors.text} size="md" />
-          <Badge label={getCategoryLabel(animal.category).toUpperCase()} color={categoryColors.bg} textColor={categoryColors.text} size="md" />
+          <Badge label={getCategoryLabel(animal.category, types).toUpperCase()} color={categoryColors.bg} textColor={categoryColors.text} size="md" />
           {animal.type === 'group' && <Badge label="GROUP" color={colors.neutral[100]} textColor={colors.neutral[600]} size="md" />}
         </View>
 

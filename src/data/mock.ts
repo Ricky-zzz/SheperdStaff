@@ -2,6 +2,8 @@ import { Livestock, Pen } from '../features/livestock/types';
 import { Expense } from '../features/expenses/types';
 import { Activity } from '../features/activity/types';
 import { Task } from '../features/tasks/types';
+import { AnimalType } from '../features/animalTypes/types';
+import { Location } from '../features/locations/types';
 
 function isoDaysFromNow(days: number): string {
   const d = new Date();
@@ -60,6 +62,25 @@ export const mockPens: Pen[] = [
     livestockIds: ['duck-group-1'],
     notes: 'Fenced pond area',
   },
+];
+
+export const mockAnimalTypes: AnimalType[] = [
+  { id: 'cattle', name: 'Cattle', icon: 'fitness', color: '#8B5CF6', createdAt: '2025-01-01' },
+  { id: 'pig', name: 'Pig', icon: 'nutrition', color: '#EC4899', createdAt: '2025-01-01' },
+  { id: 'chicken', name: 'Chicken', icon: 'egg', color: '#F59E0B', createdAt: '2025-01-01' },
+  { id: 'goat', name: 'Goat', icon: 'leaf', color: '#10B981', createdAt: '2025-01-01' },
+  { id: 'sheep', name: 'Sheep', icon: 'paw', color: '#6366F1', createdAt: '2025-01-01' },
+  { id: 'duck', name: 'Duck', icon: 'water', color: '#06B6D4', createdAt: '2025-01-01' },
+  { id: 'other', name: 'Other', icon: 'paw', color: '#78716C', createdAt: '2025-01-01' },
+];
+
+export const mockLocations: Location[] = [
+  { id: 'loc-1', name: 'Main Cattle Pasture', notes: 'North Field grazing', createdAt: '2025-01-01' },
+  { id: 'loc-2', name: 'Pig Pen A', notes: 'Barn Area', createdAt: '2025-01-01' },
+  { id: 'loc-3', name: 'Chicken Coop', notes: 'Backyard', createdAt: '2025-01-01' },
+  { id: 'loc-4', name: 'Goat Enclosure', notes: 'East Side', createdAt: '2025-01-01' },
+  { id: 'loc-5', name: 'Sheep Paddock', notes: 'West Hill', createdAt: '2025-01-01' },
+  { id: 'loc-6', name: 'Duck Pond', notes: 'Creek Side', createdAt: '2025-01-01' },
 ];
 
 export const mockLivestock: Livestock[] = [

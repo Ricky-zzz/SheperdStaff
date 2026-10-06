@@ -85,6 +85,16 @@ function RootNavigator() {
             options={{ ...headerOptions, title: 'Tasks' }}
           />
           <Stack.Screen name="tasks/form" options={{ ...modalOptions, title: 'Task' }} />
+          <Stack.Screen
+            name="locations"
+            options={{ ...headerOptions, title: 'Locations' }}
+          />
+          <Stack.Screen name="locations/form" options={{ ...modalOptions, title: 'Location' }} />
+          <Stack.Screen
+            name="animal-types"
+            options={{ ...headerOptions, title: 'Animal Types' }}
+          />
+          <Stack.Screen name="animal-types/form" options={{ ...modalOptions, title: 'Animal Type' }} />
         </Stack.Protected>
 
         <Stack.Protected guard={state === 'locked'}>

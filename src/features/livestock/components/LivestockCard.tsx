@@ -6,17 +6,19 @@ import { Badge, getStatusBadgeColor, getCategoryBadgeColor } from '../../../comp
 import { calculateAgeInMonths } from '../../../lib/utils/age';
 import { useTheme } from '../../../lib/theme/ThemeContext';
 import { Livestock } from '../types';
+import { AnimalType } from '../../animalTypes/types';
 import { getCategoryLabel, getCategoryIcon, getStatusLabel } from '../livestockMeta';
 
 interface LivestockCardProps {
   livestock: Livestock;
   onPress: () => void;
+  types?: AnimalType[];
 }
 
-export const LivestockCard: React.FC<LivestockCardProps> = ({ livestock, onPress }) => {
+export const LivestockCard: React.FC<LivestockCardProps> = ({ livestock, onPress, types = [] }) => {
   const { colors } = useTheme();
   const statusColors = getStatusBadgeColor(livestock.status, colors);
-  const categoryColors = getCategoryBadgeColor(livestock.category, colors);
+  const categoryColors = getCategoryBadgeColor(livestock.category, colors, types);
   const ageMonths = calculateAgeInMonths(livestock.startDate);
 
   return (
@@ -27,12 +29,12 @@ export const LivestockCard: React.FC<LivestockCardProps> = ({ livestock, onPress
             className="w-11 h-11 rounded-lg justify-center items-center mr-3"
             style={{ backgroundColor: categoryColors.bg }}
           >
-            <Ionicons name={getCategoryIcon(livestock.category)} size={20} color={categoryColors.text} />
+            <Ionicons name={getCategoryIcon(livestock.category, types)} size={20} color={categoryColors.text} />
           </View>
           <View className="flex-1">
             <Text className="text-lg font-semibold text-neutral-800">{livestock.name}</Text>
             <Text className="text-sm text-neutral-500 mt-0.5">
-              {livestock.breed || getCategoryLabel(livestock.category)}
+              {livestock.breed || getCategoryLabel(livestock.category, types)}
               {livestock.type === 'group' ? ` • ${livestock.quantity} head` : ''}
             </Text>
           </View>
@@ -41,7 +43,7 @@ export const LivestockCard: React.FC<LivestockCardProps> = ({ livestock, onPress
 
         <View className="flex-row flex-wrap gap-2 mb-3">
           <Badge label={getStatusLabel(livestock.status)} color={statusColors.bg} textColor={statusColors.text} />
-          <Badge label={getCategoryLabel(livestock.category)} color={categoryColors.bg} textColor={categoryColors.text} />
+          <Badge label={getCategoryLabel(livestock.category, types)} color={categoryColors.bg} textColor={categoryColors.text} />
           {livestock.type === 'group' && (
             <Badge label="Group" color={colors.neutral[100]} textColor={colors.neutral[600]} />
           )}

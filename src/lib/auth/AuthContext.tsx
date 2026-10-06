@@ -85,8 +85,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       themeKey: draft.themeKey,
       darkMode: draft.darkMode,
     });
-    // NOTE (presentation branch): seeding disabled so the livestock demo starts empty.
-    // Main still seeds sample data here. "Load Sample Data" in More works on demand.
+    try {
+      const { seedIfNeeded } = await import('../db/seed');
+      const { getDb } = await import('../db/client');
+      await seedIfNeeded(await getDb());
+    } catch {
+      // Sample data is optional — never block entry to the app.
+    }
     setProfile(await getProfile());
     setState('unlocked');
   }, [draft]);
@@ -137,7 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { getDb } = await import('../db/client');
     const db = await getDb();
     await db.execAsync(
-      'DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM user_profile;'
+      'DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM animal_types; DELETE FROM locations; DELETE FROM user_profile;'
     );
     setProfile(null);
     setDraftState({ name: '', email: '', password: '', themeKey: 'earth', darkMode: false });

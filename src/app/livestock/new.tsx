@@ -1,23 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
-import { LivestockCategory, LivestockType, LivestockStatus } from '../../features/livestock/types';
+import { LivestockType, LivestockStatus } from '../../features/livestock/types';
 import { create as createLivestock } from '../../features/livestock/services/livestockService';
+import { AnimalType } from '../../features/animalTypes/types';
+import { getAll as getAllTypes } from '../../features/animalTypes/services/animalTypeService';
+import { Location } from '../../features/locations/types';
+import { getAll as getAllLocations } from '../../features/locations/services/locationService';
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { validateLivestock } from '../../lib/utils/validate';
 import { DateInput } from '../../components/ui/DateInput';
-
-const CATEGORIES: { label: string; value: LivestockCategory }[] = [
-  { label: 'Cattle', value: 'cattle' },
-  { label: 'Pig', value: 'pig' },
-  { label: 'Chicken', value: 'chicken' },
-  { label: 'Goat', value: 'goat' },
-  { label: 'Sheep', value: 'sheep' },
-  { label: 'Duck', value: 'duck' },
-  { label: 'Other', value: 'other' },
-];
 
 const STATUSES: { label: string; value: LivestockStatus }[] = [
   { label: 'Active', value: 'active' },
@@ -33,7 +27,7 @@ export default function AddLivestockScreen() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [type, setType] = useState<LivestockType>('individual');
-  const [category, setCategory] = useState<LivestockCategory>('cattle');
+  const [category, setCategory] = useState('cattle');
   const [breed, setBreed] = useState('');
   const [quantity, setQuantity] = useState('1');
   const [sex, setSex] = useState<'male' | 'female' | 'mixed'>('female');
@@ -42,8 +36,19 @@ export default function AddLivestockScreen() {
   const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10));
   const [status, setStatus] = useState<LivestockStatus>('active');
   const [notes, setNotes] = useState('');
+  const [types, setTypes] = useState<AnimalType[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const [t, l] = await Promise.all([getAllTypes(), getAllLocations()]);
+      setTypes(t);
+      setLocations(l);
+      setCategory((prev) => (t.some((x) => x.id === prev) ? prev : t[0]?.id ?? prev));
+    })();
+  }, []);
 
   const handleSave = async () => {
     const e = validateLivestock({ name, type, quantity, location });
@@ -131,13 +136,13 @@ export default function AddLivestockScreen() {
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Category *</Text>
         <View className="flex-row flex-wrap gap-2 mb-4">
-          {CATEGORIES.map((cat) => (
+          {types.map((t) => (
             <TouchableOpacity
-              key={cat.value}
-              className={`px-3 py-2 rounded-full border ${category === cat.value ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
-              onPress={() => setCategory(cat.value)}
+              key={t.id}
+              className={`px-3 py-2 rounded-full border ${category === t.id ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
+              onPress={() => setCategory(t.id)}
             >
-              <Text className={`text-sm font-medium ${category === cat.value ? 'text-white' : 'text-neutral-600'}`}>{cat.label}</Text>
+              <Text className={`text-sm font-medium ${category === t.id ? 'text-white' : 'text-neutral-600'}`}>{t.name}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -187,17 +192,26 @@ export default function AddLivestockScreen() {
       <View className="mb-5">
         <Text className="text-lg font-semibold text-neutral-800 mb-4">Location & Purpose</Text>
 
-        <Text className="text-sm font-medium text-neutral-600 mb-2">Location *</Text>
-        <TextInput
-          className={inputClass('location')}
-          placeholder="e.g., Main Cattle Pasture, Chicken Coop"
-          placeholderTextColor={colors.neutral[400]}
-          value={location}
-          onChangeText={(v) => {
-            setLocation(v);
-            if (errors.location) setErrors((p) => ({ ...p, location: '' }));
-          }}
-        />
+        <View className="flex-row items-center justify-between mb-2">
+          <Text className="text-sm font-medium text-neutral-600">Location *</Text>
+          <TouchableOpacity onPress={() => router.push('/locations')}>
+            <Text className="text-sm font-medium text-primary-600">Manage →</Text>
+          </TouchableOpacity>
+        </View>
+        <View className="flex-row flex-wrap gap-2 mb-1">
+          {locations.map((loc) => (
+            <TouchableOpacity
+              key={loc.id}
+              className={`px-3 py-2 rounded-full border ${location === loc.name ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
+              onPress={() => {
+                setLocation(loc.name);
+                if (errors.location) setErrors((p) => ({ ...p, location: '' }));
+              }}
+            >
+              <Text className={`text-sm font-medium ${location === loc.name ? 'text-white' : 'text-neutral-600'}`}>{loc.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
         {errors.location ? <Text className="text-xs text-error mb-3">{errors.location}</Text> : <View className="mb-3" />}
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Purpose</Text>

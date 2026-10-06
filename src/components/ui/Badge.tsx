@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, StyleProp, ViewStyle } from 'react-native';
 import { useTheme } from '../../lib/theme/ThemeContext';
 import { ThemeColors } from '../../lib/theme/themes';
+import { AnimalType } from '../../features/animalTypes/types';
 
 interface BadgeProps {
   label: string;
@@ -53,7 +54,9 @@ export const getStatusBadgeColor = (status: string, colors?: ThemeColors): { bg:
   }
 };
 
-export const getCategoryBadgeColor = (category: string, colors?: ThemeColors): { bg: string; text: string } => {
+export const getCategoryBadgeColor = (category: string, colors?: ThemeColors, types: AnimalType[] = []): { bg: string; text: string } => {
+  const resolved = types.find((t) => t.id === category)?.color;
+  if (resolved) return { bg: resolved + '1F', text: resolved };
   switch (category) {
     case 'cattle':
       return { bg: '#EDE9FE', text: '#5B21B6' };

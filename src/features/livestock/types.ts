@@ -1,4 +1,5 @@
-export type LivestockCategory = 'cattle' | 'pig' | 'chicken' | 'goat' | 'sheep' | 'duck' | 'other';
+/** Slug id of an animal type (see features/animalTypes). Free string for forward-compat. */
+export type LivestockCategory = string;
 
 export type LivestockStatus = 'growing' | 'breeding' | 'for_sale' | 'sold' | 'deceased' | 'active';
 

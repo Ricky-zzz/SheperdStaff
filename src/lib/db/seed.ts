@@ -1,11 +1,27 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
-import { mockLivestock, mockPens, mockExpenses, mockActivities, mockTasks } from '../../data/mock';
+import { mockLivestock, mockPens, mockExpenses, mockActivities, mockTasks, mockAnimalTypes, mockLocations } from '../../data/mock';
 
 export async function seedIfNeeded(database: SQLiteDatabase): Promise<boolean> {
   const row = await database.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM livestock');
   if (row && row.c > 0) return false;
 
   await database.withTransactionAsync(async () => {
+    for (const t of mockAnimalTypes) {
+      await database.runAsync(
+        `INSERT INTO animal_types (id, name, icon, color, createdAt)
+         VALUES (?, ?, ?, ?, ?)`,
+        [t.id, t.name, t.icon, t.color, t.createdAt]
+      );
+    }
+
+    for (const loc of mockLocations) {
+      await database.runAsync(
+        `INSERT INTO locations (id, name, notes, createdAt)
+         VALUES (?, ?, ?, ?)`,
+        [loc.id, loc.name, loc.notes ?? null, loc.createdAt]
+      );
+    }
+
     for (const l of mockLivestock) {
       await database.runAsync(
         `INSERT INTO livestock (id, name, category, type, quantity, breed, sex, startDate, location, purpose, status, notes, imageUrl, healthNotes, feedings, expenseIds)
@@ -68,7 +84,7 @@ export async function seedIfNeeded(database: SQLiteDatabase): Promise<boolean> {
 }
 
 export async function clearAll(database: SQLiteDatabase): Promise<void> {
-  await database.execAsync('DELETE FROM activities; DELETE FROM expenses; DELETE FROM livestock; DELETE FROM pens;');
+  await database.execAsync('DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM animal_types; DELETE FROM locations;');
 }
 
 export async function reseed(database: SQLiteDatabase): Promise<void> {

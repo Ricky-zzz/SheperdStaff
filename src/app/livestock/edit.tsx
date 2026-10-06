@@ -3,21 +3,15 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator,
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
-import { LivestockCategory, LivestockType, LivestockStatus } from '../../features/livestock/types';
+import { LivestockType, LivestockStatus } from '../../features/livestock/types';
 import { getById, update } from '../../features/livestock/services/livestockService';
+import { AnimalType } from '../../features/animalTypes/types';
+import { getAll as getAllTypes } from '../../features/animalTypes/services/animalTypeService';
+import { Location } from '../../features/locations/types';
+import { getAll as getAllLocations } from '../../features/locations/services/locationService';
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { validateLivestock } from '../../lib/utils/validate';
 import { DateInput } from '../../components/ui/DateInput';
-
-const CATEGORIES: { label: string; value: LivestockCategory }[] = [
-  { label: 'Cattle', value: 'cattle' },
-  { label: 'Pig', value: 'pig' },
-  { label: 'Chicken', value: 'chicken' },
-  { label: 'Goat', value: 'goat' },
-  { label: 'Sheep', value: 'sheep' },
-  { label: 'Duck', value: 'duck' },
-  { label: 'Other', value: 'other' },
-];
 
 const STATUSES: { label: string; value: LivestockStatus }[] = [
   { label: 'Active', value: 'active' },
@@ -37,7 +31,7 @@ export default function EditLivestockScreen() {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
   const [type, setType] = useState<LivestockType>('individual');
-  const [category, setCategory] = useState<LivestockCategory>('cattle');
+  const [category, setCategory] = useState('cattle');
   const [breed, setBreed] = useState('');
   const [quantity, setQuantity] = useState('1');
   const [sex, setSex] = useState<'male' | 'female' | 'mixed'>('female');
@@ -47,6 +41,8 @@ export default function EditLivestockScreen() {
   const [status, setStatus] = useState<LivestockStatus>('active');
   const [notes, setNotes] = useState('');
   const [initialStatus, setInitialStatus] = useState<LivestockStatus>('active');
+  const [types, setTypes] = useState<AnimalType[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
@@ -54,7 +50,7 @@ export default function EditLivestockScreen() {
     if (!id) return;
     setLoading(true);
     try {
-      const l = await getById(id as string);
+      const [l, t, locs] = await Promise.all([getById(id as string), getAllTypes(), getAllLocations()]);
       if (!l) {
         Alert.alert('Not found', 'Livestock not found');
         router.back();
@@ -72,10 +68,19 @@ export default function EditLivestockScreen() {
       setStatus(l.status);
       setInitialStatus(l.status);
       setNotes(l.notes ?? '');
+      setTypes(t);
+      setLocations(locs);
     } finally {
       setLoading(false);
     }
   }, [id, router]);
+
+  const typeOptions: AnimalType[] = types.some((t) => t.id === category)
+    ? types
+    : [{ id: category, name: category, icon: 'paw', color: '#78716C', createdAt: '' }, ...types];
+  const locationOptions: Location[] = locations.some((l) => l.name === location) || !location
+    ? locations
+    : [{ id: 'current', name: location, createdAt: '' }, ...locations];
 
   useEffect(() => {
     load();
@@ -156,9 +161,9 @@ export default function EditLivestockScreen() {
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Category *</Text>
         <View className="flex-row flex-wrap gap-2 mb-4">
-          {CATEGORIES.map((cat) => (
-            <TouchableOpacity key={cat.value} className={`px-3 py-2 rounded-full border ${category === cat.value ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setCategory(cat.value)}>
-              <Text className={`text-sm font-medium ${category === cat.value ? 'text-white' : 'text-neutral-600'}`}>{cat.label}</Text>
+          {typeOptions.map((t) => (
+            <TouchableOpacity key={t.id} className={`px-3 py-2 rounded-full border ${category === t.id ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setCategory(t.id)}>
+              <Text className={`text-sm font-medium ${category === t.id ? 'text-white' : 'text-neutral-600'}`}>{t.name}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -186,8 +191,26 @@ export default function EditLivestockScreen() {
       </View>
 
       <View className="mb-5">
-        <Text className="text-sm font-medium text-neutral-600 mb-2">Location *</Text>
-        <TextInput className={inputClass('location')} placeholder="Location" placeholderTextColor={colors.neutral[400]} value={location} onChangeText={(v) => { setLocation(v); if (errors.location) setErrors((p) => ({ ...p, location: '' })); }} />
+        <View className="flex-row items-center justify-between mb-2">
+          <Text className="text-sm font-medium text-neutral-600">Location *</Text>
+          <TouchableOpacity onPress={() => router.push('/locations')}>
+            <Text className="text-sm font-medium text-primary-600">Manage →</Text>
+          </TouchableOpacity>
+        </View>
+        <View className="flex-row flex-wrap gap-2 mb-1">
+          {locationOptions.map((loc) => (
+            <TouchableOpacity
+              key={loc.id}
+              className={`px-3 py-2 rounded-full border ${location === loc.name ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
+              onPress={() => {
+                setLocation(loc.name);
+                if (errors.location) setErrors((p) => ({ ...p, location: '' }));
+              }}
+            >
+              <Text className={`text-sm font-medium ${location === loc.name ? 'text-white' : 'text-neutral-600'}`}>{loc.name}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
         {errors.location ? <Text className="text-xs text-error mb-3">{errors.location}</Text> : <View className="mb-3" />}
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Purpose</Text>

@@ -9,15 +9,9 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { LivestockCard } from '../../features/livestock/components/LivestockCard';
 import { getAll } from '../../features/livestock/services/livestockService';
 import { Livestock, LivestockCategory } from '../../features/livestock/types';
+import { AnimalType } from '../../features/animalTypes/types';
+import { getAll as getAllTypes } from '../../features/animalTypes/services/animalTypeService';
 import { useTheme } from '../../lib/theme/ThemeContext';
-
-const FILTER_OPTIONS: { label: string; value: LivestockCategory | 'all' }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Cattle', value: 'cattle' },
-  { label: 'Pigs', value: 'pig' },
-  { label: 'Chickens', value: 'chicken' },
-  { label: 'Goats', value: 'goat' },
-];
 
 export default function LivestockScreen() {
   const { colors } = useTheme();
@@ -25,14 +19,16 @@ export default function LivestockScreen() {
   const [search, setSearch] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<LivestockCategory | 'all'>('all');
   const [livestock, setLivestock] = useState<Livestock[]>([]);
+  const [types, setTypes] = useState<AnimalType[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await getAll();
+      const [data, t] = await Promise.all([getAll(), getAllTypes()]);
       setLivestock(data);
+      setTypes(t);
     } finally {
       setLoading(false);
     }
@@ -41,11 +37,18 @@ export default function LivestockScreen() {
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      setLivestock(await getAll());
+      const [data, t] = await Promise.all([getAll(), getAllTypes()]);
+      setLivestock(data);
+      setTypes(t);
     } finally {
       setRefreshing(false);
     }
   }, []);
+
+  const filterOptions: { label: string; value: LivestockCategory | 'all' }[] = [
+    { label: 'All', value: 'all' },
+    ...types.map((t) => ({ label: t.name, value: t.id })),
+  ];
 
   useFocusEffect(
     useCallback(() => {
@@ -69,7 +72,7 @@ export default function LivestockScreen() {
       </View>
 
       <View className="flex-row gap-2 mb-4 flex-wrap">
-        {FILTER_OPTIONS.map((filter) => (
+        {filterOptions.map((filter) => (
           <FilterChip key={filter.value} label={filter.label} selected={selectedFilter === filter.value} onPress={() => setSelectedFilter(filter.value)} />
         ))}
       </View>
@@ -85,7 +88,7 @@ export default function LivestockScreen() {
       ) : (
         <>
           {filteredLivestock.map((animal) => (
-            <LivestockCard key={animal.id} livestock={animal} onPress={() => router.push(`/livestock/${animal.id}`)} />
+            <LivestockCard key={animal.id} livestock={animal} types={types} onPress={() => router.push(`/livestock/${animal.id}`)} />
           ))}
           {filteredLivestock.length === 0 && <EmptyState icon="search" title="No livestock found" subtitle="Try adjusting your search or filters" />}
         </>

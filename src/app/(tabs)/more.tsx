@@ -48,8 +48,8 @@ export default function MoreScreen() {
     {
       title: 'Farm Management',
       items: [
-        { icon: 'map', label: 'Pens & Locations', subtitle: 'Manage farm areas', color: colors.primary[600] },
-        { icon: 'people', label: 'Caretakers', subtitle: 'Manage farm access', color: colors.category.cattle },
+        { icon: 'map', label: 'Locations', subtitle: 'Manage farm areas', route: '/locations', color: colors.primary[600] },
+        { icon: 'paw', label: 'Animal Types', subtitle: 'Manage livestock categories', route: '/animal-types', color: colors.category.cattle },
         { icon: 'calendar', label: 'Activity History', subtitle: 'View all activities', route: '/activity', color: colors.earth[600] },
       ],
     },
