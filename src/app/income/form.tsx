@@ -51,7 +51,7 @@ export default function IncomeFormScreen() {
   }, [id]);
 
   const meta = getIncomeCategoryMeta(category, colors);
-  const showSoldToggle = category === 'sale' && !!livestockId;
+  const showSoldToggle = category === 'sale' && !!livestockId && !isEdit;
 
   const handleSave = async () => {
     const e: Record<string, string> = {};
@@ -80,24 +80,24 @@ export default function IncomeFormScreen() {
         await incomeService.update(id, payload);
       } else {
         await incomeService.create({ id: `inc-${Date.now()}`, ...payload });
-      }
-      if (markSold && livestockId) {
-        await updateStatus(livestockId, 'sold');
-        await logActivity({
-          id: `act-${Date.now()}`,
-          date,
-          type: 'sale',
-          description: `Sold for ₱${numericAmount.toFixed(2)}: ${description.trim()}`,
-          livestockId,
-        });
-      } else {
-        await logActivity({
-          id: `act-${Date.now()}`,
-          date,
-          type: 'income',
-          description: `${meta.label} income: ${description.trim()} ₱${numericAmount.toFixed(2)}`,
-          livestockId: livestockId || undefined,
-        });
+        if (markSold && livestockId) {
+          await updateStatus(livestockId, 'sold');
+          await logActivity({
+            id: `act-${Date.now()}`,
+            date,
+            type: 'sale',
+            description: `Sold for ₱${numericAmount.toFixed(2)}: ${description.trim()}`,
+            livestockId,
+          });
+        } else {
+          await logActivity({
+            id: `act-${Date.now()}`,
+            date,
+            type: 'income',
+            description: `${meta.label} income: ${description.trim()} ₱${numericAmount.toFixed(2)}`,
+            livestockId: livestockId || undefined,
+          });
+        }
       }
       router.back();
     } catch (err: any) {
