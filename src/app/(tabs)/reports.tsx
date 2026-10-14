@@ -13,8 +13,10 @@ import {
   countByStatus,
 } from '../../features/livestock/services/livestockService';
 import { getAll as getAllExpenses } from '../../features/expenses/services/expenseService';
+import { getAll as getAllIncome } from '../../features/income/services/incomeService';
 import { Livestock } from '../../features/livestock/types';
 import { Expense } from '../../features/expenses/types';
+import { Income } from '../../features/income/types';
 import { AnimalType } from '../../features/animalTypes/types';
 import { getAll as getAllTypes } from '../../features/animalTypes/services/animalTypeService';
 import { getCategoryLabel } from '../../features/livestock/livestockMeta';
@@ -43,17 +45,19 @@ export default function ReportsScreen() {
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [totalLivestock, setTotalLivestock] = useState(0);
   const [types, setTypes] = useState<AnimalType[]>([]);
+  const [allIncome, setAllIncome] = useState<Income[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [lByCat, sCounts, tL, allL, allE, t] = await Promise.all([
+      const [lByCat, sCounts, tL, allL, allE, t, inc] = await Promise.all([
         livestockByCategory(),
         countByStatus(),
         countLivestock(),
         getAllLivestock(),
         getAllExpenses(),
         getAllTypes(),
+        getAllIncome(),
       ]);
       setLivestockByCategoryMap(lByCat);
       setStatusCounts(sCounts);
@@ -61,6 +65,7 @@ export default function ReportsScreen() {
       setAllLivestock(allL);
       setAllExpenses(allE);
       setTypes(t);
+      setAllIncome(inc);
     } finally {
       setLoading(false);
     }
@@ -69,13 +74,14 @@ export default function ReportsScreen() {
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [lByCat, sCounts, tL, allL, allE, t] = await Promise.all([
+      const [lByCat, sCounts, tL, allL, allE, t, inc] = await Promise.all([
         livestockByCategory(),
         countByStatus(),
         countLivestock(),
         getAllLivestock(),
         getAllExpenses(),
         getAllTypes(),
+        getAllIncome(),
       ]);
       setLivestockByCategoryMap(lByCat);
       setStatusCounts(sCounts);
@@ -83,6 +89,7 @@ export default function ReportsScreen() {
       setAllLivestock(allL);
       setAllExpenses(allE);
       setTypes(t);
+      setAllIncome(inc);
     } finally {
       setRefreshing(false);
     }
@@ -105,6 +112,9 @@ export default function ReportsScreen() {
   }, {});
   const totalSpent = filteredExpenses.reduce((s, e) => s + e.amount, 0);
   const txCount = filteredExpenses.length;
+  const filteredIncome = cutoff ? allIncome.filter((i) => i.date >= cutoff) : allIncome;
+  const totalEarned = filteredIncome.reduce((s, i) => s + i.amount, 0);
+  const netProfit = totalEarned - totalSpent;
 
   const maxLivestock = Math.max(1, ...Object.values(livestockByCategoryMap));
   const maxExpense = Math.max(1, ...Object.values(expensesByCategoryMap));
@@ -135,6 +145,22 @@ export default function ReportsScreen() {
         <Card className="flex-1 items-center py-5"><Ionicons name="list" size={24} color={colors.category.cattle} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{allLivestock.length}</Text><Text className="text-sm text-neutral-500 mt-1">Records</Text></Card>
         <Card className="flex-1 items-center py-5"><Ionicons name="receipt" size={24} color={colors.category.chicken} /><Text className="text-2xl font-bold text-neutral-800 mt-2">{txCount}</Text><Text className="text-sm text-neutral-500 mt-1">Transactions</Text></Card>
       </View>
+
+      <View className="flex-row gap-3 mb-3">
+        <Card className="flex-1 items-center py-5">
+          <Ionicons name="trending-up" size={24} color={colors.success} />
+          <Text className="text-2xl font-bold mt-2" style={{ color: colors.success }}>₱{totalEarned.toFixed(0)}</Text>
+          <Text className="text-sm text-neutral-500 mt-1">{range === '30d' ? 'Income 30d' : 'Total Income'}</Text>
+        </Card>
+        <Card className="flex-1 items-center py-5">
+          <Ionicons name={netProfit >= 0 ? 'arrow-up-circle' : 'arrow-down-circle'} size={24} color={netProfit >= 0 ? colors.success : colors.error} />
+          <Text className="text-2xl font-bold mt-2" style={{ color: netProfit >= 0 ? colors.success : colors.error }}>
+            {netProfit >= 0 ? '+' : ''}₱{netProfit.toFixed(0)}
+          </Text>
+          <Text className="text-sm text-neutral-500 mt-1">Net Profit</Text>
+        </Card>
+      </View>
+      <Text className="text-xs text-neutral-400 -mt-1 mb-3 text-center">Profit = Income − Expenses</Text>
 
       <SectionHeader title="Livestock by Type" />
       <Card className="mb-2">

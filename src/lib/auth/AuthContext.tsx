@@ -142,7 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { getDb } = await import('../db/client');
     const db = await getDb();
     await db.execAsync(
-      'DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM animal_types; DELETE FROM locations; DELETE FROM user_profile;'
+      'DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM animal_types; DELETE FROM locations; DELETE FROM income; DELETE FROM user_profile;'
     );
     setProfile(null);
     setDraftState({ name: '', email: '', password: '', themeKey: 'earth', darkMode: false });

@@ -62,6 +62,19 @@ CREATE TABLE IF NOT EXISTS animal_types (
   createdAt TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS income (
+  id TEXT PRIMARY KEY NOT NULL,
+  date TEXT NOT NULL,
+  category TEXT NOT NULL,
+  description TEXT NOT NULL,
+  amount REAL NOT NULL,
+  livestockId TEXT,
+  notes TEXT,
+  FOREIGN KEY (livestockId) REFERENCES livestock(id) ON DELETE SET NULL
+);
+CREATE INDEX IF NOT EXISTS idx_income_date ON income(date);
+CREATE INDEX IF NOT EXISTS idx_income_livestockId ON income(livestockId);
+
 CREATE TABLE IF NOT EXISTS locations (
   id TEXT PRIMARY KEY NOT NULL,
   name TEXT NOT NULL UNIQUE,

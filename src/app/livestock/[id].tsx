@@ -12,6 +12,9 @@ import { ExpenseItem } from '../../features/expenses/components/ExpenseItem';
 import { getStatusLabel, getCategoryLabel } from '../../features/livestock/livestockMeta';
 import { formatAge } from '../../lib/utils/age';
 import { getByLivestockId as getExpensesForLivestock } from '../../features/expenses/services/expenseService';
+import { getByLivestockId as getByLivestockIdIncome } from '../../features/income/services/incomeService';
+import { IncomeItem } from '../../features/income/components/IncomeItem';
+import { Income } from '../../features/income/types';
 import { getById as getLivestockById, remove, updateStatus, addHealthNote, addFeeding } from '../../features/livestock/services/livestockService';
 import { AnimalType } from '../../features/animalTypes/types';
 import { getAll as getAllTypes } from '../../features/animalTypes/services/animalTypeService';
@@ -43,6 +46,8 @@ export default function LivestockDetailScreen() {
   const [animal, setAnimal] = useState<Livestock | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [types, setTypes] = useState<AnimalType[]>([]);
+  const [incomeList, setIncomeList] = useState<Income[]>([]);
+  const [incomeTotal, setIncomeTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
@@ -63,7 +68,12 @@ export default function LivestockDetailScreen() {
     if (!id) return;
     setLoading(true);
     try {
-      const [a, e, t] = await Promise.all([getLivestockById(id as string), getExpensesForLivestock(id as string), getAllTypes()]);
+      const [a, e, t, inc] = await Promise.all([
+        getLivestockById(id as string),
+        getExpensesForLivestock(id as string),
+        getAllTypes(),
+        getByLivestockIdIncome(id as string),
+      ]);
       if (!a) setNotFound(true);
       else {
         setAnimal(a);
@@ -71,6 +81,8 @@ export default function LivestockDetailScreen() {
       }
       setExpenses(e);
       setTypes(t);
+      setIncomeList(inc);
+      setIncomeTotal(inc.reduce((s, i) => s + i.amount, 0));
     } finally {
       setLoading(false);
     }
@@ -306,6 +318,35 @@ const statusColors = getStatusBadgeColor(animal.status, colors);
         ) : (
           <EmptyState icon="wallet-outline" title="No expenses recorded" />
         )}
+
+      <SectionHeader title="Income" />
+      {incomeList.length > 0 ? (
+        <>
+          {incomeList.map((inc) => (
+            <TouchableOpacity key={inc.id} activeOpacity={0.7} onPress={() => router.push({ pathname: '/income/form', params: { id: inc.id } })}>
+              <IncomeItem income={inc} />
+            </TouchableOpacity>
+          ))}
+          <Card className="mt-2" style={{ backgroundColor: colors.success + '15' }}>
+            <View className="flex-row justify-between items-center">
+              <Text className="text-base font-semibold" style={{ color: colors.success }}>Total Income</Text>
+              <Text className="text-xl font-bold" style={{ color: colors.success }}>₱{incomeTotal.toFixed(2)}</Text>
+            </View>
+          </Card>
+        </>
+      ) : (
+        <EmptyState icon="trending-up-outline" title="No income recorded" />
+      )}
+
+      <Card className="mt-4" style={{ backgroundColor: (incomeTotal - totalExpense) >= 0 ? colors.success + '15' : colors.error + '15' }}>
+        <View className="flex-row justify-between items-center">
+          <Text className="text-base font-semibold text-neutral-800">Net Profit</Text>
+          <Text className="text-2xl font-bold" style={{ color: (incomeTotal - totalExpense) >= 0 ? colors.success : colors.error }}>
+            {(incomeTotal - totalExpense) >= 0 ? '+' : ''}₱{(incomeTotal - totalExpense).toFixed(2)}
+          </Text>
+        </View>
+        <Text className="text-xs text-neutral-400 mt-1 text-right">Income ₱{incomeTotal.toFixed(2)} − Expenses ₱{totalExpense.toFixed(2)}</Text>
+      </Card>
 
         <View className="h-8" />
       </ScrollView>

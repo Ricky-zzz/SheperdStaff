@@ -4,6 +4,7 @@ import { Activity } from '../features/activity/types';
 import { Task } from '../features/tasks/types';
 import { AnimalType } from '../features/animalTypes/types';
 import { Location } from '../features/locations/types';
+import { Income } from '../features/income/types';
 
 function isoDaysFromNow(days: number): string {
   const d = new Date();
@@ -326,6 +327,13 @@ export const mockActivities: Activity[] = [
   { id: 'act-13', date: '2025-12-12', type: 'health_note', description: 'Hooves trimmed for Merino flock, ready for sale', livestockId: 'sheep-group-1' },
   { id: 'act-14', date: '2026-01-09', type: 'expense_added', description: 'Purchased duck pellets - ?18.00', expenseId: 'exp-14' },
   { id: 'act-15', date: '2025-10-02', type: 'sale', description: 'Pig Batch 2024-B sold at market (4 hogs)', livestockId: 'pig-group-2' },
+];
+
+export const mockIncome: Income[] = [
+  { id: 'inc-1', date: '2025-10-02', category: 'sale', description: 'Pig Batch 2024-B sold at market', amount: 24000, livestockId: 'pig-group-2', notes: '4 hogs, average 95 kg' },
+  { id: 'inc-2', date: '2025-12-20', category: 'sale', description: 'Goat for_sale batch (partial)', amount: 4500, livestockId: 'goat-group-1' },
+  { id: 'inc-3', date: '2026-01-08', category: 'eggs', description: 'Weekly egg surplus sold', amount: 320, livestockId: 'chicken-group-1' },
+  { id: 'inc-4', date: '2026-01-12', category: 'milk', description: 'Raw milk from pasture', amount: 540, livestockId: 'cow-1' },
 ];
 
 export const mockTasks: Task[] = [

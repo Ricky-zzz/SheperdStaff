@@ -1,6 +1,7 @@
 export type ActivityType =
   | 'livestock_added'
   | 'expense_added'
+  | 'income'
   | 'health_note'
   | 'status_change'
   | 'feeding'

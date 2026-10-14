@@ -6,6 +6,7 @@ export function getActivityIcon(type: ActivityType): keyof typeof Ionicons.glyph
   switch (type) {
     case 'feeding': return 'restaurant';
     case 'expense_added': return 'cash';
+    case 'income': return 'trending-up';
     case 'health_note': return 'medkit';
     case 'status_change': return 'swap-horizontal';
     case 'livestock_added': return 'add-circle';
@@ -19,6 +20,7 @@ export function getActivityColor(type: ActivityType, colors: ThemeColors): strin
   switch (type) {
     case 'feeding': return colors.earth[500];
     case 'expense_added': return colors.error;
+    case 'income': return colors.success;
     case 'health_note': return colors.primary[500];
     case 'status_change': return '#9F7AEA';
     case 'livestock_added': return colors.success;
