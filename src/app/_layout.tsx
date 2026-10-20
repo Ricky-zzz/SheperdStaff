@@ -73,7 +73,9 @@ function RootNavigator() {
           <Stack.Screen name="livestock/edit" options={{ ...modalOptions, title: 'Edit Livestock' }} />
           <Stack.Screen name="expenses/new" options={{ ...modalOptions, title: 'Add Expense' }} />
           <Stack.Screen name="expenses/edit" options={{ ...modalOptions, title: 'Edit Expense' }} />
+          <Stack.Screen name="expenses/all" options={{ ...headerOptions, title: 'All Expenses' }} />
           <Stack.Screen name="income/form" options={{ ...modalOptions, title: 'Income' }} />
+          <Stack.Screen name="income/all" options={{ ...headerOptions, title: 'All Income' }} />
           <Stack.Screen
             name="activity"
             options={{ ...headerOptions, title: 'Activity History' }}
