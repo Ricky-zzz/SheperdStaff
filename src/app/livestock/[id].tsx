@@ -40,7 +40,7 @@ const HEALTH_TYPES: { label: string; value: HealthNoteType }[] = [
 ];
 
 export default function LivestockDetailScreen() {
-  const { colors } = useTheme();
+  const { colors, colorMode } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const [animal, setAnimal] = useState<Livestock | null>(null);
@@ -216,8 +216,8 @@ export default function LivestockDetailScreen() {
     return <View className="flex-1 justify-center items-center"><Text className="text-lg text-neutral-500">Livestock not found</Text></View>;
   }
 
-const statusColors = getStatusBadgeColor(animal.status, colors);
-  const categoryColors = getCategoryBadgeColor(animal.category, colors, types);
+const statusColors = getStatusBadgeColor(animal.status, colors, colorMode);
+  const categoryColors = getCategoryBadgeColor(animal.category, colors, types, colorMode);
   const totalExpense = expenses.reduce((sum, e) => {
     const share = e.allocations?.find((a) => a.livestockId === animal.id)?.amount;
     return sum + (share ?? e.amount);

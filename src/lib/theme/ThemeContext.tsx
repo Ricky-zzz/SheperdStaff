@@ -4,17 +4,20 @@ import { vars } from 'nativewind';
 import { ThemeColors, getTheme } from './themes';
 import { Colors, setActiveColors } from './colors';
 import { useAuth } from '../auth/AuthContext';
+import { ColorMode } from '../../features/profile/types';
 
 interface ThemeContextValue {
   colors: ThemeColors;
   themeKey: string;
   darkMode: boolean;
+  colorMode: ColorMode;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   colors: Colors,
   themeKey: 'earth',
   darkMode: false,
+  colorMode: 'colorful',
 });
 
 const SHADES = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900'] as const;
@@ -39,6 +42,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { profile, draft } = useAuth();
   const themeKey = profile?.themeKey ?? draft.themeKey ?? 'earth';
   const darkMode = profile?.darkMode ?? draft.darkMode ?? false;
+  const colorMode: ColorMode = profile?.colorMode ?? draft.colorMode ?? 'colorful';
   const theme = getTheme(themeKey);
   const palette = darkMode ? theme.dark : theme.light;
 
@@ -47,7 +51,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const variables = useMemo(() => paletteToVariables(palette), [palette]);
 
   return (
-    <ThemeContext.Provider value={{ colors: palette, themeKey, darkMode }}>
+    <ThemeContext.Provider value={{ colors: palette, themeKey, darkMode, colorMode }}>
       <View className="flex-1" style={vars(variables)}>
         {children}
       </View>

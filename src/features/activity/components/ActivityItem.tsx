@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../lib/theme/ThemeContext';
 import { Activity } from '../types';
-import { getActivityIcon, getActivityColor, getActivityLabel } from '../activityMeta';
+import { getActivityIcon, getActivityLabel } from '../activityMeta';
 
 interface ActivityItemProps {
   activity: Activity;
@@ -17,13 +17,13 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
   showBorder = false,
 }) => {
   const { colors } = useTheme();
-  const color = getActivityColor(activity.type, colors);
+  const color = colors.neutral[500];
 
   const content = (
     <>
       <View
         className="w-9 h-9 rounded-lg justify-center items-center mr-3"
-        style={{ backgroundColor: color + '15' }}
+        style={{ backgroundColor: colors.neutral[100] }}
       >
         <Ionicons name={getActivityIcon(activity.type)} size={16} color={color} />
       </View>

@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS user_profile (
   salt TEXT NOT NULL,
   themeKey TEXT NOT NULL DEFAULT 'earth',
   darkMode INTEGER NOT NULL DEFAULT 0,
+  colorMode TEXT NOT NULL DEFAULT 'colorful',
   createdAt TEXT NOT NULL,
   updatedAt TEXT NOT NULL
 );
@@ -126,6 +127,15 @@ export async function ensureSchema(database: SQLiteDatabase): Promise<void> {
     const cols = await database.getAllAsync<{ name: string }>('PRAGMA table_info(animal_types)');
     if (cols.some((c) => c.name === 'icon')) {
       await database.execAsync('ALTER TABLE animal_types DROP COLUMN icon');
+    }
+  } catch {
+    // table missing or already migrated
+  }
+  // Migration: add user_profile.colorMode (older installs)
+  try {
+    const cols = await database.getAllAsync<{ name: string }>('PRAGMA table_info(user_profile)');
+    if (cols.length > 0 && !cols.some((c) => c.name === 'colorMode')) {
+      await database.execAsync("ALTER TABLE user_profile ADD COLUMN colorMode TEXT NOT NULL DEFAULT 'colorful'");
     }
   } catch {
     // table missing or already migrated

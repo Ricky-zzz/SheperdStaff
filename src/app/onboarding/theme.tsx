@@ -5,12 +5,14 @@ import { Card } from '../../components/ui/Card';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { useTheme } from '../../lib/theme/ThemeContext';
 import { ThemePicker } from '../../components/ui/ThemePicker';
+import { ColorMode } from '../../features/profile/types';
 
 export default function OnboardingThemeScreen() {
   const { draft, setDraft, completeOnboarding } = useAuth();
   const { colors } = useTheme();
   const [themeKey, setThemeKey] = useState(draft.themeKey);
   const [darkMode, setDarkMode] = useState(draft.darkMode);
+  const [colorMode, setColorMode] = useState<ColorMode>(draft.colorMode);
   const [saving, setSaving] = useState(false);
 
   const handleSelect = (key: string) => {
@@ -23,10 +25,15 @@ export default function OnboardingThemeScreen() {
     setDraft({ darkMode: value });
   };
 
+  const handleColorMode = (value: ColorMode) => {
+    setColorMode(value);
+    setDraft({ colorMode: value });
+  };
+
   const handleFinish = async () => {
     setSaving(true);
     try {
-      setDraft({ themeKey, darkMode });
+      setDraft({ themeKey, darkMode, colorMode });
       await completeOnboarding();
     } finally {
       setSaving(false);
@@ -46,7 +53,14 @@ export default function OnboardingThemeScreen() {
       </View>
 
       <Card className="mb-4">
-        <ThemePicker selected={themeKey} onSelect={handleSelect} darkMode={darkMode} onDarkModeChange={handleDarkMode} />
+        <ThemePicker
+          selected={themeKey}
+          onSelect={handleSelect}
+          darkMode={darkMode}
+          onDarkModeChange={handleDarkMode}
+          colorMode={colorMode}
+          onColorModeChange={handleColorMode}
+        />
 
         <TouchableOpacity className="flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600 mt-6" onPress={handleFinish} disabled={saving}>
           {saving ? (

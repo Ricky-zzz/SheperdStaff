@@ -7,8 +7,8 @@ import { Income } from '../types';
 import { getIncomeCategoryMeta } from '../incomeMeta';
 
 export const IncomeItem: React.FC<{ income: Income }> = ({ income }) => {
-  const { colors } = useTheme();
-  const meta = getIncomeCategoryMeta(income.category, colors);
+  const { colors, colorMode } = useTheme();
+  const meta = getIncomeCategoryMeta(income.category, colors, colorMode);
   return (
     <Card className="mb-2 p-4">
       <View className="flex-row items-center justify-between mb-2">

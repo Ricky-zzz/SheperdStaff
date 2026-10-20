@@ -19,7 +19,7 @@ const CATEGORIES: ExpenseCategory[] = ['feed', 'medicine', 'supplies', 'maintena
 type Segment = 'expenses' | 'income';
 
 export default function ExpensesScreen() {
-  const { colors } = useTheme();
+  const { colors, colorMode } = useTheme();
   const router = useRouter();
   const [segment, setSegment] = useState<Segment>('expenses');
   const [selectedCategory, setSelectedCategory] = useState<ExpenseCategory | 'all'>('all');
@@ -112,15 +112,15 @@ export default function ExpensesScreen() {
 
       {segment === 'expenses' ? (
         <>
-          <Card className="bg-primary-700 mb-5 items-center">
-            <Text className="text-sm text-primary-200 font-medium">Total Expenses</Text>
-            <Text className="text-3xl font-bold text-white mt-1">₱{totalExpenses.toFixed(2)}</Text>
-            <Text className="text-sm text-primary-300 mt-1">{allExpenses.length} transactions</Text>
+          <Card className={`mb-5 items-center ${colorMode === 'uniform' ? 'border border-neutral-300' : 'bg-primary-700'}`}>
+            <Text className={`text-sm font-medium ${colorMode === 'uniform' ? 'text-neutral-600' : 'text-primary-200'}`}>Total Expenses</Text>
+            <Text className="text-3xl font-bold mt-1" style={{ color: colorMode === 'uniform' ? colors.error : colors.white }}>₱{totalExpenses.toFixed(2)}</Text>
+            <Text className={`text-sm mt-1 ${colorMode === 'uniform' ? 'text-neutral-400' : 'text-primary-300'}`}>{allExpenses.length} transactions</Text>
           </Card>
 
           <View className="flex-row flex-wrap gap-2 mb-5">
             {CATEGORIES.map((key) => {
-              const info = getExpenseCategoryMeta(key, colors);
+              const info = getExpenseCategoryMeta(key, colors, colorMode);
               const amount = expensesByCategory[key] || 0;
               const isSelected = selectedCategory === key;
               return (
@@ -141,7 +141,7 @@ export default function ExpensesScreen() {
 
           <View className="flex-row justify-between items-center mb-3">
             <Text className="text-lg font-semibold text-neutral-800">
-              {selectedCategory === 'all' ? 'All Expenses' : getExpenseCategoryMeta(selectedCategory, colors).label}
+              {selectedCategory === 'all' ? 'All Expenses' : getExpenseCategoryMeta(selectedCategory, colors, colorMode).label}
             </Text>
             <TouchableOpacity className="flex-row items-center bg-primary-600 px-3 py-2 rounded-lg gap-1" onPress={() => router.push('/expenses/new')}>
               <Ionicons name="add-outline" size={18} color={colors.white} />
@@ -159,10 +159,10 @@ export default function ExpensesScreen() {
         </>
       ) : (
         <>
-          <Card className="bg-success mb-5 items-center">
-            <Text className="text-sm text-white font-medium">Total Income</Text>
-            <Text className="text-3xl font-bold text-white mt-1">₱{totalInc.toFixed(2)}</Text>
-            <Text className="text-sm text-white mt-1">{allIncome.length} entries · Net: {net >= 0 ? '+' : ''}₱{net.toFixed(2)}</Text>
+          <Card className={`mb-5 items-center ${colorMode === 'uniform' ? 'border border-neutral-300' : 'bg-success'}`}>
+            <Text className={`text-sm font-medium ${colorMode === 'uniform' ? 'text-neutral-600' : 'text-white'}`}>Total Income</Text>
+            <Text className="text-3xl font-bold mt-1" style={{ color: colorMode === 'uniform' ? colors.success : colors.white }}>₱{totalInc.toFixed(2)}</Text>
+            <Text className={`text-sm mt-1 ${colorMode === 'uniform' ? 'text-neutral-400' : 'text-white'}`}>{allIncome.length} entries · Net: {net >= 0 ? '+' : ''}₱{net.toFixed(2)}</Text>
           </Card>
 
           <View className="flex-row justify-between items-center mb-3">

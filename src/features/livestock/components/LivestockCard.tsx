@@ -16,9 +16,9 @@ interface LivestockCardProps {
 }
 
 export const LivestockCard: React.FC<LivestockCardProps> = ({ livestock, onPress, types = [] }) => {
-  const { colors } = useTheme();
-  const statusColors = getStatusBadgeColor(livestock.status, colors);
-  const categoryColors = getCategoryBadgeColor(livestock.category, colors, types);
+  const { colors, colorMode } = useTheme();
+  const statusColors = getStatusBadgeColor(livestock.status, colors, colorMode);
+  const categoryColors = getCategoryBadgeColor(livestock.category, colors, types, colorMode);
   const ageMonths = calculateAgeInMonths(livestock.startDate);
 
   return (
@@ -27,9 +27,9 @@ export const LivestockCard: React.FC<LivestockCardProps> = ({ livestock, onPress
         <View className="flex-row items-center mb-3">
           <View
             className="w-11 h-11 rounded-lg justify-center items-center mr-3"
-            style={{ backgroundColor: categoryColors.bg }}
+            style={{ backgroundColor: colors.neutral[100] }}
           >
-            <Ionicons name="paw-outline" size={20} color={categoryColors.text} />
+            <Ionicons name="paw-outline" size={20} color={colors.neutral[500]} />
           </View>
           <View className="flex-1">
             <Text className="text-lg font-semibold text-neutral-800">{livestock.name}</Text>

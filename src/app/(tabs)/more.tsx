@@ -20,7 +20,8 @@ interface MenuItem {
 export default function MoreScreen() {
   const router = useRouter();
   const { profile } = useAuth();
-  const { colors } = useTheme();
+  const { colors, colorMode } = useTheme();
+  const menuColor = (c: string) => (colorMode === 'uniform' ? colors.neutral[500] : c);
 
   const handleLoadSampleData = () => {
     Alert.alert('Load sample data?', 'Adds demo livestock, expenses, and tasks. Only runs if the database is empty — your existing data is never touched.', [
@@ -48,27 +49,27 @@ export default function MoreScreen() {
     {
       title: 'Farm Management',
       items: [
-        { icon: 'map-outline', label: 'Locations', subtitle: 'Manage farm areas', route: '/locations', color: colors.primary[600] },
-        { icon: 'paw-outline', label: 'Animal Types', subtitle: 'Manage livestock categories', route: '/animal-types', color: colors.category.cattle },
-        { icon: 'calendar-outline', label: 'Activity History', subtitle: 'View all activities', route: '/activity', color: colors.earth[600] },
+        { icon: 'map-outline', label: 'Locations', subtitle: 'Manage farm areas', route: '/locations', color: menuColor(colors.primary[600]) },
+        { icon: 'paw-outline', label: 'Animal Types', subtitle: 'Manage livestock categories', route: '/animal-types', color: menuColor(colors.category.cattle) },
+        { icon: 'calendar-outline', label: 'Activity History', subtitle: 'View all activities', route: '/activity', color: menuColor(colors.earth[600]) },
       ],
     },
     {
       title: 'Data & Reports',
       items: [
-        { icon: 'flask-outline', label: 'Load Sample Data', subtitle: 'Add demo records (only if empty)', color: colors.category.duck, onPress: handleLoadSampleData },
-        { icon: 'download-outline', label: 'Export Data', subtitle: 'Download farm records', color: colors.category.chicken },
-        { icon: 'cloud-upload-outline', label: 'Backup', subtitle: 'Save your data', color: colors.category.goat },
+        { icon: 'flask-outline', label: 'Load Sample Data', subtitle: 'Add demo records (only if empty)', color: menuColor(colors.category.duck), onPress: handleLoadSampleData },
+        { icon: 'download-outline', label: 'Export Data', subtitle: 'Download farm records', color: menuColor(colors.category.chicken) },
+        { icon: 'cloud-upload-outline', label: 'Backup', subtitle: 'Save your data', color: menuColor(colors.category.goat) },
       ],
     },
     {
       title: 'Settings',
       items: [
-        { icon: 'key-outline', label: 'Change Password', subtitle: 'Update your lock password', route: '/profile/password', color: colors.earth[600] },
-        { icon: 'moon-outline', label: 'Appearance', subtitle: 'Theme settings', route: '/profile/theme', color: colors.neutral[600] },
-        { icon: 'notifications-outline', label: 'Notifications', subtitle: 'Manage alerts', color: colors.category.sheep },
-        { icon: 'help-circle-outline', label: 'Help & Support', subtitle: 'Get assistance', color: colors.category.duck },
-        { icon: 'information-circle-outline', label: 'About', subtitle: 'Shepherd Staff v1.0', color: colors.neutral[500] },
+        { icon: 'key-outline', label: 'Change Password', subtitle: 'Update your lock password', route: '/profile/password', color: menuColor(colors.earth[600]) },
+        { icon: 'moon-outline', label: 'Appearance', subtitle: 'Theme settings', route: '/profile/theme', color: menuColor(colors.neutral[600]) },
+        { icon: 'notifications-outline', label: 'Notifications', subtitle: 'Manage alerts', color: menuColor(colors.category.sheep) },
+        { icon: 'help-circle-outline', label: 'Help & Support', subtitle: 'Get assistance', color: menuColor(colors.category.duck) },
+        { icon: 'information-circle-outline', label: 'About', subtitle: 'Shepherd Staff v1.0', color: menuColor(colors.neutral[500]) },
       ],
     },
   ];

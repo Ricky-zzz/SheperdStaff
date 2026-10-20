@@ -16,7 +16,8 @@ import { Activity } from '../../features/activity/types';
 import { useTheme } from '../../lib/theme/ThemeContext';
 
 export default function HomeScreen() {
-  const { colors } = useTheme();
+  const { colors, colorMode } = useTheme();
+  const accent = (c: string) => (colorMode === 'uniform' ? colors.neutral[600] : c);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [totalLivestock, setTotalLivestock] = useState(0);
@@ -82,18 +83,18 @@ export default function HomeScreen() {
       </View>
 
       <View className="flex-row gap-3 mb-3">
-        <StatCard title="Total Livestock" value={totalLivestock} icon="paw" color={colors.primary[600]} subtitle={`${totalGroups} groups`} />
-        <StatCard title="This Month" value={`₱${monthExpenses.toFixed(0)}`} icon="trending-up" color={colors.earth[600]} subtitle="Expenses" />
+        <StatCard title="Total Livestock" value={totalLivestock} icon="paw-outline" color={accent(colors.primary[600])} subtitle={`${totalGroups} groups`} />
+        <StatCard title="This Month" value={`₱${monthExpenses.toFixed(0)}`} icon="trending-up-outline" color={accent(colors.earth[600])} subtitle="Expenses" />
       </View>
       <View className="flex-row gap-3 mb-5">
-        <StatCard title="Active" value={activeCount} icon="checkmark-circle" color={colors.success} subtitle="Healthy & growing" />
-        <StatCard title="Total Spent" value={`₱${totalExpenses.toFixed(0)}`} icon="wallet" color={colors.category.cattle} subtitle="All time" />
+        <StatCard title="Active" value={activeCount} icon="checkmark-circle-outline" color={accent(colors.success)} subtitle="Healthy & growing" />
+        <StatCard title="Total Spent" value={`₱${totalExpenses.toFixed(0)}`} icon="wallet-outline" color={accent(colors.category.cattle)} subtitle="All time" />
       </View>
 
       <TouchableOpacity onPress={() => router.push('/tasks')}>
         <Card className="mb-5 flex-row items-center">
-          <View className="w-11 h-11 rounded-lg justify-center items-center mr-3" style={{ backgroundColor: colors.earth[100] }}>
-            <Ionicons name="checkbox-outline" size={22} color={colors.earth[600]} />
+          <View className="w-11 h-11 rounded-lg justify-center items-center mr-3" style={{ backgroundColor: colorMode === 'uniform' ? colors.neutral[100] : colors.earth[100] }}>
+            <Ionicons name="checkbox-outline" size={22} color={colorMode === 'uniform' ? colors.neutral[600] : colors.earth[600]} />
           </View>
           <View className="flex-1">
             <Text className="text-base font-semibold text-neutral-800">{'Today\u2019s Tasks'}</Text>

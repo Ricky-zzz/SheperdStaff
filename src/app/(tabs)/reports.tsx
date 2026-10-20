@@ -57,7 +57,7 @@ function monthStartISO(): string {
 }
 
 export default function ReportsScreen() {
-  const { colors } = useTheme();
+  const { colors, colorMode } = useTheme();
   const { profile } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -195,7 +195,7 @@ export default function ReportsScreen() {
 
   const expenseRows = Object.entries(expensesByCategoryMap)
     .sort(([, a], [, b]) => b - a)
-    .map(([category, amount]) => ({ category, amount, label: getExpenseCategoryMeta(category as Expense['category'], colors).label }));
+    .map(([category, amount]) => ({ category, amount, label: getExpenseCategoryMeta(category as Expense['category'], colors, colorMode).label }));
 
   const maxLivestock = Math.max(1, ...Object.values(livestockByCategoryMap));
   const maxExpense = Math.max(1, ...Object.values(expensesByCategoryMap));
@@ -321,7 +321,7 @@ export default function ReportsScreen() {
           <View key={category} className="flex-row items-center mb-3">
             <Text className="w-20 text-sm text-neutral-600 font-medium">{getCategoryLabel(category, types)}</Text>
             <View className="flex-1 h-5 bg-neutral-100 rounded-sm overflow-hidden mx-2">
-              <View className="h-full rounded-sm" style={{ width: `${(count / maxLivestock) * 100}%`, backgroundColor: categoryColors[category] || colors.neutral[400] }} />
+              <View className="h-full rounded-sm" style={{ width: `${(count / maxLivestock) * 100}%`, backgroundColor: colorMode === 'uniform' ? colors.neutral[400] : categoryColors[category] || colors.neutral[400] }} />
             </View>
             <Text className="w-12 text-sm font-semibold text-neutral-700 text-right">{count}</Text>
           </View>
@@ -334,7 +334,7 @@ export default function ReportsScreen() {
           <View key={row.category} className="flex-row items-center mb-3">
             <Text className="w-24 text-sm text-neutral-600 font-medium" numberOfLines={1}>{row.label}</Text>
             <View className="flex-1 h-5 bg-neutral-100 rounded-sm overflow-hidden mx-2">
-              <View className="h-full rounded-sm" style={{ width: `${(row.amount / maxExpense) * 100}%`, backgroundColor: getExpenseCategoryMeta(row.category as Expense['category'], colors).color }} />
+              <View className="h-full rounded-sm" style={{ width: `${(row.amount / maxExpense) * 100}%`, backgroundColor: getExpenseCategoryMeta(row.category as Expense['category'], colors, colorMode).color }} />
             </View>
             <Text className="w-16 text-sm font-semibold text-neutral-700 text-right">₱{row.amount.toFixed(0)}</Text>
           </View>
@@ -346,7 +346,7 @@ export default function ReportsScreen() {
       <Card className="mb-2">
         {Object.entries(statusCounts).map(([status, count]) => (
           <View key={status} className="flex-row items-center mb-3">
-            <View className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: STATUS_COLORS[status] || colors.neutral[400] }} />
+            <View className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: colorMode === 'uniform' ? colors.neutral[400] : STATUS_COLORS[status] || colors.neutral[400] }} />
             <Text className="flex-1 text-base text-neutral-700 font-medium">{status.replace('_', ' ').charAt(0).toUpperCase() + status.replace('_', ' ').slice(1)}</Text>
             <Text className="text-sm text-neutral-500 mr-3">{count} records</Text>
             <Text className="w-11 text-base font-bold text-neutral-800 text-right">{allLivestock.length > 0 ? ((count / allLivestock.length) * 100).toFixed(0) : 0}%</Text>

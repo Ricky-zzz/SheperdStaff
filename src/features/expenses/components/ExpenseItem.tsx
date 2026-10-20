@@ -14,8 +14,8 @@ interface ExpenseItemProps {
 }
 
 export const ExpenseItem: React.FC<ExpenseItemProps> = ({ expense, highlightLivestockId }) => {
-  const { colors } = useTheme();
-  const meta = getExpenseCategoryMeta(expense.category, colors);
+  const { colors, colorMode } = useTheme();
+  const meta = getExpenseCategoryMeta(expense.category, colors, colorMode);
   const isBulk = !!(expense.allocations && expense.allocations.length > 0);
   const share = highlightLivestockId ? expense.allocations?.find((a) => a.livestockId === highlightLivestockId)?.amount : undefined;
   const displayAmount = share ?? expense.amount;

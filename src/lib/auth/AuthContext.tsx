@@ -1,11 +1,12 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { UserProfile } from '../../features/profile/types';
+import { UserProfile, ColorMode } from '../../features/profile/types';
 import {
   createProfile,
   getProfile,
   updatePassword,
   updateProfileNameEmail,
   updateTheme,
+  updateColorMode,
 } from '../../features/profile/services/profileService';
 import { generateSalt, hashPassword, verifyPassword } from '../utils/password';
 import { initDb } from '../db/client';
@@ -18,6 +19,7 @@ export interface OnboardingDraft {
   password: string;
   themeKey: string;
   darkMode: boolean;
+  colorMode: ColorMode;
 }
 
 interface AuthContextValue {
@@ -31,6 +33,7 @@ interface AuthContextValue {
   updateNameEmail: (name: string, email: string) => Promise<void>;
   changePassword: (current: string, next: string) => Promise<boolean>;
   setTheme: (themeKey: string, darkMode: boolean) => Promise<void>;
+  setColorMode: (colorMode: ColorMode) => Promise<void>;
   resetDemo: () => Promise<void>;
 }
 
@@ -45,6 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: '',
     themeKey: 'earth',
     darkMode: false,
+    colorMode: 'colorful',
   });
 
   const bootstrap = useCallback(async () => {
@@ -84,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       salt,
       themeKey: draft.themeKey,
       darkMode: draft.darkMode,
+      colorMode: draft.colorMode,
     });
     try {
       const { seedIfNeeded } = await import('../db/seed');
@@ -138,6 +143,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [profile]
   );
 
+  const setColorMode = useCallback(
+    async (colorMode: ColorMode) => {
+      if (!profile) return;
+      await updateColorMode(profile.id, colorMode);
+      setProfile({ ...profile, colorMode });
+    },
+    [profile]
+  );
+
   const resetDemo = useCallback(async () => {
     const { getDb } = await import('../db/client');
     const db = await getDb();
@@ -145,13 +159,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       'DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM animal_types; DELETE FROM locations; DELETE FROM income; DELETE FROM user_profile;'
     );
     setProfile(null);
-    setDraftState({ name: '', email: '', password: '', themeKey: 'earth', darkMode: false });
+    setDraftState({ name: '', email: '', password: '', themeKey: 'earth', darkMode: false, colorMode: 'colorful' });
     setState('onboarding');
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ state, profile, draft, setDraft, completeOnboarding, unlock, reload, updateNameEmail, changePassword, setTheme, resetDemo }),
-    [state, profile, draft, setDraft, completeOnboarding, unlock, reload, updateNameEmail, changePassword, setTheme, resetDemo]
+    () => ({ state, profile, draft, setDraft, completeOnboarding, unlock, reload, updateNameEmail, changePassword, setTheme, setColorMode, resetDemo }),
+    [state, profile, draft, setDraft, completeOnboarding, unlock, reload, updateNameEmail, changePassword, setTheme, setColorMode, resetDemo]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

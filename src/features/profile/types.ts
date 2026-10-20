@@ -1,3 +1,5 @@
+export type ColorMode = 'colorful' | 'uniform';
+
 export interface UserProfile {
   id: number;
   name: string;
@@ -6,6 +8,7 @@ export interface UserProfile {
   salt: string;
   themeKey: string;
   darkMode: boolean;
+  colorMode: ColorMode;
   createdAt: string;
   updatedAt: string;
 }
@@ -17,4 +20,5 @@ export interface CreateProfileInput {
   salt: string;
   themeKey: string;
   darkMode: boolean;
+  colorMode: ColorMode;
 }

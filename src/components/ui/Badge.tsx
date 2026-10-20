@@ -3,6 +3,7 @@ import { Text, StyleProp, ViewStyle } from 'react-native';
 import { useTheme } from '../../lib/theme/ThemeContext';
 import { ThemeColors } from '../../lib/theme/themes';
 import { AnimalType } from '../../features/animalTypes/types';
+import { ColorMode } from '../../features/profile/types';
 
 interface BadgeProps {
   label: string;
@@ -35,7 +36,8 @@ export const Badge: React.FC<BadgeProps> = ({
   );
 };
 
-export const getStatusBadgeColor = (status: string, colors?: ThemeColors): { bg: string; text: string } => {
+export const getStatusBadgeColor = (status: string, colors?: ThemeColors, mode: ColorMode = 'colorful'): { bg: string; text: string } => {
+  if (mode === 'uniform') return { bg: colors?.neutral[100] ?? '#F5F5F4', text: colors?.neutral[700] ?? '#44403C' };
   switch (status) {
     case 'growing':
       return { bg: '#C6F6D5', text: '#22543D' };
@@ -54,7 +56,8 @@ export const getStatusBadgeColor = (status: string, colors?: ThemeColors): { bg:
   }
 };
 
-export const getCategoryBadgeColor = (category: string, colors?: ThemeColors, types: AnimalType[] = []): { bg: string; text: string } => {
+export const getCategoryBadgeColor = (category: string, colors?: ThemeColors, types: AnimalType[] = [], mode: ColorMode = 'colorful'): { bg: string; text: string } => {
+  if (mode === 'uniform') return { bg: colors?.neutral[100] ?? '#F5F5F4', text: colors?.neutral[700] ?? '#44403C' };
   const resolved = types.find((t) => t.id === category)?.color;
   if (resolved) return { bg: resolved + '1F', text: resolved };
   switch (category) {

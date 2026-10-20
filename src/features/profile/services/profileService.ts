@@ -1,4 +1,4 @@
-import { UserProfile, CreateProfileInput } from '../types';
+import { UserProfile, CreateProfileInput, ColorMode } from '../types';
 import { getDb } from '../../../lib/db/client';
 
 type ProfileRow = {
@@ -9,6 +9,7 @@ type ProfileRow = {
   salt: string;
   themeKey: string;
   darkMode: number;
+  colorMode: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -17,10 +18,11 @@ function parseRow(row: ProfileRow): UserProfile {
   return {
     ...row,
     darkMode: row.darkMode === 1,
+    colorMode: (row.colorMode === 'uniform' ? 'uniform' : 'colorful') as ColorMode,
   };
 }
 
-const SELECT_COLUMNS = 'id, name, email, passwordHash, salt, themeKey, darkMode, createdAt, updatedAt';
+const SELECT_COLUMNS = 'id, name, email, passwordHash, salt, themeKey, darkMode, colorMode, createdAt, updatedAt';
 
 export async function getProfile(): Promise<UserProfile | null> {
   const db = await getDb();
@@ -36,9 +38,9 @@ export async function createProfile(input: CreateProfileInput): Promise<void> {
   const db = await getDb();
   const now = new Date().toISOString();
   await db.runAsync(
-    `INSERT INTO user_profile (id, name, email, passwordHash, salt, themeKey, darkMode, createdAt, updatedAt)
-     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [input.name, input.email, input.passwordHash, input.salt, input.themeKey, input.darkMode ? 1 : 0, now, now]
+    `INSERT INTO user_profile (id, name, email, passwordHash, salt, themeKey, darkMode, colorMode, createdAt, updatedAt)
+     VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [input.name, input.email, input.passwordHash, input.salt, input.themeKey, input.darkMode ? 1 : 0, input.colorMode, now, now]
   );
 }
 
@@ -63,5 +65,13 @@ export async function updateTheme(id: number, themeKey: string, darkMode: boolea
   await db.runAsync(
     'UPDATE user_profile SET themeKey = ?, darkMode = ?, updatedAt = ? WHERE id = ?',
     [themeKey, darkMode ? 1 : 0, new Date().toISOString(), id]
+  );
+}
+
+export async function updateColorMode(id: number, colorMode: ColorMode): Promise<void> {
+  const db = await getDb();
+  await db.runAsync(
+    'UPDATE user_profile SET colorMode = ?, updatedAt = ? WHERE id = ?',
+    [colorMode, new Date().toISOString(), id]
   );
 }
