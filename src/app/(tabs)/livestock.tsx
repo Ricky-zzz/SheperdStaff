@@ -67,7 +67,7 @@ export default function LivestockScreen() {
       <View className="flex-row gap-2 mb-4">
         <SearchBar value={search} onChangeText={setSearch} placeholder="Search livestock..." />
         <TouchableOpacity className="w-11 h-11 rounded-lg bg-primary-600 justify-center items-center shadow-sm" onPress={() => router.push('/livestock/new')}>
-          <Ionicons name="add" size={22} color={colors.white} />
+          <Ionicons name="add-outline" size={22} color={colors.white} />
         </TouchableOpacity>
       </View>
 

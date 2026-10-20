@@ -37,7 +37,7 @@ export default function OnboardingThemeScreen() {
     <View className="flex-1 bg-background p-6 justify-center">
       <View className="items-center mb-6">
         <View className="w-20 h-20 rounded-full bg-primary-100 items-center justify-center mb-4">
-          <Ionicons name="color-palette" size={36} color={colors.primary[600]} />
+          <Ionicons name="color-palette-outline" size={36} color={colors.primary[600]} />
         </View>
         <Text className="text-2xl font-bold text-neutral-800 text-center">Choose your theme</Text>
         <Text className="text-sm text-neutral-500 text-center mt-2">
@@ -54,7 +54,7 @@ export default function OnboardingThemeScreen() {
           ) : (
             <>
               <Text className="text-base font-semibold text-white">Get Started</Text>
-              <Ionicons name="checkmark" size={20} color={colors.white} />
+              <Ionicons name="checkmark-outline" size={20} color={colors.white} />
             </>
           )}
         </TouchableOpacity>

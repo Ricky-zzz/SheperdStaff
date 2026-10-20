@@ -93,7 +93,7 @@ export default function HomeScreen() {
       <TouchableOpacity onPress={() => router.push('/tasks')}>
         <Card className="mb-5 flex-row items-center">
           <View className="w-11 h-11 rounded-lg justify-center items-center mr-3" style={{ backgroundColor: colors.earth[100] }}>
-            <Ionicons name="checkbox" size={22} color={colors.earth[600]} />
+            <Ionicons name="checkbox-outline" size={22} color={colors.earth[600]} />
           </View>
           <View className="flex-1">
             <Text className="text-base font-semibold text-neutral-800">{'Today\u2019s Tasks'}</Text>
@@ -107,7 +107,7 @@ export default function HomeScreen() {
                 : 'No pending tasks'}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.neutral[300]} />
+          <Ionicons name="chevron-forward-outline" size={18} color={colors.neutral[300]} />
         </Card>
       </TouchableOpacity>
 
@@ -116,25 +116,25 @@ export default function HomeScreen() {
       <View className="flex-row gap-3">
         <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/livestock/new')}>
           <View className="w-[52px] h-[52px] rounded-lg justify-center items-center" style={{ backgroundColor: colors.primary[100] }}>
-            <Ionicons name="add-circle" size={24} color={colors.primary[600]} />
+            <Ionicons name="add-circle-outline" size={24} color={colors.primary[600]} />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">Add Animal</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/expenses/new')}>
           <View className="w-[52px] h-[52px] rounded-lg justify-center items-center" style={{ backgroundColor: colors.earth[100] }}>
-            <Ionicons name="cash" size={24} color={colors.earth[600]} />
+            <Ionicons name="cash-outline" size={24} color={colors.earth[600]} />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">Add Expense</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/(tabs)/livestock')}>
           <View className="w-[52px] h-[52px] rounded-lg justify-center items-center bg-purple-100">
-            <Ionicons name="list" size={24} color="#7C3AED" />
+            <Ionicons name="list-outline" size={24} color="#7C3AED" />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">View All</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/(tabs)/reports')}>
           <View className="w-[52px] h-[52px] rounded-lg justify-center items-center bg-blue-100">
-            <Ionicons name="bar-chart" size={24} color="#2563EB" />
+            <Ionicons name="bar-chart-outline" size={24} color="#2563EB" />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">Reports</Text>
         </TouchableOpacity>

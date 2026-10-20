@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, TouchableOpacity, Modal, TextInput, Alert, KeyboardAvoidingView, Platform } from 'react-native';
 import { useLocalSearchParams, useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../../components/ui/Card';
@@ -249,12 +249,12 @@ const statusColors = getStatusBadgeColor(animal.status, colors);
           {animal.breed && <Text className="text-base text-neutral-500 mb-4">{animal.breed}</Text>}
           <View className="gap-3">
             {[
-              { icon: 'layers', label: 'Quantity', value: String(animal.quantity) },
-              { icon: 'calendar', label: 'Age', value: formatAge(animal.startDate) },
-              { icon: 'location', label: 'Location', value: animal.location },
-              { icon: 'flag', label: 'Purpose', value: animal.purpose },
+              { icon: 'layers-outline', label: 'Quantity', value: String(animal.quantity) },
+              { icon: 'calendar-outline', label: 'Age', value: formatAge(animal.startDate) },
+              { icon: 'location-outline', label: 'Location', value: animal.location },
+              { icon: 'flag-outline', label: 'Purpose', value: animal.purpose },
               ...(animal.sex ? [{ icon: animal.sex === 'male' ? 'male' : 'female', label: 'Sex', value: animal.sex }] : []),
-              { icon: 'time', label: 'Since', value: animal.startDate },
+              { icon: 'time-outline', label: 'Since', value: animal.startDate },
             ].map((item) => (
               <View key={item.label} className="flex-row items-center gap-3">
                 <Ionicons name={item.icon as any} size={16} color={colors.neutral[400]} />
@@ -353,11 +353,12 @@ const statusColors = getStatusBadgeColor(animal.status, colors);
 
       {/* Health Note Modal */}
       <Modal visible={showHealth} transparent animationType="slide" onRequestClose={() => setShowHealth(false)}>
-        <View className="flex-1 bg-black/40 justify-end">
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View className="flex-1 bg-black/40 justify-end">
           <View className="bg-card rounded-t-lg p-4">
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-lg font-semibold text-neutral-800">Add Health Note</Text>
-              <TouchableOpacity onPress={() => setShowHealth(false)}><Ionicons name="close" size={22} color={colors.neutral[500]} /></TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowHealth(false)}><Ionicons name="close-outline" size={22} color={colors.neutral[500]} /></TouchableOpacity>
             </View>
             <Text className="text-sm font-medium text-neutral-600 mb-2">Type</Text>
             <View className="flex-row flex-wrap gap-2 mb-4">
@@ -377,16 +378,18 @@ const statusColors = getStatusBadgeColor(animal.status, colors);
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+                </View>
+      </KeyboardAvoidingView>
       </Modal>
 
       {/* Feeding Modal */}
       <Modal visible={showFeeding} transparent animationType="slide" onRequestClose={() => setShowFeeding(false)}>
-        <View className="flex-1 bg-black/40 justify-end">
+        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <View className="flex-1 bg-black/40 justify-end">
           <View className="bg-card rounded-t-lg p-4">
             <View className="flex-row justify-between items-center mb-4">
               <Text className="text-lg font-semibold text-neutral-800">Add Feeding</Text>
-              <TouchableOpacity onPress={() => setShowFeeding(false)}><Ionicons name="close" size={22} color={colors.neutral[500]} /></TouchableOpacity>
+              <TouchableOpacity onPress={() => setShowFeeding(false)}><Ionicons name="close-outline" size={22} color={colors.neutral[500]} /></TouchableOpacity>
             </View>
             <Text className="text-sm font-medium text-neutral-600 mb-2">Feed Type *</Text>
             <TextInput className="bg-card border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-3" placeholder="e.g., Hay + Grain mix" placeholderTextColor={colors.neutral[400]} value={feedType} onChangeText={setFeedType} />
@@ -402,7 +405,8 @@ const statusColors = getStatusBadgeColor(animal.status, colors);
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+                </View>
+      </KeyboardAvoidingView>
       </Modal>
     </>
   );

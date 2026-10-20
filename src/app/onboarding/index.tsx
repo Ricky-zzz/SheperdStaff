@@ -32,7 +32,7 @@ export default function OnboardingIndexScreen() {
     <View className="flex-1 bg-background p-6 justify-center">
       <View className="items-center mb-6">
         <View className="w-20 h-20 rounded-full bg-primary-100 items-center justify-center">
-          <Ionicons name="leaf" size={40} color={colors.primary[600]} />
+          <Ionicons name="leaf-outline" size={40} color={colors.primary[600]} />
         </View>
       </View>
 
@@ -72,7 +72,7 @@ export default function OnboardingIndexScreen() {
 
         <TouchableOpacity className="flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600 mt-4" onPress={handleContinue}>
           <Text className="text-base font-semibold text-white">Continue</Text>
-          <Ionicons name="arrow-forward" size={20} color={colors.white} />
+          <Ionicons name="arrow-forward-outline" size={20} color={colors.white} />
         </TouchableOpacity>
       </Card>
       <Text className="text-xs text-neutral-400 text-center">

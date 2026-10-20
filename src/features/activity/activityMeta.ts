@@ -4,14 +4,14 @@ import { ActivityType } from './types';
 
 export function getActivityIcon(type: ActivityType): keyof typeof Ionicons.glyphMap {
   switch (type) {
-    case 'feeding': return 'restaurant';
-    case 'expense_added': return 'cash';
-    case 'income': return 'trending-up';
-    case 'health_note': return 'medkit';
-    case 'status_change': return 'swap-horizontal';
-    case 'livestock_added': return 'add-circle';
-    case 'sale': return 'trophy';
-    case 'task_completed': return 'checkmark-circle';
+    case 'feeding': return 'restaurant-outline';
+    case 'expense_added': return 'cash-outline';
+    case 'income': return 'trending-up-outline';
+    case 'health_note': return 'medkit-outline';
+    case 'status_change': return 'swap-horizontal-outline';
+    case 'livestock_added': return 'add-circle-outline';
+    case 'sale': return 'trophy-outline';
+    case 'task_completed': return 'checkmark-circle-outline';
     default: return 'ellipse';
   }
 }

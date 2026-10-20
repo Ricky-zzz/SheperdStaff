@@ -27,7 +27,7 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({ selected, onSelect, da
               style={{ backgroundColor: swatch }}
               onPress={() => onSelect(t.key)}
             >
-              {isSelected && <Ionicons name="checkmark" size={26} color={colors.white} />}
+              {isSelected && <Ionicons name="checkmark-outline" size={26} color={colors.white} />}
             </TouchableOpacity>
           );
         })}
@@ -35,7 +35,7 @@ export const ThemePicker: React.FC<ThemePickerProps> = ({ selected, onSelect, da
 
       <View className="flex-row items-center justify-between bg-card border border-border rounded-lg px-4 py-3 mt-4">
         <View className="flex-row items-center gap-2">
-          <Ionicons name="moon" size={18} color={colors.neutral[600]} />
+          <Ionicons name="moon-outline" size={18} color={colors.neutral[600]} />
           <Text className="text-sm font-medium text-neutral-700">Dark mode</Text>
         </View>
         <Switch value={darkMode} onValueChange={onDarkModeChange} trackColor={{ true: colors.primary[600], false: colors.neutral[300] }} />

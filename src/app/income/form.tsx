@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { FormScroll } from '../../components/ui/FormScroll';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
@@ -136,7 +137,7 @@ export default function IncomeFormScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-background p-4" showsVerticalScrollIndicator={false}>
+    <FormScroll>
       {errors.form && <Text className="text-sm text-error mb-3">{errors.form}</Text>}
 
       <View className="mb-5">
@@ -249,12 +250,12 @@ export default function IncomeFormScreen() {
           <Text className="text-base font-semibold text-neutral-600">Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-[2] flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600" onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator color={colors.white} /> : <Ionicons name="checkmark" size={20} color={colors.white} />}
+          {saving ? <ActivityIndicator color={colors.white} /> : <Ionicons name="checkmark-outline" size={20} color={colors.white} />}
           <Text className="text-base font-semibold text-white">{saving ? 'Saving...' : isEdit ? 'Save' : 'Record'}</Text>
         </TouchableOpacity>
       </View>
 
       <View className="h-8" />
-    </ScrollView>
+    </FormScroll>
   );
 }

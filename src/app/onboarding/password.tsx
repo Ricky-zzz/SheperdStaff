@@ -49,7 +49,7 @@ export default function OnboardingPasswordScreen() {
     <View className="flex-1 bg-background p-6 justify-center">
       <View className="items-center mb-6">
         <View className="w-20 h-20 rounded-full bg-primary-100 items-center justify-center mb-4">
-          <Ionicons name="lock-closed" size={36} color={colors.primary[600]} />
+          <Ionicons name="lock-closed-outline" size={36} color={colors.primary[600]} />
         </View>
         <Text className="text-2xl font-bold text-neutral-800 text-center">Create a password</Text>
         <Text className="text-sm text-neutral-500 text-center mt-2">
@@ -113,7 +113,7 @@ export default function OnboardingPasswordScreen() {
             <ActivityIndicator size="small" color={colors.primary[600]} />
           ) : (
             <>
-              <Ionicons name="key" size={18} color={colors.primary[600]} />
+              <Ionicons name="key-outline" size={18} color={colors.primary[600]} />
               <Text className="text-base font-semibold text-primary-700">Generate a strong password</Text>
             </>
           )}
@@ -121,7 +121,7 @@ export default function OnboardingPasswordScreen() {
 
         <TouchableOpacity className="flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600 mt-2" onPress={handleContinue}>
           <Text className="text-base font-semibold text-white">Continue</Text>
-          <Ionicons name="arrow-forward" size={20} color={colors.white} />
+          <Ionicons name="arrow-forward-outline" size={20} color={colors.white} />
         </TouchableOpacity>
       </Card>
       <Text className="text-xs text-neutral-400 text-center">Step 2 of 3</Text>

@@ -35,7 +35,7 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
           {getActivityLabel(activity.type)} • {activity.date}
         </Text>
       </View>
-      {onPress && <Ionicons name="chevron-forward" size={16} color={colors.neutral[300]} />}
+      {onPress && <Ionicons name="chevron-forward-outline" size={16} color={colors.neutral[300]} />}
     </>
   );
 

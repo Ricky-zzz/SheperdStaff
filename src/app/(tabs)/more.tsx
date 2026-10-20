@@ -48,27 +48,27 @@ export default function MoreScreen() {
     {
       title: 'Farm Management',
       items: [
-        { icon: 'map', label: 'Locations', subtitle: 'Manage farm areas', route: '/locations', color: colors.primary[600] },
-        { icon: 'paw', label: 'Animal Types', subtitle: 'Manage livestock categories', route: '/animal-types', color: colors.category.cattle },
-        { icon: 'calendar', label: 'Activity History', subtitle: 'View all activities', route: '/activity', color: colors.earth[600] },
+        { icon: 'map-outline', label: 'Locations', subtitle: 'Manage farm areas', route: '/locations', color: colors.primary[600] },
+        { icon: 'paw-outline', label: 'Animal Types', subtitle: 'Manage livestock categories', route: '/animal-types', color: colors.category.cattle },
+        { icon: 'calendar-outline', label: 'Activity History', subtitle: 'View all activities', route: '/activity', color: colors.earth[600] },
       ],
     },
     {
       title: 'Data & Reports',
       items: [
-        { icon: 'flask', label: 'Load Sample Data', subtitle: 'Add demo records (only if empty)', color: colors.category.duck, onPress: handleLoadSampleData },
-        { icon: 'download', label: 'Export Data', subtitle: 'Download farm records', color: colors.category.chicken },
-        { icon: 'cloud-upload', label: 'Backup', subtitle: 'Save your data', color: colors.category.goat },
+        { icon: 'flask-outline', label: 'Load Sample Data', subtitle: 'Add demo records (only if empty)', color: colors.category.duck, onPress: handleLoadSampleData },
+        { icon: 'download-outline', label: 'Export Data', subtitle: 'Download farm records', color: colors.category.chicken },
+        { icon: 'cloud-upload-outline', label: 'Backup', subtitle: 'Save your data', color: colors.category.goat },
       ],
     },
     {
       title: 'Settings',
       items: [
-        { icon: 'key', label: 'Change Password', subtitle: 'Update your lock password', route: '/profile/password', color: colors.earth[600] },
-        { icon: 'moon', label: 'Appearance', subtitle: 'Theme settings', route: '/profile/theme', color: colors.neutral[600] },
-        { icon: 'notifications', label: 'Notifications', subtitle: 'Manage alerts', color: colors.category.sheep },
-        { icon: 'help-circle', label: 'Help & Support', subtitle: 'Get assistance', color: colors.category.duck },
-        { icon: 'information-circle', label: 'About', subtitle: 'Shepherd Staff v1.0', color: colors.neutral[500] },
+        { icon: 'key-outline', label: 'Change Password', subtitle: 'Update your lock password', route: '/profile/password', color: colors.earth[600] },
+        { icon: 'moon-outline', label: 'Appearance', subtitle: 'Theme settings', route: '/profile/theme', color: colors.neutral[600] },
+        { icon: 'notifications-outline', label: 'Notifications', subtitle: 'Manage alerts', color: colors.category.sheep },
+        { icon: 'help-circle-outline', label: 'Help & Support', subtitle: 'Get assistance', color: colors.category.duck },
+        { icon: 'information-circle-outline', label: 'About', subtitle: 'Shepherd Staff v1.0', color: colors.neutral[500] },
       ],
     },
   ];
@@ -77,7 +77,7 @@ export default function MoreScreen() {
     <Screen>
       <Card className="flex-row items-center mb-5 py-5">
         <View className="w-14 h-14 rounded-full bg-primary-100 justify-center items-center mr-4">
-          <Ionicons name="person" size={32} color={colors.primary[600]} />
+          <Ionicons name="person-outline" size={32} color={colors.primary[600]} />
         </View>
         <View className="flex-1">
           <Text className="text-lg font-semibold text-neutral-800">{profile?.name ?? 'Farm Owner'}</Text>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { FormScroll } from '../../components/ui/FormScroll';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
@@ -12,6 +13,7 @@ import { getAll as getAllLocations } from '../../features/locations/services/loc
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { validateLivestock } from '../../lib/utils/validate';
 import { DateInput } from '../../components/ui/DateInput';
+import { Select } from '../../components/ui/Select';
 
 const STATUSES: { label: string; value: LivestockStatus }[] = [
   { label: 'Active', value: 'active' },
@@ -97,7 +99,7 @@ export default function AddLivestockScreen() {
     `${baseInput} ${errors[field] ? 'border-error' : 'border-border'} mb-1`;
 
   return (
-    <ScrollView className="flex-1 bg-background p-4" showsVerticalScrollIndicator={false}>
+    <FormScroll>
       {errors.form && <Text className="text-sm text-error mb-3">{errors.form}</Text>}
 
       <View className="mb-5">
@@ -122,14 +124,14 @@ export default function AddLivestockScreen() {
             className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg border ${type === 'individual' ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
             onPress={() => setType('individual')}
           >
-            <Ionicons name="person" size={18} color={type === 'individual' ? colors.white : colors.neutral[500]} />
+            <Ionicons name="person-outline" size={18} color={type === 'individual' ? colors.white : colors.neutral[500]} />
             <Text className={`text-base font-medium ${type === 'individual' ? 'text-white' : 'text-neutral-500'}`}>Individual</Text>
           </TouchableOpacity>
           <TouchableOpacity
             className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg border ${type === 'group' ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
             onPress={() => setType('group')}
           >
-            <Ionicons name="people" size={18} color={type === 'group' ? colors.white : colors.neutral[500]} />
+            <Ionicons name="people-outline" size={18} color={type === 'group' ? colors.white : colors.neutral[500]} />
             <Text className={`text-base font-medium ${type === 'group' ? 'text-white' : 'text-neutral-500'}`}>Group/Batch</Text>
           </TouchableOpacity>
         </View>
@@ -198,20 +200,16 @@ export default function AddLivestockScreen() {
             <Text className="text-sm font-medium text-primary-600">Manage →</Text>
           </TouchableOpacity>
         </View>
-        <View className="flex-row flex-wrap gap-2 mb-1">
-          {locations.map((loc) => (
-            <TouchableOpacity
-              key={loc.id}
-              className={`px-3 py-2 rounded-full border ${location === loc.name ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
-              onPress={() => {
-                setLocation(loc.name);
-                if (errors.location) setErrors((p) => ({ ...p, location: '' }));
-              }}
-            >
-              <Text className={`text-sm font-medium ${location === loc.name ? 'text-white' : 'text-neutral-600'}`}>{loc.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <Select
+          selectedValue={location}
+          onValueChange={(v) => {
+            setLocation(v);
+            if (errors.location) setErrors((p) => ({ ...p, location: '' }));
+          }}
+          options={locations.map((loc) => ({ label: loc.name, value: loc.name }))}
+          placeholder="Select location"
+          error={errors.location}
+        />
         {errors.location ? <Text className="text-xs text-error mb-3">{errors.location}</Text> : <View className="mb-3" />}
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Purpose</Text>
@@ -260,12 +258,12 @@ export default function AddLivestockScreen() {
           <Text className="text-base font-semibold text-neutral-600">Cancel</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-[2] flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600" onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator color={colors.white} /> : <Ionicons name="checkmark" size={20} color={colors.white} />}
+          {saving ? <ActivityIndicator color={colors.white} /> : <Ionicons name="checkmark-outline" size={20} color={colors.white} />}
           <Text className="text-base font-semibold text-white">{saving ? 'Saving...' : 'Save Record'}</Text>
         </TouchableOpacity>
       </View>
 
       <View className="h-8" />
-    </ScrollView>
+    </FormScroll>
   );
 }

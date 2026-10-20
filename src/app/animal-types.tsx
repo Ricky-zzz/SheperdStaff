@@ -55,7 +55,7 @@ export default function AnimalTypesScreen() {
       <View className="flex-row justify-between items-center mb-4">
         <Text className="text-lg font-semibold text-neutral-800">Animal types</Text>
         <TouchableOpacity className="flex-row items-center bg-primary-600 px-3 py-2 rounded-lg gap-1" onPress={() => router.push('/animal-types/form')}>
-          <Ionicons name="add" size={18} color={colors.white} />
+          <Ionicons name="add-outline" size={18} color={colors.white} />
           <Text className="text-sm text-white font-semibold">New</Text>
         </TouchableOpacity>
       </View>
@@ -73,7 +73,7 @@ export default function AnimalTypesScreen() {
             >
               <View className="w-10 h-10 rounded-full justify-center items-center mr-3" style={{ backgroundColor: t.color }} />
               <Text className="flex-1 text-base font-medium text-neutral-800">{t.name}</Text>
-              <Ionicons name="chevron-forward" size={18} color={colors.neutral[300]} />
+              <Ionicons name="chevron-forward-outline" size={18} color={colors.neutral[300]} />
             </TouchableOpacity>
           ))}
         </Card>

@@ -44,7 +44,7 @@ export const ListItem: React.FC<ListItemProps> = ({
         {subtitle && <Text className="text-sm text-neutral-500 mt-0.5">{subtitle}</Text>}
       </View>
       {right}
-      {showChevron && <Ionicons name="chevron-forward" size={18} color={colors.neutral[300]} />}
+      {showChevron && <Ionicons name="chevron-forward-outline" size={18} color={colors.neutral[300]} />}
     </TouchableOpacity>
   );
 };

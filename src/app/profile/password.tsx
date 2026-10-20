@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { FormScroll } from '../../components/ui/FormScroll';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
@@ -60,7 +61,7 @@ export default function ChangePasswordScreen() {
   const inputClass = 'bg-card border rounded-lg px-4 py-3 text-base text-neutral-800 mb-1';
 
   return (
-    <View className="flex-1 bg-background p-4">
+    <FormScroll>
       {errors.form && <Text className="text-sm text-error mb-3">{errors.form}</Text>}
 
       <Text className="text-sm font-medium text-neutral-600 mb-2">Current password *</Text>
@@ -130,7 +131,7 @@ export default function ChangePasswordScreen() {
           <ActivityIndicator size="small" color={colors.primary[600]} />
         ) : (
           <>
-            <Ionicons name="key" size={18} color={colors.primary[600]} />
+            <Ionicons name="key-outline" size={18} color={colors.primary[600]} />
             <Text className="text-base font-semibold text-primary-700">Generate a strong password</Text>
           </>
         )}
@@ -141,11 +142,11 @@ export default function ChangePasswordScreen() {
           <ActivityIndicator size="small" color={colors.white} />
         ) : (
           <>
-            <Ionicons name="checkmark" size={20} color={colors.white} />
+            <Ionicons name="checkmark-outline" size={20} color={colors.white} />
             <Text className="text-base font-semibold text-white">Change Password</Text>
           </>
         )}
       </TouchableOpacity>
-    </View>
+    </FormScroll>
   );
 }

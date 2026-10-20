@@ -29,7 +29,7 @@ export const LivestockCard: React.FC<LivestockCardProps> = ({ livestock, onPress
             className="w-11 h-11 rounded-lg justify-center items-center mr-3"
             style={{ backgroundColor: categoryColors.bg }}
           >
-            <Ionicons name="paw" size={20} color={categoryColors.text} />
+            <Ionicons name="paw-outline" size={20} color={categoryColors.text} />
           </View>
           <View className="flex-1">
             <Text className="text-lg font-semibold text-neutral-800">{livestock.name}</Text>
@@ -38,7 +38,7 @@ export const LivestockCard: React.FC<LivestockCardProps> = ({ livestock, onPress
               {livestock.type === 'group' ? ` • ${livestock.quantity} head` : ''}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={18} color={colors.neutral[300]} />
+          <Ionicons name="chevron-forward-outline" size={18} color={colors.neutral[300]} />
         </View>
 
         <View className="flex-row flex-wrap gap-2 mb-3">
@@ -51,15 +51,15 @@ export const LivestockCard: React.FC<LivestockCardProps> = ({ livestock, onPress
 
         <View className="flex-row flex-wrap gap-4">
           <View className="flex-row items-center gap-1">
-            <Ionicons name="location" size={14} color={colors.neutral[400]} />
+            <Ionicons name="location-outline" size={14} color={colors.neutral[400]} />
             <Text className="text-xs text-neutral-500">{livestock.location}</Text>
           </View>
           <View className="flex-row items-center gap-1">
-            <Ionicons name="calendar" size={14} color={colors.neutral[400]} />
+            <Ionicons name="calendar-outline" size={14} color={colors.neutral[400]} />
             <Text className="text-xs text-neutral-500">{ageMonths} months</Text>
           </View>
           <View className="flex-row items-center gap-1">
-            <Ionicons name="flag" size={14} color={colors.neutral[400]} />
+            <Ionicons name="flag-outline" size={14} color={colors.neutral[400]} />
             <Text className="text-xs text-neutral-500">{livestock.purpose}</Text>
           </View>
         </View>

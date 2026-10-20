@@ -27,7 +27,7 @@ export default function LockScreen() {
   return (
     <View className="flex-1 bg-primary-900 items-center justify-center p-6">
       <View className="w-20 h-20 rounded-full bg-white/15 items-center justify-center mb-5">
-        <Ionicons name="lock-closed" size={36} color={colors.white} />
+        <Ionicons name="lock-closed-outline" size={36} color={colors.white} />
       </View>
       <Text className="text-2xl font-bold text-white mb-1">Shepherd Staff</Text>
       <Text className="text-sm text-primary-200 mb-8">
@@ -60,7 +60,7 @@ export default function LockScreen() {
           <ActivityIndicator size="small" color={colors.white} />
         ) : (
           <>
-            <Ionicons name="lock-open" size={20} color={colors.white} />
+            <Ionicons name="lock-open-outline" size={20} color={colors.white} />
             <Text className="text-base font-semibold text-white">Unlock</Text>
           </>
         )}

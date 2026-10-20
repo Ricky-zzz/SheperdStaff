@@ -33,7 +33,7 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, livestockName, onPress
         onPress={onToggle}
         hitSlop={8}
       >
-        {isDone && <Ionicons name="checkmark" size={18} color={colors.success} />}
+        {isDone && <Ionicons name="checkmark-outline" size={18} color={colors.success} />}
       </TouchableOpacity>
 
       <TouchableOpacity className="flex-1" onPress={onPress} activeOpacity={0.7}>

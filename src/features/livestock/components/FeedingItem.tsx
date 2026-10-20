@@ -14,7 +14,7 @@ export const FeedingItem: React.FC<FeedingItemProps> = ({ feeding }) => {
   return (
     <Card className="mb-2 p-3">
       <View className="flex-row items-center gap-2 mb-2">
-        <Ionicons name="restaurant" size={16} color={colors.earth[600]} />
+        <Ionicons name="restaurant-outline" size={16} color={colors.earth[600]} />
         <Text className="text-base font-medium text-neutral-800">{feeding.feedType}</Text>
         <Text className="text-xs text-neutral-400 ml-auto">{feeding.date}</Text>
       </View>

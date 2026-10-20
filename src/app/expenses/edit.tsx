@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { FormScroll } from '../../components/ui/FormScroll';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
@@ -12,12 +13,12 @@ import { validateExpense } from '../../lib/utils/validate';
 import { DateInput } from '../../components/ui/DateInput';
 
 const CATEGORIES: { label: string; value: ExpenseCategory; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { label: 'Feed', value: 'feed', icon: 'restaurant' },
-  { label: 'Medicine', value: 'medicine', icon: 'medkit' },
-  { label: 'Supplies', value: 'supplies', icon: 'cube' },
-  { label: 'Maintenance', value: 'maintenance', icon: 'construct' },
-  { label: 'Labor', value: 'labor', icon: 'people' },
-  { label: 'Other', value: 'other', icon: 'ellipsis-horizontal' },
+  { label: 'Feed', value: 'feed', icon: 'restaurant-outline' },
+  { label: 'Medicine', value: 'medicine', icon: 'medkit-outline' },
+  { label: 'Supplies', value: 'supplies', icon: 'cube-outline' },
+  { label: 'Maintenance', value: 'maintenance', icon: 'construct-outline' },
+  { label: 'Labor', value: 'labor', icon: 'people-outline' },
+  { label: 'Other', value: 'other', icon: 'ellipsis-horizontal-outline' },
 ];
 
 const inputClass = 'bg-card border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-1';
@@ -163,7 +164,7 @@ export default function EditExpenseScreen() {
   const inputCls = (field: string) => `${inputClass} ${errors[field] ? 'border-error' : 'border-border'} mb-1`;
 
   return (
-    <ScrollView className="flex-1 bg-background p-4" showsVerticalScrollIndicator={false}>
+    <FormScroll>
       {errors.form && <Text className="text-sm text-error mb-3">{errors.form}</Text>}
 
       <View className="mb-5">
@@ -198,11 +199,11 @@ export default function EditExpenseScreen() {
         <Text className="text-sm font-medium text-neutral-600 mb-2">Scope</Text>
         <View className="flex-row gap-3 mb-4">
           <TouchableOpacity className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg border ${scope === 'direct' ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setScope('direct')}>
-            <Ionicons name="person" size={18} color={scope === 'direct' ? colors.white : colors.neutral[500]} />
+            <Ionicons name="person-outline" size={18} color={scope === 'direct' ? colors.white : colors.neutral[500]} />
             <Text className={`text-sm font-medium ${scope === 'direct' ? 'text-white' : 'text-neutral-500'}`}>Direct</Text>
           </TouchableOpacity>
           <TouchableOpacity className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg border ${scope === 'bulk' ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setScope('bulk')}>
-            <Ionicons name="people" size={18} color={scope === 'bulk' ? colors.white : colors.neutral[500]} />
+            <Ionicons name="people-outline" size={18} color={scope === 'bulk' ? colors.white : colors.neutral[500]} />
             <Text className={`text-sm font-medium ${scope === 'bulk' ? 'text-white' : 'text-neutral-500'}`}>Bulk</Text>
           </TouchableOpacity>
         </View>
@@ -264,13 +265,13 @@ export default function EditExpenseScreen() {
           <Text className="text-base font-semibold" style={{ color: colors.error }}>Delete</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-[2] flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600" onPress={handleSave} disabled={saving || deleting}>
-          {saving ? <ActivityIndicator color={colors.white} /> : <Ionicons name="checkmark" size={20} color={colors.white} />}
+          {saving ? <ActivityIndicator color={colors.white} /> : <Ionicons name="checkmark-outline" size={20} color={colors.white} />}
           <Text className="text-base font-semibold text-white">{saving ? 'Saving...' : 'Update'}</Text>
         </TouchableOpacity>
       </View>
       <TouchableOpacity className="py-3 items-center mt-2" onPress={() => router.back()}><Text className="text-sm text-neutral-500">Cancel</Text></TouchableOpacity>
 
       <View className="h-8" />
-    </ScrollView>
+    </FormScroll>
   );
 }
