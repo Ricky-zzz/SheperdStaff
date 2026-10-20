@@ -310,9 +310,9 @@ const statusColors = getStatusBadgeColor(animal.status, colors);
               <ExpenseItem expense={expense} highlightLivestockId={animal.id} />
             </TouchableOpacity>
           ))}
-            <Card className="flex-row justify-between items-center bg-primary-50 mt-2">
-              <Text className="text-base font-semibold text-primary-700">Total Expenses</Text>
-              <Text className="text-xl font-bold text-primary-700">₱{totalExpense.toFixed(2)}</Text>
+            <Card className="flex-row justify-between items-center mt-2 border border-neutral-300">
+              <Text className="text-base font-semibold text-neutral-800">Total Expenses</Text>
+              <Text className="text-xl font-bold" style={{ color: colors.error }}>₱{totalExpense.toFixed(2)}</Text>
             </Card>
           </>
         ) : (
@@ -327,9 +327,9 @@ const statusColors = getStatusBadgeColor(animal.status, colors);
               <IncomeItem income={inc} />
             </TouchableOpacity>
           ))}
-          <Card className="mt-2" style={{ backgroundColor: colors.success + '15' }}>
+          <Card className="mt-2 border border-neutral-300">
             <View className="flex-row justify-between items-center">
-              <Text className="text-base font-semibold" style={{ color: colors.success }}>Total Income</Text>
+              <Text className="text-base font-semibold text-neutral-800">Total Income</Text>
               <Text className="text-xl font-bold" style={{ color: colors.success }}>₱{incomeTotal.toFixed(2)}</Text>
             </View>
           </Card>
@@ -338,7 +338,7 @@ const statusColors = getStatusBadgeColor(animal.status, colors);
         <EmptyState icon="trending-up-outline" title="No income recorded" />
       )}
 
-      <Card className="mt-4" style={{ backgroundColor: (incomeTotal - totalExpense) >= 0 ? colors.success + '15' : colors.error + '15' }}>
+      <Card className="mt-4 border-2 border-neutral-400">
         <View className="flex-row justify-between items-center">
           <Text className="text-base font-semibold text-neutral-800">Net Profit</Text>
           <Text className="text-2xl font-bold" style={{ color: (incomeTotal - totalExpense) >= 0 ? colors.success : colors.error }}>

@@ -101,7 +101,7 @@ export default function HomeScreen() {
               {taskCounts.today > 0
                 ? `${taskCounts.today} due today${taskCounts.overdue > 0 ? ` · ${taskCounts.overdue} overdue` : ''}`
                 : taskCounts.overdue > 0
-                ? `${taskCounts.overdue} overdue — catch up!`
+                ? `${taskCounts.overdue} overdue`
                 : nextDue
                 ? `Next: ${nextDue.title} (${nextDue.dueDate})`
                 : 'No pending tasks'}
