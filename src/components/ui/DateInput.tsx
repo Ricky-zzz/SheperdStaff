@@ -8,6 +8,7 @@ interface DateInputProps {
   value: string;
   onChange: (date: string) => void;
   error?: string;
+  allowFuture?: boolean;
 }
 
 function parseISO(iso: string): Date {
@@ -22,7 +23,7 @@ function toISO(date: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-export const DateInput: React.FC<DateInputProps> = ({ value, onChange, error }) => {
+export const DateInput: React.FC<DateInputProps> = ({ value, onChange, error, allowFuture = false }) => {
   const [show, setShow] = useState(false);
   const { colors } = useTheme();
 
@@ -48,7 +49,7 @@ export const DateInput: React.FC<DateInputProps> = ({ value, onChange, error }) 
           value={parseISO(value || toISO(new Date()))}
           mode="date"
           display="default"
-          maximumDate={new Date()}
+          maximumDate={allowFuture ? undefined : new Date()}
           onChange={handleChange}
         />
       )}

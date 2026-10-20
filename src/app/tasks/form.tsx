@@ -114,7 +114,7 @@ export default function TaskFormScreen() {
         {errors.title ? <Text className="text-xs text-error mb-3">{errors.title}</Text> : <View className="mb-3" />}
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Due date *</Text>
-        <DateInput value={dueDate} onChange={(d) => { setDueDate(d); if (errors.dueDate) setErrors((p) => ({ ...p, dueDate: '' })); }} error={errors.dueDate} />
+        <DateInput value={dueDate} onChange={(d) => { setDueDate(d); if (errors.dueDate) setErrors((p) => ({ ...p, dueDate: '' })); }} error={errors.dueDate} allowFuture />
       </View>
 
       <View className="mb-5">
