@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui/Screen';
 import { Card } from '../../components/ui/Card';
@@ -59,6 +59,7 @@ function monthStartISO(): string {
 export default function ReportsScreen() {
   const { colors } = useTheme();
   const { profile } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sharing, setSharing] = useState(false);
@@ -293,7 +294,12 @@ export default function ReportsScreen() {
       <SectionHeader title="Profit by Animal / Group" />
       <Card className="mb-2 p-0">
         {entityRows.map((row, index) => (
-          <View key={row.id} className={`px-4 py-3 ${index < entityRows.length - 1 ? 'border-b border-neutral-100' : ''}`}>
+          <TouchableOpacity
+            key={row.id}
+            className={`px-4 py-3 ${index < entityRows.length - 1 ? 'border-b border-neutral-100' : ''}`}
+            activeOpacity={0.7}
+            onPress={() => router.push(`/livestock/${row.id}`)}
+          >
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
                 <Text className="text-base font-medium text-neutral-800" numberOfLines={1}>{row.name}</Text>
@@ -302,8 +308,9 @@ export default function ReportsScreen() {
               <Text className="text-base font-bold ml-3" style={{ color: row.profit >= 0 ? colors.success : colors.error }}>
                 {row.profit >= 0 ? '+' : ''}₱{row.profit.toFixed(0)}
               </Text>
+              <Ionicons name="chevron-forward-outline" size={16} color={colors.neutral[300]} />
             </View>
-          </View>
+          </TouchableOpacity>
         ))}
         {entityRows.length === 0 && <Text className="text-sm text-neutral-400 p-4">No livestock yet</Text>}
       </Card>
