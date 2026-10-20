@@ -88,6 +88,7 @@ function RootNavigator() {
             options={{ ...headerOptions, title: 'Tasks' }}
           />
           <Stack.Screen name="tasks/form" options={{ ...modalOptions, title: 'Task' }} />
+          <Stack.Screen name="reports/type" options={{ ...headerOptions, title: 'Type Ledger' }} />
           <Stack.Screen
             name="locations"
             options={{ ...headerOptions, title: 'Locations' }}

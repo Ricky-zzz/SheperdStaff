@@ -63,6 +63,7 @@ export default function ReportsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sharing, setSharing] = useState(false);
+  const [showAllEntities, setShowAllEntities] = useState(false);
   const [preset, setPreset] = useState<Preset>('all');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
@@ -200,6 +201,7 @@ export default function ReportsScreen() {
   const maxLivestock = Math.max(1, ...Object.values(livestockByCategoryMap));
   const maxExpense = Math.max(1, ...Object.values(expensesByCategoryMap));
   const maxTypeProfit = Math.max(1, ...typeRows.map((r) => Math.abs(r.profit)));
+  const visibleEntities = showAllEntities ? entityRows : entityRows.slice(0, 5);
 
   const handleShare = async () => {
     setSharing(true);
@@ -278,7 +280,12 @@ export default function ReportsScreen() {
       <SectionHeader title="Profit by Animal Type" />
       <Card className="mb-2">
         {typeRows.map((row) => (
-          <View key={row.key} className="flex-row items-center mb-3">
+          <TouchableOpacity
+            key={row.key}
+            className="flex-row items-center mb-3"
+            activeOpacity={0.7}
+            onPress={() => router.push({ pathname: '/reports/type', params: { category: row.key } })}
+          >
             <Text className="w-20 text-sm text-neutral-600 font-medium" numberOfLines={1}>{row.label}</Text>
             <View className="flex-1 h-5 bg-neutral-100 rounded-sm overflow-hidden mx-2">
               <View className="h-full rounded-sm" style={{ width: `${(Math.abs(row.profit) / maxTypeProfit) * 100}%`, backgroundColor: row.profit >= 0 ? colors.success : colors.error }} />
@@ -286,17 +293,18 @@ export default function ReportsScreen() {
             <Text className="w-20 text-sm font-semibold text-right" style={{ color: row.profit >= 0 ? colors.success : colors.error }}>
               {row.profit >= 0 ? '+' : ''}₱{row.profit.toFixed(0)}
             </Text>
-          </View>
+            <Ionicons name="chevron-forward-outline" size={14} color={colors.neutral[300]} />
+          </TouchableOpacity>
         ))}
         {typeRows.length === 0 && <Text className="text-sm text-neutral-400 py-2">No data in this range</Text>}
       </Card>
 
       <SectionHeader title="Profit by Animal / Group" />
       <Card className="mb-2 p-0">
-        {entityRows.map((row, index) => (
+        {visibleEntities.map((row, index) => (
           <TouchableOpacity
             key={row.id}
-            className={`px-4 py-3 ${index < entityRows.length - 1 ? 'border-b border-neutral-100' : ''}`}
+            className={`px-4 py-3 ${index < visibleEntities.length - 1 ? 'border-b border-neutral-100' : ''}`}
             activeOpacity={0.7}
             onPress={() => router.push(`/livestock/${row.id}`)}
           >
@@ -312,6 +320,11 @@ export default function ReportsScreen() {
             </View>
           </TouchableOpacity>
         ))}
+        {entityRows.length > 5 && (
+          <TouchableOpacity className="py-3 items-center border-t border-neutral-100" onPress={() => setShowAllEntities((v) => !v)}>
+            <Text className="text-sm font-medium text-primary-600">{showAllEntities ? 'Show less' : `View all (${entityRows.length})`}</Text>
+          </TouchableOpacity>
+        )}
         {entityRows.length === 0 && <Text className="text-sm text-neutral-400 p-4">No livestock yet</Text>}
       </Card>
 
