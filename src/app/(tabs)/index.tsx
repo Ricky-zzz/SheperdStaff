@@ -12,6 +12,7 @@ import * as activityService from '../../features/activity/services/activityServi
 import * as expenseService from '../../features/expenses/services/expenseService';
 import * as taskService from '../../features/tasks/services/taskService';
 import { Task } from '../../features/tasks/types';
+import { formatDueTime } from '../../features/tasks/taskMeta';
 import { Activity } from '../../features/activity/types';
 import { useTheme } from '../../lib/theme/ThemeContext';
 
@@ -104,7 +105,7 @@ export default function HomeScreen() {
                 : taskCounts.overdue > 0
                 ? `${taskCounts.overdue} overdue`
                 : nextDue
-                ? `Next: ${nextDue.title} (${nextDue.dueDate})`
+                ? `Next: ${nextDue.title} (${nextDue.dueDate}${nextDue.dueTime ? `, ${formatDueTime(nextDue.dueTime)}` : ''})`
                 : 'No pending tasks'}
             </Text>
           </View>

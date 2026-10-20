@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../lib/theme/ThemeContext';
 import { Task } from '../types';
 import { todayISO } from '../services/taskService';
+import { formatDueTime, getRecurrenceLabel } from '../taskMeta';
 
 interface TaskItemProps {
   task: Task;
@@ -19,6 +20,8 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, livestockName, onPress
   const isOverdue = !isDone && task.dueDate < todayISO();
 
   const subtitleParts = [task.dueDate];
+  if (task.dueTime) subtitleParts.push(formatDueTime(task.dueTime));
+  if (task.recurrence !== 'none') subtitleParts.push(getRecurrenceLabel(task.recurrence));
   if (livestockName) subtitleParts.push(livestockName);
   if (task.notes) subtitleParts.push(task.notes);
 

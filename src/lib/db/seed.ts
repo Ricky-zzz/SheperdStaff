@@ -83,9 +83,21 @@ export async function seedIfNeeded(database: SQLiteDatabase): Promise<boolean> {
 
     for (const t of mockTasks) {
       await database.runAsync(
-        `INSERT INTO tasks (id, title, dueDate, notes, status, livestockId, createdAt, completedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [t.id, t.title, t.dueDate, t.notes ?? null, t.status, t.livestockId ?? null, t.createdAt, t.completedAt ?? null]
+        `INSERT INTO tasks (id, title, dueDate, dueTime, notes, status, livestockId, recurrence, seriesId, createdAt, completedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          t.id,
+          t.title,
+          t.dueDate,
+          t.dueTime ?? null,
+          t.notes ?? null,
+          t.status,
+          t.livestockId ?? null,
+          t.recurrence,
+          t.seriesId ?? null,
+          t.createdAt,
+          t.completedAt ?? null,
+        ]
       );
     }
 

@@ -9,6 +9,9 @@ import { getAll as getAllLivestock } from '../../features/livestock/services/liv
 import * as taskService from '../../features/tasks/services/taskService';
 import { required, dateValid } from '../../lib/utils/validate';
 import { DateInput } from '../../components/ui/DateInput';
+import { TimeInput } from '../../components/ui/TimeInput';
+import { TaskRecurrence } from '../../features/tasks/types';
+import { RECURRENCE_OPTIONS, getRecurrenceLabel } from '../../features/tasks/taskMeta';
 
 const inputClass = 'bg-card border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-1';
 
@@ -20,6 +23,8 @@ export default function TaskFormScreen() {
   const [loading, setLoading] = useState(isEdit);
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState(taskService.todayISO());
+  const [dueTime, setDueTime] = useState<string | undefined>(undefined);
+  const [recurrence, setRecurrence] = useState<TaskRecurrence>('none');
   const [notes, setNotes] = useState('');
   const [livestockId, setLivestockId] = useState<string | null>(null);
   const [livestock, setLivestock] = useState<Livestock[]>([]);
@@ -34,6 +39,8 @@ export default function TaskFormScreen() {
       if (t) {
         setTitle(t.title);
         setDueDate(t.dueDate);
+        setDueTime(t.dueTime);
+        setRecurrence(t.recurrence);
         setNotes(t.notes ?? '');
         setLivestockId(t.livestockId ?? null);
       }
@@ -57,8 +64,10 @@ export default function TaskFormScreen() {
       const payload = {
         title: title.trim(),
         dueDate,
+        dueTime,
         notes: notes.trim() || undefined,
         livestockId: livestockId || undefined,
+        recurrence,
       };
       if (isEdit) {
         await taskService.update(id, payload);
@@ -115,6 +124,30 @@ export default function TaskFormScreen() {
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Due date *</Text>
         <DateInput value={dueDate} onChange={(d) => { setDueDate(d); if (errors.dueDate) setErrors((p) => ({ ...p, dueDate: '' })); }} error={errors.dueDate} allowFuture />
+
+        <Text className="text-sm font-medium text-neutral-600 mb-2">Time (optional)</Text>
+        <TimeInput value={dueTime} onChange={setDueTime} />
+        <View className="mb-3" />
+
+        <Text className="text-sm font-medium text-neutral-600 mb-2">Repeat</Text>
+        <View className="flex-row flex-wrap gap-2">
+          {RECURRENCE_OPTIONS.map((r) => (
+            <TouchableOpacity
+              key={r}
+              className={`px-3 py-2 rounded-full border ${recurrence === r ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
+              onPress={() => setRecurrence(r)}
+            >
+              <Text className={`text-sm ${recurrence === r ? 'text-white' : 'text-neutral-600'}`}>
+                {r === 'none' ? 'None' : getRecurrenceLabel(r)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        {recurrence !== 'none' ? (
+          <Text className="text-xs text-neutral-400 mt-2">
+            Completing this task will create the next one automatically.
+          </Text>
+        ) : null}
       </View>
 
       <View className="mb-5">

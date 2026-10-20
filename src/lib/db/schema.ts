@@ -47,9 +47,12 @@ CREATE TABLE IF NOT EXISTS tasks (
   id TEXT PRIMARY KEY NOT NULL,
   title TEXT NOT NULL,
   dueDate TEXT NOT NULL,
+  dueTime TEXT,
   notes TEXT,
   status TEXT NOT NULL DEFAULT 'pending',
   livestockId TEXT,
+  recurrence TEXT NOT NULL DEFAULT 'none',
+  seriesId TEXT,
   createdAt TEXT NOT NULL,
   completedAt TEXT,
   FOREIGN KEY (livestockId) REFERENCES livestock(id) ON DELETE SET NULL
@@ -130,6 +133,18 @@ export async function ensureSchema(database: SQLiteDatabase): Promise<void> {
     }
   } catch {
     // table missing or already migrated
+  }
+  // Migration: task due time + recurrence (older installs)
+  for (const ddl of [
+    'ALTER TABLE tasks ADD COLUMN dueTime TEXT',
+    "ALTER TABLE tasks ADD COLUMN recurrence TEXT NOT NULL DEFAULT 'none'",
+    'ALTER TABLE tasks ADD COLUMN seriesId TEXT',
+  ]) {
+    try {
+      await database.execAsync(ddl);
+    } catch {
+      // column already exists
+    }
   }
   // Migration: add user_profile.colorMode (older installs)
   try {
