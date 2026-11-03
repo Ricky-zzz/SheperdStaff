@@ -22,11 +22,11 @@ export function getActivityColor(type: ActivityType, colors: ThemeColors): strin
     case 'expense_added': return colors.error;
     case 'income': return colors.success;
     case 'health_note': return colors.primary[500];
-    case 'status_change': return '#9F7AEA';
+    case 'status_change': return colors.category.sheep;
     case 'livestock_added': return colors.success;
     case 'sale': return colors.category.cattle;
     case 'task_completed': return colors.success;
-    default: return colors.neutral[400];
+    default: return colors.neutral[500];
   }
 }
 

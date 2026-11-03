@@ -30,13 +30,13 @@ export const HealthNoteItem: React.FC<HealthNoteItemProps> = ({ note }) => {
         : colors.category.cattle,
   };
   return (
-    <Card className="mb-2 p-3">
+    <Card className="mb-4 p-4">
       <View className="flex-row items-center gap-2 mb-2">
         <Ionicons name={meta.icon} size={16} color={meta.color} />
         <Text className="text-sm font-semibold" style={{ color: meta.color }}>
           {note.type.charAt(0).toUpperCase() + note.type.slice(1)}
         </Text>
-        <Text className="text-xs text-neutral-400 ml-auto">{note.date}</Text>
+        <Text className="text-xs text-neutral-500 ml-auto">{note.date}</Text>
       </View>
       <Text className="text-base text-neutral-700 leading-5">{note.note}</Text>
     </Card>

@@ -55,14 +55,25 @@ export default function AllExpensesScreen() {
     <Screen refreshing={refreshing} onRefresh={refresh}>
       <View className="flex-row justify-between items-center mb-4">
         <Text className="text-lg font-semibold text-neutral-800">{sorted.length} expenses</Text>
-        <TouchableOpacity className="flex-row items-center bg-primary-600 px-3 py-2 rounded-lg gap-1" onPress={() => router.push('/expenses/new')}>
-          <Ionicons name="add-outline" size={18} color={colors.white} />
-          <Text className="text-sm text-white font-semibold">Add</Text>
+        <TouchableOpacity
+          className="min-h-11 flex-row items-center justify-center bg-primary-600 px-3 py-2 rounded-lg gap-1"
+          onPress={() => router.push('/expenses/new')}
+          accessibilityRole="button"
+          accessibilityLabel="Add expense"
+        >
+          <Ionicons name="add-outline" size={18} color={colors.onPrimary} />
+          <Text className="text-sm text-onPrimary font-semibold">Add</Text>
         </TouchableOpacity>
       </View>
 
       {sorted.map((expense) => (
-        <TouchableOpacity key={expense.id} activeOpacity={0.7} onPress={() => router.push({ pathname: '/expenses/edit', params: { id: expense.id } })}>
+        <TouchableOpacity
+          key={expense.id}
+          activeOpacity={0.7}
+          onPress={() => router.push({ pathname: '/expenses/edit', params: { id: expense.id } })}
+          accessibilityRole="button"
+          accessibilityLabel={`Expense ${expense.description}`}
+        >
           <ExpenseItem expense={expense} />
         </TouchableOpacity>
       ))}

@@ -34,6 +34,9 @@ export interface ThemeColors {
   error: string;
   success: string;
   warning: string;
+  onPrimary: string;
+  onSuccess: string;
+  onError: string;
 }
 
 export interface ThemeDef {
@@ -75,7 +78,7 @@ function makePalette(
   background: string,
   card: string,
   border: string,
-  opts: Partial<Pick<ThemeColors, 'error' | 'success' | 'warning' | 'earth'>> = {}
+  opts: Partial<Pick<ThemeColors, 'error' | 'success' | 'warning' | 'earth' | 'onPrimary' | 'onSuccess' | 'onError'>> = {}
 ): ThemeColors {
   return {
     primary,
@@ -87,9 +90,12 @@ function makePalette(
     background,
     card,
     border,
-    error: opts.error ?? '#EF4444',
-    success: opts.success ?? '#10B981',
+    error: opts.error ?? '#DC2626',
+    success: opts.success ?? '#047857',
     warning: opts.warning ?? '#F59E0B',
+    onPrimary: opts.onPrimary ?? WHITE,
+    onSuccess: opts.onSuccess ?? WHITE,
+    onError: opts.onError ?? WHITE,
   };
 }
 
@@ -269,27 +275,27 @@ export const THEMES: ThemeDef[] = [
   {
     key: 'earth',
     name: 'Earth Green',
-    light: makePalette(EARTH_PRIMARY_LIGHT, EARTH_NEUTRAL_LIGHT, '#F5F5F4', '#FFFFFF', '#E7E5E4'),
+    light: makePalette(EARTH_PRIMARY_LIGHT, EARTH_NEUTRAL_LIGHT, '#FAFAF9', '#FFFFFF', '#E7E5E4'),
     dark: makePalette(
       EARTH_PRIMARY_DARK,
       EARTH_NEUTRAL_DARK,
       '#14120F',
       '#1E1C18',
       '#33302B',
-      { error: '#F87171', success: '#34D399', warning: '#FBBF24' }
+      { error: '#F87171', success: '#34D399', warning: '#FBBF24', onPrimary: '#0C1F16', onSuccess: '#1C1917', onError: '#1C1917' }
     ),
   },
   {
     key: 'ocean',
     name: 'Ocean Blue',
-    light: makePalette(OCEAN_PRIMARY_LIGHT, OCEAN_NEUTRAL_LIGHT, '#F1F5F9', '#FFFFFF', '#E2E8F0'),
+    light: makePalette(OCEAN_PRIMARY_LIGHT, OCEAN_NEUTRAL_LIGHT, '#F8FAFC', '#FFFFFF', '#E2E8F0'),
     dark: makePalette(
       OCEAN_PRIMARY_DARK,
       OCEAN_NEUTRAL_DARK,
       '#0F141B',
       '#1A2028',
       '#2A323D',
-      { error: '#F87171', success: '#34D399', warning: '#FBBF24' }
+      { error: '#F87171', success: '#34D399', warning: '#FBBF24', onPrimary: '#0B1424', onSuccess: '#1C1917', onError: '#1C1917' }
     ),
   },
   {
@@ -298,7 +304,7 @@ export const THEMES: ThemeDef[] = [
     light: makePalette(
       SUNSET_PRIMARY_LIGHT,
       SUNSET_NEUTRAL_LIGHT,
-      '#FAF7F2',
+      '#FDFAF6',
       '#FFFFFF',
       '#EAE3D8',
       { earth: SUNSET_EARTH_SCALE }
@@ -309,7 +315,7 @@ export const THEMES: ThemeDef[] = [
       '#191512',
       '#241F1A',
       '#38312A',
-      { earth: SUNSET_EARTH_SCALE, error: '#F87171', success: '#34D399', warning: '#FBBF24' }
+      { earth: SUNSET_EARTH_SCALE, error: '#F87171', success: '#34D399', warning: '#FBBF24', onPrimary: '#241705', onSuccess: '#1C1917', onError: '#1C1917' }
     ),
   },
 ];

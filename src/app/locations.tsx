@@ -55,9 +55,14 @@ export default function LocationsScreen() {
     <Screen refreshing={refreshing} onRefresh={refresh}>
       <View className="flex-row justify-between items-center mb-4">
         <Text className="text-lg font-semibold text-neutral-800">Farm locations</Text>
-        <TouchableOpacity className="flex-row items-center bg-primary-600 px-3 py-2 rounded-lg gap-1" onPress={() => router.push('/locations/form')}>
-          <Ionicons name="add-outline" size={18} color={colors.white} />
-          <Text className="text-sm text-white font-semibold">New</Text>
+        <TouchableOpacity
+          className="min-h-11 flex-row items-center justify-center bg-primary-600 px-3 py-2 rounded-lg gap-1"
+          onPress={() => router.push('/locations/form')}
+          accessibilityRole="button"
+          accessibilityLabel="New location"
+        >
+          <Ionicons name="add-outline" size={18} color={colors.onPrimary} />
+          <Text className="text-sm text-onPrimary font-semibold">New</Text>
         </TouchableOpacity>
       </View>
 

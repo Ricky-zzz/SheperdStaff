@@ -132,14 +132,20 @@ export default function ExpensesScreen() {
         <TouchableOpacity
           className={`flex-1 py-2.5 rounded-lg border ${segment === 'expenses' ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
           onPress={() => setSegment('expenses')}
+          accessibilityRole="radio"
+          accessibilityState={{ selected: segment === 'expenses' }}
+          accessibilityLabel="Expenses"
         >
-          <Text className={`text-sm font-semibold text-center ${segment === 'expenses' ? 'text-white' : 'text-neutral-600'}`}>Expenses</Text>
+            <Text className={`text-sm font-semibold text-center ${segment === 'expenses' ? 'text-onPrimary' : 'text-neutral-600'}`}>Expenses</Text>
         </TouchableOpacity>
         <TouchableOpacity
           className={`flex-1 py-2.5 rounded-lg border ${segment === 'income' ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
           onPress={() => setSegment('income')}
+          accessibilityRole="radio"
+          accessibilityState={{ selected: segment === 'income' }}
+          accessibilityLabel="Income"
         >
-          <Text className={`text-sm font-semibold text-center ${segment === 'income' ? 'text-white' : 'text-neutral-600'}`}>Income</Text>
+            <Text className={`text-sm font-semibold text-center ${segment === 'income' ? 'text-onPrimary' : 'text-neutral-600'}`}>Income</Text>
         </TouchableOpacity>
       </View>
 
@@ -156,8 +162,8 @@ export default function ExpensesScreen() {
         <>
           <Card className={`mt-4 mb-4 items-center ${colorMode === 'uniform' ? 'border border-neutral-300' : 'bg-primary-700'}`}>
             <Text className={`text-sm font-medium ${colorMode === 'uniform' ? 'text-neutral-600' : 'text-primary-200'}`}>Total Expenses · {range.label}</Text>
-            <Text className="text-3xl font-bold mt-1" style={{ color: colorMode === 'uniform' ? colors.error : colors.white }}>₱{totalExpenses.toFixed(2)}</Text>
-            <Text className={`text-sm mt-1 ${colorMode === 'uniform' ? 'text-neutral-400' : 'text-primary-300'}`}>{filteredExpenses.length} transactions</Text>
+            <Text className="text-3xl font-bold mt-1" style={{ color: colorMode === 'uniform' ? colors.error : colors.onPrimary }}>₱{totalExpenses.toFixed(2)}</Text>
+            <Text className={`text-sm mt-1 ${colorMode === 'uniform' ? 'text-neutral-500' : 'text-primary-100'}`}>{filteredExpenses.length} transactions</Text>
           </Card>
 
           <View className="flex-row flex-wrap gap-2 mb-4">
@@ -170,6 +176,9 @@ export default function ExpensesScreen() {
                   key={key}
                   className={`w-[31%] bg-card rounded-lg p-3 items-center shadow-sm ${isSelected ? 'border-2 border-primary-500' : ''}`}
                   onPress={() => setSelectedCategory(isSelected ? 'all' : key)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: isSelected }}
+                  accessibilityLabel={`${info.label}, ${amount.toFixed(0)} pesos`}
                 >
                   <View className="w-9 h-9 rounded-lg justify-center items-center mb-2" style={{ backgroundColor: info.color + '15' }}>
                     <Ionicons name={info.icon} size={18} color={info.color} />
@@ -190,6 +199,8 @@ export default function ExpensesScreen() {
                     key={row.id}
                     className={`flex-row items-center justify-between px-4 py-3 ${index < topSpenders.length - 1 ? 'border-b border-neutral-100' : ''}`}
                     onPress={() => router.push(`/livestock/${row.id}`)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${row.name}, ${row.amount.toFixed(0)} pesos spent`}
                   >
                     <View className="flex-row items-center gap-3 flex-1">
                       <View className="w-8 h-8 rounded-lg items-center justify-center" style={{ backgroundColor: colors.neutral[100] }}>
@@ -209,18 +220,35 @@ export default function ExpensesScreen() {
               {selectedCategory === 'all' ? 'Recent Expenses' : getExpenseCategoryMeta(selectedCategory, colors, colorMode).label}
             </Text>
             <View className="flex-row items-center gap-3">
-              <TouchableOpacity onPress={() => router.push('/expenses/all')}>
+              <TouchableOpacity
+                onPress={() => router.push('/expenses/all')}
+                className="px-2 py-2 -my-2"
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="See all expenses"
+              >
                 <Text className="text-sm font-medium text-primary-600">See all</Text>
               </TouchableOpacity>
-              <TouchableOpacity className="flex-row items-center bg-primary-600 px-3 py-2 rounded-lg gap-1" onPress={() => router.push('/expenses/new')}>
-                <Ionicons name="add-outline" size={18} color={colors.white} />
-                <Text className="text-sm text-white font-semibold">Add</Text>
+              <TouchableOpacity
+                className="min-h-11 flex-row items-center bg-primary-600 px-3 py-2 rounded-lg gap-1"
+                onPress={() => router.push('/expenses/new')}
+                accessibilityRole="button"
+                accessibilityLabel="Add expense"
+              >
+                <Ionicons name="add-outline" size={18} color={colors.onPrimary} />
+                <Text className="text-sm text-onPrimary font-semibold">Add</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           {recentExpenses.map((expense) => (
-            <TouchableOpacity key={expense.id} activeOpacity={0.7} onPress={() => router.push({ pathname: '/expenses/edit', params: { id: expense.id } })}>
+            <TouchableOpacity
+              key={expense.id}
+              activeOpacity={0.7}
+              onPress={() => router.push({ pathname: '/expenses/edit', params: { id: expense.id } })}
+              accessibilityRole="button"
+              accessibilityLabel={`Expense ${expense.description}`}
+            >
               <ExpenseItem expense={expense} />
             </TouchableOpacity>
           ))}
@@ -230,9 +258,9 @@ export default function ExpensesScreen() {
       ) : (
         <>
           <Card className={`mt-4 mb-4 items-center ${colorMode === 'uniform' ? 'border border-neutral-300' : 'bg-success'}`}>
-            <Text className={`text-sm font-medium ${colorMode === 'uniform' ? 'text-neutral-600' : 'text-white'}`}>Total Income · {range.label}</Text>
-            <Text className="text-3xl font-bold mt-1" style={{ color: colorMode === 'uniform' ? colors.success : colors.white }}>₱{totalInc.toFixed(2)}</Text>
-            <Text className={`text-sm mt-1 ${colorMode === 'uniform' ? 'text-neutral-400' : 'text-white'}`}>{filteredIncome.length} entries · Net: {net >= 0 ? '+' : ''}₱{net.toFixed(2)}</Text>
+            <Text className={`text-sm font-medium ${colorMode === 'uniform' ? 'text-neutral-600' : 'text-onSuccess'}`}>Total Income · {range.label}</Text>
+            <Text className="text-3xl font-bold mt-1" style={{ color: colorMode === 'uniform' ? colors.success : colors.onSuccess }}>₱{totalInc.toFixed(2)}</Text>
+            <Text className={`text-sm mt-1 ${colorMode === 'uniform' ? 'text-neutral-500' : 'text-onSuccess'}`}>{filteredIncome.length} entries · Net: {net >= 0 ? '+' : ''}₱{net.toFixed(2)}</Text>
           </Card>
 
           <Card className="mb-4">
@@ -248,6 +276,8 @@ export default function ExpensesScreen() {
                     key={row.id}
                     className={`flex-row items-center justify-between px-4 py-3 ${index < topEarners.length - 1 ? 'border-b border-neutral-100' : ''}`}
                     onPress={() => router.push(`/livestock/${row.id}`)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`${row.name}, ${row.amount.toFixed(0)} pesos earned`}
                   >
                     <View className="flex-row items-center gap-3 flex-1">
                       <View className="w-8 h-8 rounded-lg items-center justify-center" style={{ backgroundColor: colors.neutral[100] }}>
@@ -265,18 +295,35 @@ export default function ExpensesScreen() {
           <View className="flex-row justify-between items-center mb-3">
             <Text className="text-lg font-semibold text-neutral-800">Recent Income</Text>
             <View className="flex-row items-center gap-3">
-              <TouchableOpacity onPress={() => router.push('/income/all')}>
+              <TouchableOpacity
+                onPress={() => router.push('/income/all')}
+                className="px-2 py-2 -my-2"
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="See all income"
+              >
                 <Text className="text-sm font-medium text-primary-600">See all</Text>
               </TouchableOpacity>
-              <TouchableOpacity className="flex-row items-center bg-success px-3 py-2 rounded-lg gap-1" onPress={() => router.push('/income/form')}>
-                <Ionicons name="add-outline" size={18} color={colors.white} />
-                <Text className="text-sm text-white font-semibold">Add</Text>
+              <TouchableOpacity
+                className="min-h-11 flex-row items-center bg-success px-3 py-2 rounded-lg gap-1"
+                onPress={() => router.push('/income/form')}
+                accessibilityRole="button"
+                accessibilityLabel="Add income"
+              >
+                <Ionicons name="add-outline" size={18} color={colors.onSuccess} />
+                <Text className="text-sm text-onSuccess font-semibold">Add</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           {recentIncome.map((inc) => (
-            <TouchableOpacity key={inc.id} activeOpacity={0.7} onPress={() => router.push({ pathname: '/income/form', params: { id: inc.id } })}>
+            <TouchableOpacity
+              key={inc.id}
+              activeOpacity={0.7}
+              onPress={() => router.push({ pathname: '/income/form', params: { id: inc.id } })}
+              accessibilityRole="button"
+              accessibilityLabel={`Income ${inc.description}`}
+            >
               <IncomeItem income={inc} />
             </TouchableOpacity>
           ))}

@@ -1,23 +1,25 @@
 import '../../global.css';
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '../lib/auth/AuthContext';
 import { ThemeProvider, useTheme } from '../lib/theme/ThemeContext';
 
-function LoadingView() {
+function LoadingView({ darkMode }: { darkMode: boolean }) {
+  const { colors } = useTheme();
   return (
     <View className="flex-1 items-center justify-center bg-background">
-      <StatusBar style="dark" />
-      <ActivityIndicator color="#2F855A" />
+      <StatusBar style={darkMode ? 'light' : 'dark'} />
+      <ActivityIndicator color={colors.primary[600]} />
     </View>
   );
 }
 
 function RootNavigator() {
   const { state } = useAuth();
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
   const router = useRouter();
   const segments = useSegments();
   const navState = useRootNavigationState();
@@ -34,7 +36,7 @@ function RootNavigator() {
     }
   }, [state, segments, navState?.key, router]);
 
-  if (state === 'loading') return <LoadingView />;
+  if (state === 'loading') return <LoadingView darkMode={darkMode} />;
 
   const headerOptions = {
     headerShown: true,
@@ -50,7 +52,7 @@ function RootNavigator() {
 
   return (
     <>
-      <StatusBar style="dark" />
+      <StatusBar style={darkMode ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -99,6 +101,13 @@ function RootNavigator() {
             options={{ ...headerOptions, title: 'Animal Types' }}
           />
           <Stack.Screen name="animal-types/form" options={{ ...modalOptions, title: 'Animal Type' }} />
+          <Stack.Screen
+            name="inventory"
+            options={{ ...headerOptions, title: 'Feed Inventory' }}
+          />
+          <Stack.Screen name="inventory/[id]" options={{ ...headerOptions, title: 'Feed Details' }} />
+          <Stack.Screen name="inventory/form" options={{ ...modalOptions, title: 'Feed Item' }} />
+          <Stack.Screen name="inventory/restock" options={{ ...modalOptions, title: 'Restock Feed' }} />
         </Stack.Protected>
 
         <Stack.Protected guard={state === 'locked'}>
@@ -112,10 +121,12 @@ function RootNavigator() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <RootNavigator />
-      </ThemeProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <ThemeProvider>
+          <RootNavigator />
+        </ThemeProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }

@@ -20,7 +20,7 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({ expense, highlightLive
   const share = highlightLivestockId ? expense.allocations?.find((a) => a.livestockId === highlightLivestockId)?.amount : undefined;
   const displayAmount = share ?? expense.amount;
   return (
-    <Card className="mb-2 p-3">
+    <Card className="mb-4 p-4">
       <View className="flex-row items-center">
         <View
           className="w-10 h-10 rounded-lg justify-center items-center mr-3"
@@ -30,7 +30,7 @@ export const ExpenseItem: React.FC<ExpenseItemProps> = ({ expense, highlightLive
         </View>
         <View className="flex-1">
           <Text className="text-base font-medium text-neutral-800">{expense.description}</Text>
-          <Text className="text-xs text-neutral-400 mt-0.5">
+          <Text className="text-xs text-neutral-500 mt-0.5">
             {expense.date}
             {isBulk ? ` • Bulk split ${expense.allocations!.length} ways` : ''}
           </Text>

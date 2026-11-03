@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { useTheme } from '../../lib/theme/ThemeContext';
 import { ThemePicker } from '../../components/ui/ThemePicker';
-import { ColorMode } from '../../features/profile/types';
+import { ColorMode, Appearance } from '../../features/profile/types';
 
 export default function OnboardingThemeScreen() {
   const { draft, setDraft, completeOnboarding } = useAuth();
   const { colors } = useTheme();
   const [themeKey, setThemeKey] = useState(draft.themeKey);
-  const [darkMode, setDarkMode] = useState(draft.darkMode);
+  const [appearance, setAppearance] = useState<Appearance>(draft.appearance);
   const [colorMode, setColorMode] = useState<ColorMode>(draft.colorMode);
   const [saving, setSaving] = useState(false);
 
@@ -20,9 +21,9 @@ export default function OnboardingThemeScreen() {
     setDraft({ themeKey: key });
   };
 
-  const handleDarkMode = (value: boolean) => {
-    setDarkMode(value);
-    setDraft({ darkMode: value });
+  const handleAppearance = (value: Appearance) => {
+    setAppearance(value);
+    setDraft({ appearance: value });
   };
 
   const handleColorMode = (value: ColorMode) => {
@@ -33,7 +34,7 @@ export default function OnboardingThemeScreen() {
   const handleFinish = async () => {
     setSaving(true);
     try {
-      setDraft({ themeKey, darkMode, colorMode });
+      setDraft({ themeKey, appearance, colorMode });
       await completeOnboarding();
     } finally {
       setSaving(false);
@@ -56,24 +57,24 @@ export default function OnboardingThemeScreen() {
         <ThemePicker
           selected={themeKey}
           onSelect={handleSelect}
-          darkMode={darkMode}
-          onDarkModeChange={handleDarkMode}
+          appearance={appearance}
+          onAppearanceChange={handleAppearance}
           colorMode={colorMode}
           onColorModeChange={handleColorMode}
         />
 
-        <TouchableOpacity className="flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600 mt-6" onPress={handleFinish} disabled={saving}>
-          {saving ? (
-            <ActivityIndicator size="small" color={colors.white} />
-          ) : (
-            <>
-              <Text className="text-base font-semibold text-white">Get Started</Text>
-              <Ionicons name="checkmark-outline" size={20} color={colors.white} />
-            </>
-          )}
-        </TouchableOpacity>
+        <Button
+          title="Get Started"
+          variant="primary"
+          size="lg"
+          icon="checkmark-outline"
+          iconPosition="right"
+          className="mt-6"
+          loading={saving}
+          onPress={handleFinish}
+        />
       </Card>
-      <Text className="text-xs text-neutral-400 text-center">Step 3 of 3</Text>
+      <Text className="text-xs text-neutral-500 text-center">Step 3 of 3</Text>
     </View>
   );
 }

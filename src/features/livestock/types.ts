@@ -19,11 +19,21 @@ export interface FeedingRecord {
   date: string;
   feedType: string;
   amount: string;
+  /** Inventory link (stock-backed feeding). */
+  inventoryId?: string;
+  /** Quantity consumed in the inventory item's unit (e.g. kg). */
+  quantity?: number;
+  unit?: string;
+  unitCost?: number;
+  /** Monetary cost of this feeding (quantity × unitCost at time of feeding). */
+  cost?: number;
   notes?: string;
 }
 
 export interface Livestock {
   id: string;
+  /** Human-readable unique code: Animal ID (individual) or Batch ID (group). Stable once created. */
+  code: string;
   name: string;
   category: LivestockCategory;
   type: LivestockType;

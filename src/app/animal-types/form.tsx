@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { FormScroll } from '../../components/ui/FormScroll';
+import { Button } from '../../components/ui/Button';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
@@ -93,12 +94,13 @@ export default function AnimalTypeFormScreen() {
       <TextInput
         className={`${inputClass} ${errors.name ? 'border-error' : 'border-border'}`}
         placeholder="e.g., Dairy Cows, Layers"
-        placeholderTextColor={colors.neutral[400]}
+        placeholderTextColor={colors.neutral[500]}
         value={name}
         onChangeText={(v) => {
           setName(v);
           if (errors.name) setErrors((p) => ({ ...p, name: '' }));
         }}
+        onBlur={() => setErrors((prev) => ({ ...prev, name: validateAnimalType({ name, color }).name ?? '' }))}
       />
       {errors.name ? <Text className="text-xs text-error mb-3">{errors.name}</Text> : <View className="mb-3" />}
 
@@ -111,7 +113,7 @@ export default function AnimalTypeFormScreen() {
             style={{ backgroundColor: c }}
             onPress={() => setColor(c)}
           >
-            {color === c && <Ionicons name="checkmark-outline" size={22} color={colors.white} />}
+            {color === c && <Ionicons name="checkmark-outline" size={22} color={colors.black} />}
           </TouchableOpacity>
         ))}
       </View>
@@ -119,17 +121,12 @@ export default function AnimalTypeFormScreen() {
 
       <View className="flex-row gap-3 mt-4">
         {isEdit && (
-          <TouchableOpacity className="w-14 py-4 rounded-lg border border-error items-center" onPress={handleDelete} disabled={deleting}>
+          <TouchableOpacity className="w-14 py-4 rounded-lg border border-error items-center" onPress={handleDelete} disabled={deleting} accessibilityRole="button" accessibilityLabel="Delete">
             {deleting ? <ActivityIndicator size="small" color={colors.error} /> : <Ionicons name="trash-outline" size={18} color={colors.error} />}
           </TouchableOpacity>
         )}
-        <TouchableOpacity className="flex-1 py-4 rounded-lg border border-border items-center" onPress={() => router.back()} disabled={saving}>
-          <Text className="text-base font-semibold text-neutral-600">Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="flex-[2] flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600" onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator color={colors.white} /> : <Ionicons name="checkmark-outline" size={20} color={colors.white} />}
-          <Text className="text-base font-semibold text-white">{saving ? 'Saving...' : isEdit ? 'Save' : 'Add'}</Text>
-        </TouchableOpacity>
+        <Button title="Cancel" variant="neutral" size="lg" className="flex-1" onPress={() => router.back()} disabled={saving} />
+        <Button title={saving ? 'Saving...' : isEdit ? 'Save' : 'Add'} variant="primary" size="lg" className="flex-[2]" icon="checkmark-outline" loading={saving} onPress={handleSave} disabled={saving} />
       </View>
     </FormScroll>
   );

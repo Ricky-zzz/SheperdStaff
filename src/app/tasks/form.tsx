@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { FormScroll } from '../../components/ui/FormScroll';
+import { Button } from '../../components/ui/Button';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
 import { Livestock } from '../../features/livestock/types';
+import { LivestockPicker } from '../../components/ui/LivestockPicker';
 import { getAll as getAllLivestock } from '../../features/livestock/services/livestockService';
 import * as taskService from '../../features/tasks/services/taskService';
 import { required, dateValid } from '../../lib/utils/validate';
@@ -110,6 +112,7 @@ export default function TaskFormScreen() {
   }
 
   const inputCls = (field: string) => `${inputClass} ${errors[field] ? 'border-error' : 'border-border'} mb-1`;
+  const touchTitle = () => setErrors((prev) => ({ ...prev, title: required(title) ?? '' }));
 
   return (
     <FormScroll>
@@ -119,7 +122,7 @@ export default function TaskFormScreen() {
         <Text className="text-lg font-semibold text-neutral-800 mb-4">{isEdit ? 'Task Details' : 'New Task'}</Text>
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Task title *</Text>
-        <TextInput className={inputCls('title')} placeholder="e.g., Vaccinate herd, Buy feed" placeholderTextColor={colors.neutral[400]} value={title} onChangeText={(v) => { setTitle(v); if (errors.title) setErrors((p) => ({ ...p, title: '' })); }} />
+        <TextInput className={inputCls('title')} placeholder="e.g., Vaccinate herd, Buy feed" placeholderTextColor={colors.neutral[500]} value={title} onChangeText={(v) => { setTitle(v); if (errors.title) setErrors((p) => ({ ...p, title: '' })); }} onBlur={touchTitle} />
         {errors.title ? <Text className="text-xs text-error mb-3">{errors.title}</Text> : <View className="mb-3" />}
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Due date *</Text>
@@ -134,17 +137,19 @@ export default function TaskFormScreen() {
           {RECURRENCE_OPTIONS.map((r) => (
             <TouchableOpacity
               key={r}
-              className={`px-3 py-2 rounded-full border ${recurrence === r ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
+              className={`min-h-[44px] items-center justify-center px-3 py-2 rounded-full border ${recurrence === r ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
               onPress={() => setRecurrence(r)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: recurrence === r }}
             >
-              <Text className={`text-sm ${recurrence === r ? 'text-white' : 'text-neutral-600'}`}>
+              <Text className={`text-sm ${recurrence === r ? 'text-onPrimary' : 'text-neutral-600'}`}>
                 {r === 'none' ? 'None' : getRecurrenceLabel(r)}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
         {recurrence !== 'none' ? (
-          <Text className="text-xs text-neutral-400 mt-2">
+          <Text className="text-xs text-neutral-500 mt-2">
             Completing this task will create the next one automatically.
           </Text>
         ) : null}
@@ -152,39 +157,24 @@ export default function TaskFormScreen() {
 
       <View className="mb-5">
         <Text className="text-sm font-medium text-neutral-600 mb-2">Link to livestock (optional)</Text>
-        <View className="flex-row flex-wrap gap-2">
-          <TouchableOpacity className={`px-3 py-2 rounded-full border ${!livestockId ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setLivestockId(null)}>
-            <Text className={`text-sm ${!livestockId ? 'text-white' : 'text-neutral-600'}`}>None</Text>
-          </TouchableOpacity>
-          {livestock.map((l) => (
-            <TouchableOpacity key={l.id} className={`px-3 py-2 rounded-full border ${livestockId === l.id ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setLivestockId(l.id)}>
-              <Text className={`text-sm ${livestockId === l.id ? 'text-white' : 'text-neutral-600'}`}>{l.name} · {l.quantity} head</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <LivestockPicker livestock={livestock} value={livestockId} onChange={setLivestockId} />
       </View>
 
       <View className="mb-5">
         <Text className="text-lg font-semibold text-neutral-800 mb-4">Additional Notes</Text>
-        <TextInput className={`${inputClass} min-h-[80px] pt-3 border-border`} placeholder="Optional notes..." placeholderTextColor={colors.neutral[400]} value={notes} onChangeText={setNotes} multiline numberOfLines={3} textAlignVertical="top" />
+        <TextInput className={`${inputClass} min-h-[80px] pt-3 border-border`} placeholder="Optional notes..." placeholderTextColor={colors.neutral[500]} value={notes} onChangeText={setNotes} multiline numberOfLines={3} textAlignVertical="top" />
       </View>
 
       <View className="flex-row gap-3 mt-4">
         {isEdit && (
-          <TouchableOpacity className="w-14 py-4 rounded-lg border border-error items-center" onPress={handleDelete} disabled={deleting}>
+          <TouchableOpacity className="w-14 py-4 rounded-lg border border-error items-center" onPress={handleDelete} disabled={deleting} accessibilityRole="button" accessibilityLabel="Delete">
             {deleting ? <ActivityIndicator size="small" color={colors.error} /> : <Ionicons name="trash-outline" size={18} color={colors.error} />}
           </TouchableOpacity>
         )}
-        <TouchableOpacity className="flex-1 py-4 rounded-lg border border-border items-center" onPress={() => router.back()} disabled={saving}>
-          <Text className="text-base font-semibold text-neutral-600">Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="flex-[2] flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600" onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator color={colors.white} /> : <Ionicons name="checkmark-outline" size={20} color={colors.white} />}
-          <Text className="text-base font-semibold text-white">{saving ? 'Saving...' : isEdit ? 'Save Task' : 'Add Task'}</Text>
-        </TouchableOpacity>
+        <Button title="Cancel" variant="neutral" size="lg" className="flex-1" onPress={() => router.back()} disabled={saving} />
+        <Button title={saving ? 'Saving...' : isEdit ? 'Save Task' : 'Add Task'} variant="primary" size="lg" className="flex-[2]" icon="checkmark-outline" loading={saving} onPress={handleSave} disabled={saving} />
       </View>
 
-      <View className="h-8" />
     </FormScroll>
   );
 }

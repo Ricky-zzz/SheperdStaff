@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, ScrollView, StyleProp, ViewStyle, RefreshControl } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../lib/theme/ThemeContext';
 
 interface ScreenProps {
@@ -22,6 +23,7 @@ export const Screen: React.FC<ScreenProps> = ({
   onRefresh,
 }) => {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const content = (
     <View className={`flex-1 ${padded ? 'p-4' : ''} ${className ?? ''}`} style={style}>
       {children}
@@ -33,7 +35,7 @@ export const Screen: React.FC<ScreenProps> = ({
       {scrollable ? (
         <ScrollView
           className="flex-1"
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             refreshing !== undefined && onRefresh ? (

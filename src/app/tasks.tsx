@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../components/ui/Screen';
@@ -90,6 +90,20 @@ export default function TasksScreen() {
     await load();
   };
 
+  const handleDelete = (task: Task) => {
+    Alert.alert('Delete task?', `“${task.title}” will be removed.`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          await taskService.remove(task.id);
+          await load();
+        },
+      },
+    ]);
+  };
+
   if (loading) {
     return (
       <Screen>
@@ -104,9 +118,14 @@ export default function TasksScreen() {
     <Screen refreshing={refreshing} onRefresh={refresh}>
       <View className="flex-row justify-between items-center mb-4">
         <Text className="text-lg font-semibold text-neutral-800">Task list</Text>
-        <TouchableOpacity className="flex-row items-center bg-primary-600 px-3 py-2 rounded-lg gap-1" onPress={() => router.push('/tasks/form')}>
-          <Ionicons name="add-outline" size={18} color={colors.white} />
-          <Text className="text-sm text-white font-semibold">New Task</Text>
+        <TouchableOpacity
+          className="min-h-11 flex-row items-center justify-center bg-primary-600 px-3 py-2 rounded-lg gap-1"
+          onPress={() => router.push('/tasks/form')}
+          accessibilityRole="button"
+          accessibilityLabel="New task"
+        >
+          <Ionicons name="add-outline" size={18} color={colors.onPrimary} />
+          <Text className="text-sm text-onPrimary font-semibold">New Task</Text>
         </TouchableOpacity>
       </View>
 
@@ -129,6 +148,7 @@ export default function TasksScreen() {
                     livestockName={task.livestockId ? livestockNames[task.livestockId] : undefined}
                     showBorder={index < items.length - 1}
                     onToggle={() => handleToggle(task)}
+                    onDelete={() => handleDelete(task)}
                     onPress={() => router.push({ pathname: '/tasks/form', params: { id: task.id } })}
                   />
                 ))}

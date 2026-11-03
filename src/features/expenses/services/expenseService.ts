@@ -105,20 +105,6 @@ export async function sorted(): Promise<Expense[]> {
   return getAll();
 }
 
-export function allocateBulk(amount: number, selected: { id: string; quantity: number }[]): ExpenseAllocation[] {
-  const totalQty = selected.reduce((s, g) => s + (g.quantity || 1), 0);
-  if (totalQty === 0) return selected.map((s) => ({ livestockId: s.id, amount: 0 }));
-  let running = 0;
-  return selected.map((s, idx) => {
-    if (idx === selected.length - 1) {
-      return { livestockId: s.id, amount: Math.round((amount - running) * 100) / 100 };
-    }
-    const share = Math.round((amount * s.quantity) / totalQty * 100) / 100;
-    running += share;
-    return { livestockId: s.id, amount: share };
-  });
-}
-
 // --- Writes ---
 
 export async function create(input: Expense): Promise<Expense> {

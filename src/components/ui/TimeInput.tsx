@@ -39,15 +39,24 @@ export const TimeInput: React.FC<TimeInputProps> = ({ value, onChange, error }) 
         <TouchableOpacity
           className={`flex-1 flex-row items-center justify-between bg-card border rounded-lg px-4 py-3 ${error ? 'border-error' : 'border-border'}`}
           onPress={() => setShow(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`Time, ${value ? formatTime(value) : 'all day'}`}
+          accessibilityHint="Opens the time picker"
         >
-          <Text className={`text-base ${value ? 'text-neutral-800' : 'text-neutral-400'}`}>
+          <Text className={`text-base ${value ? 'text-neutral-800' : 'text-neutral-500'}`}>
             {value ? formatTime(value) : 'All day (optional)'}
           </Text>
-          <Ionicons name="time-outline" size={18} color={colors.neutral[400]} />
+          <Ionicons name="time-outline" size={18} color={colors.neutral[500]} />
         </TouchableOpacity>
         {value ? (
-          <TouchableOpacity className="p-2" onPress={() => onChange(undefined)} hitSlop={8}>
-            <Ionicons name="close-circle-outline" size={20} color={colors.neutral[400]} />
+          <TouchableOpacity
+            className="p-2"
+            onPress={() => onChange(undefined)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel="Clear time"
+          >
+            <Ionicons name="close-circle-outline" size={20} color={colors.neutral[500]} />
           </TouchableOpacity>
         ) : null}
       </View>

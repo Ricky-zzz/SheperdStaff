@@ -49,7 +49,7 @@ export default function ActivityScreen() {
         </View>
       ) : entries.length === 0 ? (
         <View className="flex-1 items-center justify-center py-20">
-          <Text className="text-base text-neutral-400">No activity yet</Text>
+          <Text className="text-base text-neutral-500">No activity yet</Text>
         </View>
       ) : (
         <>
@@ -68,7 +68,6 @@ export default function ActivityScreen() {
               </Card>
             </View>
           ))}
-          <View className="h-8" />
         </>
       )}
     </Screen>

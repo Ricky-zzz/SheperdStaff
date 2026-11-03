@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../lib/auth/AuthContext';
 import { useTheme } from '../lib/theme/ThemeContext';
 
 export default function LockScreen() {
   const { profile, unlock, resetDemo } = useAuth();
-  const { colors } = useTheme();
+  const { colors, darkMode } = useTheme();
+  const backgroundColor = darkMode ? colors.primary[50] : colors.primary[900];
+  const mutedTextColor = darkMode ? colors.neutral[600] : colors.primary[200];
+  const faintTextColor = darkMode ? colors.neutral[500] : colors.primary[300];
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,12 +29,13 @@ export default function LockScreen() {
   };
 
   return (
-    <View className="flex-1 bg-primary-900 items-center justify-center p-6">
+    <View className="flex-1 items-center justify-center p-6" style={{ backgroundColor }}>
+      <StatusBar style="light" />
       <View className="w-20 h-20 rounded-full bg-white/15 items-center justify-center mb-5">
         <Ionicons name="lock-closed-outline" size={36} color={colors.white} />
       </View>
       <Text className="text-2xl font-bold text-white mb-1">Shepherd Staff</Text>
-      <Text className="text-sm text-primary-200 mb-8">
+      <Text className="text-sm mb-8" style={{ color: mutedTextColor }}>
         {profile ? `${profile.name} · locked` : 'Enter your password to continue'}
       </Text>
 
@@ -38,7 +43,7 @@ export default function LockScreen() {
         <TextInput
           className="flex-1 text-base text-neutral-800 py-0"
           placeholder="Password"
-          placeholderTextColor={colors.neutral[400]}
+          placeholderTextColor={colors.neutral[500]}
           value={password}
           onChangeText={(v) => {
             setPassword(v);
@@ -49,7 +54,13 @@ export default function LockScreen() {
           autoCorrect={false}
           onSubmitEditing={handleUnlock}
         />
-        <TouchableOpacity onPress={() => setShow((s) => !s)} className="p-1">
+        <TouchableOpacity
+          onPress={() => setShow((s) => !s)}
+          className="p-2.5 -mr-2"
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={show ? 'Hide password' : 'Show password'}
+        >
           <Ionicons name={show ? 'eye-off' : 'eye'} size={20} color={colors.neutral[500]} />
         </TouchableOpacity>
       </View>
@@ -66,11 +77,13 @@ export default function LockScreen() {
         )}
       </TouchableOpacity>
 
-      <Text className="text-xs text-primary-300 text-center mt-6">
+      <Text className="text-xs text-center mt-6" style={{ color: faintTextColor }}>
         Password is stored only on this device.
       </Text>
       <TouchableOpacity
-        className="mt-3 p-2"
+        className="mt-3 p-3"
+        hitSlop={8}
+        accessibilityRole="button"
         onPress={() =>
           Alert.alert('Start over?', 'This deletes the profile and all data on this device so you can create a fresh account.', [
             { text: 'Cancel', style: 'cancel' },
@@ -88,7 +101,7 @@ export default function LockScreen() {
           ])
         }
       >
-        <Text className="text-sm text-primary-200 underline">Forgot password? Start over</Text>
+        <Text className="text-sm underline" style={{ color: mutedTextColor }}>Forgot password? Start over</Text>
       </TouchableOpacity>
     </View>
   );

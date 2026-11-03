@@ -1,4 +1,5 @@
 export type ColorMode = 'colorful' | 'uniform';
+export type Appearance = 'system' | 'light' | 'dark';
 
 export interface UserProfile {
   id: number;
@@ -8,7 +9,9 @@ export interface UserProfile {
   salt: string;
   themeKey: string;
   darkMode: boolean;
+  appearance?: Appearance;
   colorMode: ColorMode;
+  avatarUri?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -20,5 +23,6 @@ export interface CreateProfileInput {
   salt: string;
   themeKey: string;
   darkMode: boolean;
+  appearance?: Appearance;
   colorMode: ColorMode;
 }

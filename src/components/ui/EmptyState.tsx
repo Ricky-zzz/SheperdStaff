@@ -13,9 +13,9 @@ export const EmptyState: React.FC<EmptyStateProps> = ({ icon, title, subtitle })
   const { colors } = useTheme();
   return (
     <View className="items-center py-16">
-      <Ionicons name={icon} size={48} color={colors.neutral[300]} />
+      <Ionicons name={icon} size={48} color={colors.neutral[500]} />
       <Text className="text-lg font-semibold text-neutral-500 mt-4">{title}</Text>
-      {subtitle && <Text className="text-base text-neutral-400 mt-2">{subtitle}</Text>}
+      {subtitle && <Text className="text-base text-neutral-500 mt-2">{subtitle}</Text>}
     </View>
   );
 };

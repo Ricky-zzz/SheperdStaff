@@ -17,7 +17,7 @@ export const MiniBarChart: React.FC<MiniBarChartProps> = ({ data, title = 'Last 
   const prev = data.length > 1 ? data[data.length - 2].value : 0;
   const up = last >= prev;
   const accent = up ? colors.success : colors.error;
-  const barColor = colorMode === 'uniform' ? colors.neutral[400] : colors.primary[400];
+  const barColor = colorMode === 'uniform' ? colors.neutral[500] : colors.primary[400];
 
   return (
     <View>
@@ -28,14 +28,14 @@ export const MiniBarChart: React.FC<MiniBarChartProps> = ({ data, title = 'Last 
           <Text className="text-xs font-semibold" style={{ color: accent }}>{up ? 'Up' : 'Down'}</Text>
         </View>
       </View>
-      <View className="flex-row items-end gap-2 h-28">
+      <View className="flex-row items-end gap-2">
         {data.map((d) => (
           <View key={d.label} className="flex-1 items-center">
             <View
               className="w-full rounded-t-sm"
               style={{ height: Math.max(2, (d.value / max) * MAX_BAR), backgroundColor: barColor }}
             />
-            <Text className="text-[10px] text-neutral-400 mt-1">{d.label}</Text>
+            <Text className="text-xs text-neutral-500 mt-1" maxFontSizeMultiplier={1.4}>{d.label}</Text>
           </View>
         ))}
       </View>

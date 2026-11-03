@@ -6,6 +6,7 @@ export interface ReportTotals {
   records: number;
   income: number;
   expenses: number;
+  feedUsed?: number;
   profit: number;
   transactions: number;
 }
@@ -92,9 +93,10 @@ function buildHtml(p: ReportPayload): string {
   <div class="cards">
     <div class="card"><div class="label">Income</div><div class="value pos">${money(p.totals.income)}</div></div>
     <div class="card"><div class="label">Expenses</div><div class="value neg">${money(p.totals.expenses)}</div></div>
+    ${p.totals.feedUsed ? `<div class="card"><div class="label">Feed Used</div><div class="value neg">${money(p.totals.feedUsed)}</div></div>` : ''}
     <div class="card"><div class="label">Net Profit</div><div class="value ${p.totals.profit >= 0 ? 'pos' : 'neg'}">${money(p.totals.profit)}</div></div>
   </div>
-  <div class="sub">Profit = Income − Expenses · ${p.totals.records} livestock records · ${p.totals.animals} heads · ${p.totals.transactions} transactions</div>
+  <div class="sub">Profit = Income − Expenses${p.totals.feedUsed ? ' − Feed used' : ''} · ${p.totals.records} livestock records · ${p.totals.animals} heads · ${p.totals.transactions} transactions</div>
 
   <h2>Profit by Animal Type</h2>
   <table>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { FormScroll } from '../../components/ui/FormScroll';
+import { Button } from '../../components/ui/Button';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
@@ -75,6 +76,7 @@ export default function ChangePasswordScreen() {
         secureTextEntry={!show}
         autoCapitalize="none"
         autoCorrect={false}
+        accessibilityLabel="Current password"
       />
       {errors.current ? <Text className="text-xs text-error mb-3">{errors.current}</Text> : <View className="mb-3" />}
 
@@ -83,7 +85,7 @@ export default function ChangePasswordScreen() {
         <TextInput
           className="flex-1 text-base text-neutral-800 py-0"
           placeholder="At least 8 characters"
-          placeholderTextColor={colors.neutral[400]}
+          placeholderTextColor={colors.neutral[500]}
           value={password}
           onChangeText={(v) => {
             setPassword(v);
@@ -93,7 +95,13 @@ export default function ChangePasswordScreen() {
           autoCapitalize="none"
           autoCorrect={false}
         />
-        <TouchableOpacity onPress={() => setShow((s) => !s)} className="p-1">
+        <TouchableOpacity
+          onPress={() => setShow((s) => !s)}
+          className="p-2.5 -mr-2"
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={show ? 'Hide password' : 'Show password'}
+        >
           <Ionicons name={show ? 'eye-off' : 'eye'} size={20} color={colors.neutral[500]} />
         </TouchableOpacity>
       </View>
@@ -123,6 +131,7 @@ export default function ChangePasswordScreen() {
         secureTextEntry={!show}
         autoCapitalize="none"
         autoCorrect={false}
+        accessibilityLabel="Re-type new password"
       />
       {errors.confirm ? <Text className="text-xs text-error mb-3">{errors.confirm}</Text> : <View className="mb-3" />}
 
@@ -137,16 +146,15 @@ export default function ChangePasswordScreen() {
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity className="flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600 mt-2" onPress={handleSave} disabled={saving}>
-        {saving ? (
-          <ActivityIndicator size="small" color={colors.white} />
-        ) : (
-          <>
-            <Ionicons name="checkmark-outline" size={20} color={colors.white} />
-            <Text className="text-base font-semibold text-white">Change Password</Text>
-          </>
-        )}
-      </TouchableOpacity>
+      <Button
+        title="Change Password"
+        variant="primary"
+        size="lg"
+        className="mt-2"
+        icon="checkmark-outline"
+        loading={saving}
+        onPress={handleSave}
+      />
     </FormScroll>
   );
 }

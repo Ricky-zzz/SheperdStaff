@@ -25,13 +25,15 @@ export const ListItem: React.FC<ListItemProps> = ({
   showBorder = false,
 }) => {
   const { colors } = useTheme();
-  const color = iconColor ?? colors.neutral[400];
+  const color = iconColor ?? colors.neutral[500];
   return (
     <TouchableOpacity
       className={`flex-row items-center p-4 ${showBorder ? 'border-b border-neutral-100' : ''}`}
       onPress={onPress}
       activeOpacity={onPress ? 0.7 : 1}
       disabled={!onPress}
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={subtitle ? `${title}, ${subtitle}` : title}
     >
       <View
         className="w-10 h-10 rounded-lg justify-center items-center mr-3"
@@ -44,7 +46,7 @@ export const ListItem: React.FC<ListItemProps> = ({
         {subtitle && <Text className="text-sm text-neutral-500 mt-0.5">{subtitle}</Text>}
       </View>
       {right}
-      {showChevron && <Ionicons name="chevron-forward-outline" size={18} color={colors.neutral[300]} />}
+      {showChevron && <Ionicons name="chevron-forward-outline" size={18} color={colors.neutral[500]} />}
     </TouchableOpacity>
   );
 };

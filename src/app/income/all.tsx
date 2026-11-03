@@ -55,14 +55,25 @@ export default function AllIncomeScreen() {
     <Screen refreshing={refreshing} onRefresh={refresh}>
       <View className="flex-row justify-between items-center mb-4">
         <Text className="text-lg font-semibold text-neutral-800">{sorted.length} income entries</Text>
-        <TouchableOpacity className="flex-row items-center bg-success px-3 py-2 rounded-lg gap-1" onPress={() => router.push('/income/form')}>
-          <Ionicons name="add-outline" size={18} color={colors.white} />
-          <Text className="text-sm text-white font-semibold">Add</Text>
+        <TouchableOpacity
+          className="min-h-11 flex-row items-center justify-center bg-success px-3 py-2 rounded-lg gap-1"
+          onPress={() => router.push('/income/form')}
+          accessibilityRole="button"
+          accessibilityLabel="Add income"
+        >
+          <Ionicons name="add-outline" size={18} color={colors.onSuccess} />
+          <Text className="text-sm text-onSuccess font-semibold">Add</Text>
         </TouchableOpacity>
       </View>
 
       {sorted.map((entry) => (
-        <TouchableOpacity key={entry.id} activeOpacity={0.7} onPress={() => router.push({ pathname: '/income/form', params: { id: entry.id } })}>
+        <TouchableOpacity
+          key={entry.id}
+          activeOpacity={0.7}
+          onPress={() => router.push({ pathname: '/income/form', params: { id: entry.id } })}
+          accessibilityRole="button"
+          accessibilityLabel={`Income ${entry.description}`}
+        >
           <IncomeItem income={entry} />
         </TouchableOpacity>
       ))}

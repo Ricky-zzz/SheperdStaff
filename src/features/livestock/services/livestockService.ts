@@ -1,8 +1,10 @@
 import { Livestock, LivestockCategory } from '../types';
 import { getDb } from '../../../lib/db/client';
+import { generateLivestockCode } from '../../../lib/utils/livestockCode';
 
 type LivestockRow = {
   id: string;
+  code: string | null;
   name: string;
   category: string;
   type: string;
@@ -23,6 +25,7 @@ type LivestockRow = {
 function parseRow(row: LivestockRow): Livestock {
   return {
     id: row.id,
+    code: row.code ?? '',
     name: row.name,
     category: row.category as Livestock['category'],
     type: row.type as Livestock['type'],
@@ -96,28 +99,34 @@ export async function search(query: string): Promise<Livestock[]> {
   const db = await getDb();
   const rows = await db.getAllAsync<LivestockRow>(
     `SELECT * FROM livestock
-     WHERE lower(name) LIKE ? OR lower(COALESCE(breed,'')) LIKE ? OR lower(location) LIKE ?
+     WHERE lower(name) LIKE ? OR lower(COALESCE(breed,'')) LIKE ? OR lower(location) LIKE ? OR lower(COALESCE(code,'')) LIKE ?
      ORDER BY name ASC`,
-    [q, q, q]
+    [q, q, q, q]
   );
   return rows.map(parseRow);
 }
 
 // --- Write helpers (M2 will wire UI, but service is ready) ---
 
-export async function create(input: Omit<Livestock, 'healthNotes' | 'feedings' | 'expenseIds'> & Partial<Pick<Livestock, 'healthNotes' | 'feedings' | 'expenseIds'>>): Promise<Livestock> {
+export async function create(
+  input: Omit<Livestock, 'code' | 'healthNotes' | 'feedings' | 'expenseIds'> &
+    Partial<Pick<Livestock, 'code' | 'healthNotes' | 'feedings' | 'expenseIds'>>
+): Promise<Livestock> {
   const db = await getDb();
+  const code = input.code ?? (await generateLivestockCode(db, input.category, input.type));
   const row: Livestock = {
     healthNotes: [],
     feedings: [],
     expenseIds: [],
     ...input,
+    code,
   } as Livestock;
   await db.runAsync(
-    `INSERT INTO livestock (id, name, category, type, quantity, breed, sex, startDate, location, purpose, status, notes, imageUrl, healthNotes, feedings, expenseIds)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO livestock (id, code, name, category, type, quantity, breed, sex, startDate, location, purpose, status, notes, imageUrl, healthNotes, feedings, expenseIds)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       row.id,
+      row.code,
       row.name,
       row.category,
       row.type,

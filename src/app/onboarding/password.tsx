@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 import { useTheme } from '../../lib/theme/ThemeContext';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { validateNewPassword } from '../../lib/utils/validate';
@@ -63,7 +64,7 @@ export default function OnboardingPasswordScreen() {
           <TextInput
             className="flex-1 text-base text-neutral-800 py-0"
             placeholder="At least 8 characters"
-            placeholderTextColor={colors.neutral[400]}
+            placeholderTextColor={colors.neutral[500]}
             value={password}
             onChangeText={(v) => {
               setPassword(v);
@@ -73,7 +74,13 @@ export default function OnboardingPasswordScreen() {
             autoCapitalize="none"
             autoCorrect={false}
           />
-          <TouchableOpacity onPress={() => setShow((s) => !s)} className="p-1">
+          <TouchableOpacity
+            onPress={() => setShow((s) => !s)}
+            className="p-2.5 -mr-2"
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={show ? 'Hide password' : 'Show password'}
+          >
             <Ionicons name={show ? 'eye-off' : 'eye'} size={20} color={colors.neutral[500]} />
           </TouchableOpacity>
         </View>
@@ -96,7 +103,7 @@ export default function OnboardingPasswordScreen() {
         <TextInput
           className={`${inputClass} ${errors.confirm ? 'border-error' : 'border-border'}`}
           placeholder="Re-type your password"
-          placeholderTextColor={colors.neutral[400]}
+          placeholderTextColor={colors.neutral[500]}
           value={confirm}
           onChangeText={(v) => {
             setConfirm(v);
@@ -108,23 +115,27 @@ export default function OnboardingPasswordScreen() {
         />
         {errors.confirm ? <Text className="text-xs text-error mb-3">{errors.confirm}</Text> : <View className="mb-3" />}
 
-        <TouchableOpacity className="flex-row items-center justify-center gap-2 py-3 rounded-lg bg-primary-100 mb-2" onPress={handleGenerate} disabled={generating}>
-          {generating ? (
-            <ActivityIndicator size="small" color={colors.primary[600]} />
-          ) : (
-            <>
-              <Ionicons name="key-outline" size={18} color={colors.primary[600]} />
-              <Text className="text-base font-semibold text-primary-700">Generate a strong password</Text>
-            </>
-          )}
-        </TouchableOpacity>
+        <Button
+          title="Generate a strong password"
+          variant="secondary"
+          size="md"
+          icon="key-outline"
+          className="mb-2"
+          loading={generating}
+          onPress={handleGenerate}
+        />
 
-        <TouchableOpacity className="flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600 mt-2" onPress={handleContinue}>
-          <Text className="text-base font-semibold text-white">Continue</Text>
-          <Ionicons name="arrow-forward-outline" size={20} color={colors.white} />
-        </TouchableOpacity>
+        <Button
+          title="Continue"
+          variant="primary"
+          size="lg"
+          icon="arrow-forward-outline"
+          iconPosition="right"
+          className="mt-2"
+          onPress={handleContinue}
+        />
       </Card>
-      <Text className="text-xs text-neutral-400 text-center">Step 2 of 3</Text>
+      <Text className="text-xs text-neutral-500 text-center">Step 2 of 3</Text>
     </View>
   );
 }

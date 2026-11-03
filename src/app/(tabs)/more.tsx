@@ -1,11 +1,10 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui/Screen';
 import { Card } from '../../components/ui/Card';
 import { ListItem } from '../../components/ui/ListItem';
-import { useAuth } from '../../lib/auth/AuthContext';
 import { useTheme } from '../../lib/theme/ThemeContext';
 
 interface MenuItem {
@@ -19,7 +18,6 @@ interface MenuItem {
 
 export default function MoreScreen() {
   const router = useRouter();
-  const { profile } = useAuth();
   const { colors, colorMode } = useTheme();
   const menuColor = (c: string) => (colorMode === 'uniform' ? colors.neutral[500] : c);
 
@@ -51,6 +49,7 @@ export default function MoreScreen() {
       items: [
         { icon: 'map-outline', label: 'Locations', subtitle: 'Manage farm areas', route: '/locations', color: menuColor(colors.primary[600]) },
         { icon: 'paw-outline', label: 'Animal Types', subtitle: 'Manage livestock categories', route: '/animal-types', color: menuColor(colors.category.cattle) },
+        { icon: 'cube-outline', label: 'Feed Inventory', subtitle: 'Feed stock and restocking', route: '/inventory', color: menuColor(colors.category.chicken) },
         { icon: 'calendar-outline', label: 'Activity History', subtitle: 'View all activities', route: '/activity', color: menuColor(colors.earth[600]) },
       ],
     },
@@ -76,19 +75,6 @@ export default function MoreScreen() {
 
   return (
     <Screen>
-      <Card className="flex-row items-center mb-5 py-5">
-        <View className="w-14 h-14 rounded-full bg-primary-100 justify-center items-center mr-4">
-          <Ionicons name="person-outline" size={32} color={colors.primary[600]} />
-        </View>
-        <View className="flex-1">
-          <Text className="text-lg font-semibold text-neutral-800">{profile?.name ?? 'Farm Owner'}</Text>
-          <Text className="text-sm text-neutral-500 mt-0.5">{profile?.email ?? 'Shepherd Staff Account'}</Text>
-        </View>
-        <TouchableOpacity className="w-10 h-10 rounded-full bg-primary-50 justify-center items-center" onPress={() => router.push('/profile/edit')}>
-          <Ionicons name="create-outline" size={18} color={colors.primary[600]} />
-        </TouchableOpacity>
-      </Card>
-
       {MENU_SECTIONS.map((section) => (
         <View key={section.title} className="mb-5">
           <Text className="text-sm font-semibold text-neutral-500 uppercase tracking-wider mb-2">{section.title}</Text>
@@ -97,7 +83,7 @@ export default function MoreScreen() {
               <ListItem
                 key={item.label}
                 icon={item.icon}
-                iconColor={item.color || colors.neutral[400]}
+                iconColor={item.color || colors.neutral[500]}
                 title={item.label}
                 subtitle={item.subtitle}
                 showChevron={!!item.route}
@@ -109,8 +95,8 @@ export default function MoreScreen() {
         </View>
       ))}
 
-      <Text className="text-sm text-neutral-400 text-center mt-5">Shepherd Staff v1.0.0</Text>
-      <Text className="text-xs text-neutral-300 text-center mt-1 mb-8">Mobile Livestock Management System</Text>
+      <Text className="text-sm text-neutral-500 text-center mt-5">Shepherd Staff v1.0.0</Text>
+      <Text className="text-xs text-neutral-500 text-center mt-1 mb-8">Mobile Livestock Management System</Text>
     </Screen>
   );
 }

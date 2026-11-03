@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { FormScroll } from '../../components/ui/FormScroll';
+import { Button } from '../../components/ui/Button';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
-import { ExpenseCategory } from '../../features/expenses/types';
-import { getById, update, remove, allocateBulk } from '../../features/expenses/services/expenseService';
+import { ExpenseCategory, ExpenseAllocation } from '../../features/expenses/types';
+import { getById, update, remove } from '../../features/expenses/services/expenseService';
 import { getAll as getAllLivestock } from '../../features/livestock/services/livestockService';
 import { Livestock } from '../../features/livestock/types';
+import { LivestockPicker } from '../../components/ui/LivestockPicker';
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { validateExpense } from '../../lib/utils/validate';
 import { DateInput } from '../../components/ui/DateInput';
@@ -22,7 +24,6 @@ const CATEGORIES: { label: string; value: ExpenseCategory; icon: keyof typeof Io
 ];
 
 const inputClass = 'bg-card border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-1';
-type Scope = 'direct' | 'bulk';
 
 export default function EditExpenseScreen() {
   const { colors } = useTheme();
@@ -34,9 +35,8 @@ export default function EditExpenseScreen() {
   const [category, setCategory] = useState<ExpenseCategory>('feed');
   const [date, setDate] = useState('');
   const [notes, setNotes] = useState('');
-  const [scope, setScope] = useState<Scope>('direct');
   const [selectedDirectId, setSelectedDirectId] = useState<string | null>(null);
-  const [bulkIds, setBulkIds] = useState<string[]>([]);
+  const [legacyAllocations, setLegacyAllocations] = useState<ExpenseAllocation[] | undefined>(undefined);
   const [livestock, setLivestock] = useState<Livestock[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -53,10 +53,8 @@ export default function EditExpenseScreen() {
         setDate(e.date);
         setNotes(e.notes ?? '');
         if (e.allocations && e.allocations.length > 0) {
-          setScope('bulk');
-          setBulkIds(e.allocations.map((a) => a.livestockId));
+          setLegacyAllocations(e.allocations);
         } else {
-          setScope('direct');
           setSelectedDirectId(e.livestockId ?? null);
         }
       }
@@ -69,24 +67,11 @@ export default function EditExpenseScreen() {
     return Number.isFinite(n) && n > 0 ? n : 0;
   }, [amount]);
 
-  const selectedBulkLivestock = useMemo(() => livestock.filter((l) => bulkIds.includes(l.id)), [livestock, bulkIds]);
-
-  const preview = useMemo(() => {
-    if (scope !== 'bulk' || selectedBulkLivestock.length === 0 || numericAmount <= 0) return [];
-    return allocateBulk(
-      numericAmount,
-      selectedBulkLivestock.map((l) => ({ id: l.id, quantity: l.quantity }))
-    );
-  }, [scope, selectedBulkLivestock, numericAmount]);
-
-  const toggleBulk = (lid: string) => {
-    setBulkIds((prev) => (prev.includes(lid) ? prev.filter((x) => x !== lid) : [...prev, lid]));
-    if (errors.bulk) setErrors((p) => ({ ...p, bulk: '' }));
-  };
+  const nameById: Record<string, string> = {};
+  for (const l of livestock) nameById[l.id] = l.name;
 
   const handleSave = async () => {
     const e = validateExpense({ description, amount, date });
-    if (scope === 'bulk' && bulkIds.length < 2) e.bulk = 'Pick at least 2 groups for bulk';
     if (Object.keys(e).length) {
       setErrors(e);
       return;
@@ -100,14 +85,9 @@ export default function EditExpenseScreen() {
         category,
         date,
         notes: notes.trim() || undefined,
+        livestockId: legacyAllocations ? undefined : selectedDirectId || undefined,
       };
-      if (scope === 'direct') {
-        patch.livestockId = selectedDirectId || undefined;
-        patch.allocations = undefined;
-      } else {
-        patch.livestockId = undefined;
-        patch.allocations = preview;
-      }
+      if (!legacyAllocations) patch.allocations = undefined;
       await update(id as string, patch);
       await logActivity({
         id: `act-${Date.now()}`,
@@ -162,6 +142,8 @@ export default function EditExpenseScreen() {
   }
 
   const inputCls = (field: string) => `${inputClass} ${errors[field] ? 'border-error' : 'border-border'} mb-1`;
+  const touch = (field: 'description' | 'amount', run: () => Record<string, string>) =>
+    setErrors((prev) => ({ ...prev, [field]: run()[field] ?? '' }));
 
   return (
     <FormScroll>
@@ -169,11 +151,11 @@ export default function EditExpenseScreen() {
 
       <View className="mb-5">
         <Text className="text-sm font-medium text-neutral-600 mb-2">Description *</Text>
-        <TextInput className={inputCls('description')} placeholder="Description" placeholderTextColor={colors.neutral[400]} value={description} onChangeText={(v) => { setDescription(v); if (errors.description) setErrors((p) => ({ ...p, description: '' })); }} />
+        <TextInput className={inputCls('description')} placeholder="Description" placeholderTextColor={colors.neutral[500]} value={description} onChangeText={(v) => { setDescription(v); if (errors.description) setErrors((p) => ({ ...p, description: '' })); }} onBlur={() => touch('description', () => validateExpense({ description, amount, date }))} />
         {errors.description ? <Text className="text-xs text-error mb-3">{errors.description}</Text> : <View className="mb-3" />}
 
           <Text className="text-sm font-medium text-neutral-600 mb-2">Amount (₱) *</Text>
-        <TextInput className={inputCls('amount')} placeholder="0.00" placeholderTextColor={colors.neutral[400]} value={amount} onChangeText={(v) => { setAmount(v); if (errors.amount) setErrors((p) => ({ ...p, amount: '' })); }} keyboardType="decimal-pad" />
+        <TextInput className={inputCls('amount')} placeholder="0.00" placeholderTextColor={colors.neutral[500]} value={amount} onChangeText={(v) => { setAmount(v); if (errors.amount) setErrors((p) => ({ ...p, amount: '' })); }} onBlur={() => touch('amount', () => validateExpense({ description, amount, date }))} keyboardType="decimal-pad" />
         {errors.amount ? <Text className="text-xs text-error mb-3">{errors.amount}</Text> : <View className="mb-3" />}
 
         <Text className="text-sm font-medium text-neutral-600 mb-2">Date</Text>
@@ -187,76 +169,39 @@ export default function EditExpenseScreen() {
             const sel = category === cat.value;
             return (
               <TouchableOpacity key={cat.value} className={`w-[30%] items-center py-4 rounded-lg border gap-2 ${sel ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setCategory(cat.value)}>
-                <Ionicons name={cat.icon} size={22} color={sel ? colors.white : colors.neutral[500]} />
-                <Text className={`text-sm font-medium ${sel ? 'text-white' : 'text-neutral-600'}`}>{cat.label}</Text>
+                <Ionicons name={cat.icon} size={22} color={sel ? colors.onPrimary : colors.neutral[500]} />
+                <Text className={`text-sm font-medium ${sel ? 'text-onPrimary' : 'text-neutral-600'}`}>{cat.label}</Text>
               </TouchableOpacity>
             );
           })}
         </View>
       </View>
 
-      <View className="mb-5">
-        <Text className="text-sm font-medium text-neutral-600 mb-2">Scope</Text>
-        <View className="flex-row gap-3 mb-4">
-          <TouchableOpacity className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg border ${scope === 'direct' ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setScope('direct')}>
-            <Ionicons name="person-outline" size={18} color={scope === 'direct' ? colors.white : colors.neutral[500]} />
-            <Text className={`text-sm font-medium ${scope === 'direct' ? 'text-white' : 'text-neutral-500'}`}>Direct</Text>
-          </TouchableOpacity>
-          <TouchableOpacity className={`flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg border ${scope === 'bulk' ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setScope('bulk')}>
-            <Ionicons name="people-outline" size={18} color={scope === 'bulk' ? colors.white : colors.neutral[500]} />
-            <Text className={`text-sm font-medium ${scope === 'bulk' ? 'text-white' : 'text-neutral-500'}`}>Bulk</Text>
-          </TouchableOpacity>
-        </View>
-
-        {scope === 'direct' ? (
-          <>
-            <Text className="text-sm font-medium text-neutral-600 mb-2">Link to (optional)</Text>
-            <View className="flex-row flex-wrap gap-2 mb-2">
-              <TouchableOpacity className={`px-3 py-2 rounded-full border ${!selectedDirectId ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setSelectedDirectId(null)}>
-                <Text className={`text-sm ${!selectedDirectId ? 'text-white' : 'text-neutral-600'}`}>General</Text>
-              </TouchableOpacity>
-              {livestock.map((l) => (
-                <TouchableOpacity key={l.id} className={`px-3 py-2 rounded-full border ${selectedDirectId === l.id ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => setSelectedDirectId(l.id)}>
-                  <Text className={`text-sm ${selectedDirectId === l.id ? 'text-white' : 'text-neutral-600'}`}>{l.name} · {l.quantity} head</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </>
-        ) : (
-          <>
-            <Text className="text-sm font-medium text-neutral-600 mb-2">Which groups share? (pick 2+)</Text>
-            <View className="flex-row flex-wrap gap-2 mb-2">
-              {livestock.map((l) => {
-                const sel = bulkIds.includes(l.id);
-                return (
-                  <TouchableOpacity key={l.id} className={`px-3 py-2 rounded-full border ${sel ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`} onPress={() => toggleBulk(l.id)}>
-                    <Text className={`text-sm ${sel ? 'text-white' : 'text-neutral-600'}`}>{l.name} · {l.quantity} head {sel ? '✓' : ''}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-            {errors.bulk ? <Text className="text-xs text-error mb-2">{errors.bulk}</Text> : null}
-            {preview.length > 0 && (
-              <View className="bg-card rounded-lg border border-border p-3 mt-2">
-                <Text className="text-sm font-semibold text-neutral-700 mb-2">Auto-split preview:</Text>
-                {preview.map((p) => {
-                  const l = livestock.find((x) => x.id === p.livestockId);
-                  return (
-                    <View key={p.livestockId} className="flex-row justify-between py-1">
-                      <Text className="text-sm text-neutral-600">{l?.name} ({l?.quantity} head)</Text>
-                      <Text className="text-sm font-semibold text-neutral-800">₱{p.amount.toFixed(2)}</Text>
-                    </View>
-                  );
-                })}
+      {legacyAllocations ? (
+        <View className="mb-5">
+          <Text className="text-sm font-medium text-neutral-600 mb-2">Split across groups</Text>
+          <View className="bg-card rounded-lg border border-border p-3">
+            <Text className="text-xs text-neutral-500 mb-2">
+              This expense was recorded with an automatic split (before feed inventory). Line items are kept as saved and shown in each group on top of its expenses.
+            </Text>
+            {legacyAllocations.map((a) => (
+              <View key={a.livestockId} className="flex-row justify-between py-1">
+                <Text className="text-sm text-neutral-600">{nameById[a.livestockId] ?? a.livestockId}</Text>
+                <Text className="text-sm font-semibold text-neutral-800">₱{a.amount.toFixed(2)}</Text>
               </View>
-            )}
-          </>
-        )}
-      </View>
+            ))}
+          </View>
+        </View>
+      ) : (
+        <View className="mb-5">
+          <Text className="text-sm font-medium text-neutral-600 mb-2">Link to livestock (optional)</Text>
+          <LivestockPicker livestock={livestock} value={selectedDirectId} onChange={setSelectedDirectId} noneLabel="General" />
+        </View>
+      )}
 
       <View className="mb-5">
         <Text className="text-sm font-medium text-neutral-600 mb-2">Notes</Text>
-        <TextInput className={`${inputClass} min-h-[80px] pt-3 border-border`} placeholder="Notes..." placeholderTextColor={colors.neutral[400]} value={notes} onChangeText={setNotes} multiline numberOfLines={3} textAlignVertical="top" />
+        <TextInput className={`${inputClass} min-h-[80px] pt-3 border-border`} placeholder="Notes..." placeholderTextColor={colors.neutral[500]} value={notes} onChangeText={setNotes} multiline numberOfLines={3} textAlignVertical="top" />
       </View>
 
       <View className="flex-row gap-3 mt-4">
@@ -264,14 +209,10 @@ export default function EditExpenseScreen() {
           {deleting ? <ActivityIndicator color={colors.error} /> : <Ionicons name="trash-outline" size={18} color={colors.error} />}
           <Text className="text-base font-semibold" style={{ color: colors.error }}>Delete</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-[2] flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600" onPress={handleSave} disabled={saving || deleting}>
-          {saving ? <ActivityIndicator color={colors.white} /> : <Ionicons name="checkmark-outline" size={20} color={colors.white} />}
-          <Text className="text-base font-semibold text-white">{saving ? 'Saving...' : 'Update'}</Text>
-        </TouchableOpacity>
+        <Button title={saving ? 'Saving...' : 'Update'} variant="primary" size="lg" className="flex-[2]" icon="checkmark-outline" loading={saving} onPress={handleSave} disabled={saving || deleting} />
       </View>
-      <TouchableOpacity className="py-3 items-center mt-2" onPress={() => router.back()}><Text className="text-sm text-neutral-500">Cancel</Text></TouchableOpacity>
+      <TouchableOpacity className="py-3 items-center mt-2" onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Cancel and go back"><Text className="text-sm text-neutral-500">Cancel</Text></TouchableOpacity>
 
-      <View className="h-8" />
     </FormScroll>
   );
 }

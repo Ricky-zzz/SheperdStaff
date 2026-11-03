@@ -36,7 +36,17 @@ const PRESETS: { key: Preset; label: string }[] = [
   { key: 'custom', label: 'Custom' },
 ];
 
-const STATUS_COLORS: Record<string, string> = { growing: '#48BB78', breeding: '#9F7AEA', active: '#10B981', for_sale: '#F59E0B', sold: '#3B82F6', deceased: '#EF4444' };
+function getStatusDotColor(status: string, colors: ReturnType<typeof useTheme>['colors']): string {
+  switch (status) {
+    case 'growing': return colors.primary[500];
+    case 'breeding': return colors.category.pig;
+    case 'active': return colors.success;
+    case 'for_sale': return colors.warning;
+    case 'sold': return colors.category.duck;
+    case 'deceased': return colors.error;
+    default: return colors.neutral[500];
+  }
+}
 
 function toISODate(d: Date): string {
   const y = d.getFullYear();
@@ -154,8 +164,20 @@ export default function ReportsScreen() {
 
   const totalSpent = filteredExpenses.reduce((s, e) => s + e.amount, 0);
   const totalEarned = filteredIncome.reduce((s, i) => s + i.amount, 0);
-  const netProfit = totalEarned - totalSpent;
   const txCount = filteredExpenses.length;
+
+  const feedUsedByEntity: Record<string, number> = {};
+  let totalFeedUsed = 0;
+  for (const l of allLivestock) {
+    for (const f of l.feedings) {
+      const cost = f.cost ?? 0;
+      if (cost <= 0 || !inRange(f.date)) continue;
+      feedUsedByEntity[l.id] = (feedUsedByEntity[l.id] || 0) + cost;
+      totalFeedUsed += cost;
+    }
+  }
+
+  const netProfit = totalEarned - totalSpent - totalFeedUsed;
 
   const expensesByCategoryMap = filteredExpenses.reduce<Record<string, number>>((acc, e) => {
     acc[e.category] = (acc[e.category] || 0) + e.amount;
@@ -178,7 +200,7 @@ export default function ReportsScreen() {
   const entityRows = allLivestock
     .map((l) => {
       const income = incomeByEntity[l.id] || 0;
-      const expenses = expenseByEntity[l.id] || 0;
+      const expenses = (expenseByEntity[l.id] || 0) + (feedUsedByEntity[l.id] || 0);
       return { id: l.id, name: l.name, category: l.category, categoryLabel: getCategoryLabel(l.category, types), income, expenses, profit: income - expenses };
     })
     .sort((a, b) => b.profit - a.profit);
@@ -210,7 +232,7 @@ export default function ReportsScreen() {
         farmName: profile?.name ? `${profile.name}'s Farm` : 'My Farm',
         rangeLabel: range.label,
         generatedAt: new Date().toLocaleString(),
-        totals: { animals: totalLivestock, records: allLivestock.length, income: totalEarned, expenses: totalSpent, profit: netProfit, transactions: txCount },
+        totals: { animals: totalLivestock, records: allLivestock.length, income: totalEarned, expenses: totalSpent, feedUsed: totalFeedUsed, profit: netProfit, transactions: txCount },
         byType: typeRows.map((r) => ({ label: r.label, income: r.income, expenses: r.expenses, profit: r.profit })),
         byEntity: entityRows.map((r) => ({ name: r.name, categoryLabel: r.categoryLabel, income: r.income, expenses: r.expenses, profit: r.profit })),
         expensesByCategory: expenseRows.map((r) => ({ label: r.label, amount: r.amount })),
@@ -238,11 +260,17 @@ export default function ReportsScreen() {
       <View className="flex-row justify-between items-center mb-3">
         <View>
           <Text className="text-lg font-semibold text-neutral-800">Farm Report</Text>
-          <Text className="text-xs text-neutral-400 mt-0.5">{range.label}</Text>
+          <Text className="text-xs text-neutral-500 mt-0.5">{range.label}</Text>
         </View>
-        <TouchableOpacity className="flex-row items-center gap-1 bg-primary-600 px-3 py-2 rounded-lg" onPress={handleShare} disabled={sharing}>
-          {sharing ? <ActivityIndicator size="small" color={colors.white} /> : <Ionicons name="share-outline" size={16} color={colors.white} />}
-          <Text className="text-sm text-white font-semibold">Share</Text>
+        <TouchableOpacity
+          className="min-h-11 flex-row items-center justify-center gap-1 bg-primary-600 px-3 py-2 rounded-lg"
+          onPress={handleShare}
+          disabled={sharing}
+          accessibilityRole="button"
+          accessibilityLabel="Share report as PDF"
+        >
+          {sharing ? <ActivityIndicator size="small" color={colors.onPrimary} /> : <Ionicons name="share-outline" size={16} color={colors.onPrimary} />}
+          <Text className="text-sm text-onPrimary font-semibold">Share</Text>
         </TouchableOpacity>
       </View>
 
@@ -275,28 +303,36 @@ export default function ReportsScreen() {
           <Text className="text-sm text-neutral-500 mt-1">Net Profit</Text>
         </Card>
       </View>
-      <Text className="text-xs text-neutral-400 -mt-1 mb-3 text-center">Profit = Income − Expenses · {txCount} transactions · {allLivestock.length} records</Text>
+      <Text className="text-xs text-neutral-500 -mt-1 mb-3 text-center">
+        Profit = Income − Expenses{totalFeedUsed > 0 ? ` − Feed used ₱${totalFeedUsed.toFixed(0)}` : ''} · {txCount} transactions · {allLivestock.length} records
+      </Text>
 
       <SectionHeader title="Profit by Animal Type" />
-      <Card className="mb-2">
+      <Card className="mb-4">
         {typeRows.map((row) => (
           <TouchableOpacity
             key={row.key}
-            className="flex-row items-center mb-3"
+            className="mb-3"
             activeOpacity={0.7}
             onPress={() => router.push({ pathname: '/reports/type', params: { category: row.key } })}
+            accessibilityRole="button"
+            accessibilityLabel={`${row.label} profit ${row.profit >= 0 ? 'plus' : 'minus'} ${Math.abs(row.profit).toFixed(0)} pesos`}
           >
-            <Text className="w-20 text-sm text-neutral-600 font-medium" numberOfLines={1}>{row.label}</Text>
-            <View className="flex-1 h-5 bg-neutral-100 rounded-sm overflow-hidden mx-2">
+            <View className="flex-row items-center mb-1.5">
+              <Text className="flex-1 text-sm text-neutral-600 font-medium mr-2" numberOfLines={1}>{row.label}</Text>
+              <Text className="text-sm font-semibold" style={{ color: row.profit >= 0 ? colors.success : colors.error }}>
+                {row.profit >= 0 ? '+' : ''}₱{row.profit.toFixed(0)}
+              </Text>
+              <View className="ml-1">
+                <Ionicons name="chevron-forward-outline" size={14} color={colors.neutral[500]} />
+              </View>
+            </View>
+            <View className="h-5 bg-neutral-100 rounded-sm overflow-hidden">
               <View className="h-full rounded-sm" style={{ width: `${(Math.abs(row.profit) / maxTypeProfit) * 100}%`, backgroundColor: row.profit >= 0 ? colors.success : colors.error }} />
             </View>
-            <Text className="w-20 text-sm font-semibold text-right" style={{ color: row.profit >= 0 ? colors.success : colors.error }}>
-              {row.profit >= 0 ? '+' : ''}₱{row.profit.toFixed(0)}
-            </Text>
-            <Ionicons name="chevron-forward-outline" size={14} color={colors.neutral[300]} />
           </TouchableOpacity>
         ))}
-        {typeRows.length === 0 && <Text className="text-sm text-neutral-400 py-2">No data in this range</Text>}
+        {typeRows.length === 0 && <Text className="text-sm text-neutral-500 py-2">No data in this range</Text>}
       </Card>
 
       <SectionHeader title="Profit by Animal / Group" />
@@ -307,67 +343,79 @@ export default function ReportsScreen() {
             className={`px-4 py-3 ${index < visibleEntities.length - 1 ? 'border-b border-neutral-100' : ''}`}
             activeOpacity={0.7}
             onPress={() => router.push(`/livestock/${row.id}`)}
+            accessibilityRole="button"
+            accessibilityLabel={`${row.name}, profit ${row.profit >= 0 ? 'plus' : 'minus'} ${Math.abs(row.profit).toFixed(0)} pesos`}
           >
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
                 <Text className="text-base font-medium text-neutral-800" numberOfLines={1}>{row.name}</Text>
-                <Text className="text-xs text-neutral-400 mt-0.5">{row.categoryLabel} · Income ₱{row.income.toFixed(0)} · Expenses ₱{row.expenses.toFixed(0)}</Text>
+                <Text className="text-xs text-neutral-500 mt-0.5">{row.categoryLabel} · Income ₱{row.income.toFixed(0)} · Expenses ₱{row.expenses.toFixed(0)}</Text>
               </View>
               <Text className="text-base font-bold ml-3" style={{ color: row.profit >= 0 ? colors.success : colors.error }}>
                 {row.profit >= 0 ? '+' : ''}₱{row.profit.toFixed(0)}
               </Text>
-              <Ionicons name="chevron-forward-outline" size={16} color={colors.neutral[300]} />
+              <Ionicons name="chevron-forward-outline" size={16} color={colors.neutral[500]} />
             </View>
           </TouchableOpacity>
         ))}
         {entityRows.length > 5 && (
-          <TouchableOpacity className="py-3 items-center border-t border-neutral-100" onPress={() => setShowAllEntities((v) => !v)}>
+          <TouchableOpacity
+            className="py-3 items-center border-t border-neutral-100"
+            onPress={() => setShowAllEntities((v) => !v)}
+            accessibilityRole="button"
+            accessibilityLabel={showAllEntities ? 'Show less' : `View all ${entityRows.length}`}
+          >
             <Text className="text-sm font-medium text-primary-600">{showAllEntities ? 'Show less' : `View all (${entityRows.length})`}</Text>
           </TouchableOpacity>
         )}
-        {entityRows.length === 0 && <Text className="text-sm text-neutral-400 p-4">No livestock yet</Text>}
+        {entityRows.length === 0 && <Text className="text-sm text-neutral-500 p-4">No livestock yet</Text>}
       </Card>
 
       <SectionHeader title="Livestock by Type" />
-      <Card className="mb-2">
+      <Card className="mb-4">
         {Object.entries(livestockByCategoryMap).map(([category, count]) => (
-          <View key={category} className="flex-row items-center mb-3">
-            <Text className="w-20 text-sm text-neutral-600 font-medium">{getCategoryLabel(category, types)}</Text>
-            <View className="flex-1 h-5 bg-neutral-100 rounded-sm overflow-hidden mx-2">
-              <View className="h-full rounded-sm" style={{ width: `${(count / maxLivestock) * 100}%`, backgroundColor: colorMode === 'uniform' ? colors.neutral[400] : categoryColors[category] || colors.neutral[400] }} />
+          <View key={category} className="mb-3">
+            <View className="flex-row justify-between mb-1.5">
+              <Text className="flex-1 text-sm text-neutral-600 font-medium mr-2" numberOfLines={1}>{getCategoryLabel(category, types)}</Text>
+              <Text className="text-sm font-semibold text-neutral-700">{count}</Text>
             </View>
-            <Text className="w-12 text-sm font-semibold text-neutral-700 text-right">{count}</Text>
+            <View className="h-5 bg-neutral-100 rounded-sm overflow-hidden">
+              <View className="h-full rounded-sm" style={{ width: `${(count / maxLivestock) * 100}%`, backgroundColor: colorMode === 'uniform' ? colors.neutral[500] : categoryColors[category] || colors.neutral[500] }} />
+            </View>
           </View>
         ))}
       </Card>
 
       <SectionHeader title="Expenses by Category" />
-      <Card className="mb-2">
+      <Card className="mb-4">
         {expenseRows.map((row) => (
-          <View key={row.category} className="flex-row items-center mb-3">
-            <Text className="w-24 text-sm text-neutral-600 font-medium" numberOfLines={1}>{row.label}</Text>
-            <View className="flex-1 h-5 bg-neutral-100 rounded-sm overflow-hidden mx-2">
+          <View key={row.category} className="mb-3">
+            <View className="flex-row justify-between mb-1.5">
+              <Text className="flex-1 text-sm text-neutral-600 font-medium mr-2" numberOfLines={1}>{row.label}</Text>
+              <Text className="text-sm font-semibold text-neutral-700">₱{row.amount.toFixed(0)}</Text>
+            </View>
+            <View className="h-5 bg-neutral-100 rounded-sm overflow-hidden">
               <View className="h-full rounded-sm" style={{ width: `${(row.amount / maxExpense) * 100}%`, backgroundColor: getExpenseCategoryMeta(row.category as Expense['category'], colors, colorMode).color }} />
             </View>
-            <Text className="w-16 text-sm font-semibold text-neutral-700 text-right">₱{row.amount.toFixed(0)}</Text>
           </View>
         ))}
-        {expenseRows.length === 0 && <Text className="text-sm text-neutral-400 py-2">No expenses in this range</Text>}
+        {expenseRows.length === 0 && <Text className="text-sm text-neutral-500 py-2">No expenses in this range</Text>}
       </Card>
 
       <SectionHeader title="Livestock by Status" />
-      <Card className="mb-2">
+      <Card className="mb-4">
         {Object.entries(statusCounts).map(([status, count]) => (
           <View key={status} className="flex-row items-center mb-3">
-            <View className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: colorMode === 'uniform' ? colors.neutral[400] : STATUS_COLORS[status] || colors.neutral[400] }} />
-            <Text className="flex-1 text-base text-neutral-700 font-medium">{status.replace('_', ' ').charAt(0).toUpperCase() + status.replace('_', ' ').slice(1)}</Text>
-            <Text className="text-sm text-neutral-500 mr-3">{count} records</Text>
-            <Text className="w-11 text-base font-bold text-neutral-800 text-right">{allLivestock.length > 0 ? ((count / allLivestock.length) * 100).toFixed(0) : 0}%</Text>
+            <View className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: colorMode === 'uniform' ? colors.neutral[500] : getStatusDotColor(status, colors) }} />
+            <View className="flex-1 mr-2">
+              <Text className="text-base text-neutral-700 font-medium">{status.replace('_', ' ').charAt(0).toUpperCase() + status.replace('_', ' ').slice(1)}</Text>
+              <Text className="text-xs text-neutral-500 mt-0.5">{count} records</Text>
+            </View>
+            <Text className="text-base font-bold text-neutral-800">{allLivestock.length > 0 ? ((count / allLivestock.length) * 100).toFixed(0) : 0}%</Text>
           </View>
         ))}
       </Card>
 
-      <View className="h-8" />
     </Screen>
   );
 }

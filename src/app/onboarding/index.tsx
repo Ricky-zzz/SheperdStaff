@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
 import { useTheme } from '../../lib/theme/ThemeContext';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { validateProfile } from '../../lib/utils/validate';
@@ -44,7 +45,7 @@ export default function OnboardingIndexScreen() {
         <TextInput
           className={`${inputClass} ${errors.name ? 'border-error' : 'border-border'}`}
           placeholder="e.g., John Mwangi"
-          placeholderTextColor={colors.neutral[400]}
+          placeholderTextColor={colors.neutral[500]}
           value={name}
           onChangeText={(v) => {
             setName(v);
@@ -58,7 +59,7 @@ export default function OnboardingIndexScreen() {
         <TextInput
           className={`${inputClass} ${errors.email ? 'border-error' : 'border-border'}`}
           placeholder="e.g., john@example.com"
-          placeholderTextColor={colors.neutral[400]}
+          placeholderTextColor={colors.neutral[500]}
           value={email}
           onChangeText={(v) => {
             setEmail(v);
@@ -70,12 +71,17 @@ export default function OnboardingIndexScreen() {
         />
         {errors.email ? <Text className="text-xs text-error mb-3">{errors.email}</Text> : <View className="mb-3" />}
 
-        <TouchableOpacity className="flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600 mt-4" onPress={handleContinue}>
-          <Text className="text-base font-semibold text-white">Continue</Text>
-          <Ionicons name="arrow-forward-outline" size={20} color={colors.white} />
-        </TouchableOpacity>
+        <Button
+          title="Continue"
+          variant="primary"
+          size="lg"
+          icon="arrow-forward-outline"
+          iconPosition="right"
+          className="mt-4"
+          onPress={handleContinue}
+        />
       </Card>
-      <Text className="text-xs text-neutral-400 text-center">
+      <Text className="text-xs text-neutral-500 text-center">
         Step 1 of 3
       </Text>
     </View>

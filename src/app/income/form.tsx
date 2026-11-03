@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, Switch } from 'react-native';
 import { FormScroll } from '../../components/ui/FormScroll';
+import { Button } from '../../components/ui/Button';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
 import { Livestock } from '../../features/livestock/types';
+import { LivestockPicker } from '../../components/ui/LivestockPicker';
 import { getAll as getAllLivestock, updateStatus } from '../../features/livestock/services/livestockService';
 import { log as logActivity } from '../../features/activity/services/activityService';
 import type { IncomeCategory } from '../../features/income/types';
@@ -151,11 +153,13 @@ export default function IncomeFormScreen() {
             return (
               <TouchableOpacity
                 key={c}
-                className={`flex-row items-center gap-1.5 px-3 py-2 rounded-full border ${sel ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
+                className={`min-h-[44px] flex-row items-center justify-center gap-1.5 px-3 py-2 rounded-full border ${sel ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
                 onPress={() => setCategory(c)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: sel }}
               >
-                <Ionicons name={m.icon} size={16} color={sel ? colors.white : m.color} />
-                <Text className={`text-sm font-medium ${sel ? 'text-white' : 'text-neutral-600'}`}>{m.label}</Text>
+                <Ionicons name={m.icon} size={16} color={sel ? colors.onPrimary : m.color} />
+                <Text className={`text-sm font-medium ${sel ? 'text-onPrimary' : 'text-neutral-600'}`}>{m.label}</Text>
               </TouchableOpacity>
             );
           })}
@@ -165,12 +169,13 @@ export default function IncomeFormScreen() {
         <TextInput
           className={`${inputClass} ${errors.description ? 'border-error' : 'border-border'}`}
           placeholder="e.g., Sold 4 hogs, Weekly egg surplus"
-          placeholderTextColor={colors.neutral[400]}
+          placeholderTextColor={colors.neutral[500]}
           value={description}
           onChangeText={(v) => {
             setDescription(v);
             if (errors.description) setErrors((p) => ({ ...p, description: '' }));
           }}
+          onBlur={() => setErrors((p) => ({ ...p, description: required(description) ?? '' }))}
         />
         {errors.description ? <Text className="text-xs text-error mb-3">{errors.description}</Text> : <View className="mb-3" />}
 
@@ -178,12 +183,18 @@ export default function IncomeFormScreen() {
         <TextInput
           className={`${inputClass} ${errors.amount ? 'border-error' : 'border-border'}`}
           placeholder="0.00"
-          placeholderTextColor={colors.neutral[400]}
+          placeholderTextColor={colors.neutral[500]}
           value={amount}
           onChangeText={(v) => {
             setAmount(v);
             if (errors.amount) setErrors((p) => ({ ...p, amount: '' }));
           }}
+          onBlur={() =>
+            setErrors((p) => ({
+              ...p,
+              amount: !amount || isNaN(Number(amount)) || Number(amount) <= 0 ? 'Enter a valid amount' : '',
+            }))
+          }
           keyboardType="decimal-pad"
         />
         {errors.amount ? <Text className="text-xs text-error mb-3">{errors.amount}</Text> : <View className="mb-3" />}
@@ -194,37 +205,21 @@ export default function IncomeFormScreen() {
 
       <View className="mb-5">
         <Text className="text-sm font-medium text-neutral-600 mb-2">Link to livestock (optional)</Text>
-        <View className="flex-row flex-wrap gap-2 mb-1">
-          <TouchableOpacity
-            className={`px-3 py-2 rounded-full border ${!livestockId ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
-            onPress={() => setLivestockId(null)}
-          >
-            <Text className={`text-sm ${!livestockId ? 'text-white' : 'text-neutral-600'}`}>None</Text>
-          </TouchableOpacity>
-          {livestock.map((l) => (
-            <TouchableOpacity
-              key={l.id}
-              className={`px-3 py-2 rounded-full border ${livestockId === l.id ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
-              onPress={() => setLivestockId(l.id)}
-            >
-              <Text className={`text-sm ${livestockId === l.id ? 'text-white' : 'text-neutral-600'}`}>{l.name} · {l.quantity} head</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <LivestockPicker livestock={livestock} value={livestockId} onChange={setLivestockId} />
       </View>
 
       {showSoldToggle && (
         <View className="flex-row items-center justify-between bg-card border border-border rounded-lg px-4 py-3 mb-5">
-          <View className="flex-1">
+          <View className="flex-1 mr-3">
             <Text className="text-sm font-medium text-neutral-700">Mark livestock as sold</Text>
-            <Text className="text-xs text-neutral-400 mt-0.5">Flips status to Sold and logs a sale activity</Text>
+            <Text className="text-xs text-neutral-500 mt-0.5">Flips status to Sold and logs a sale activity</Text>
           </View>
-          <TouchableOpacity
-            className={`w-12 h-7 rounded-full justify-center px-1 ${markSold ? 'bg-success' : 'bg-neutral-300'}`}
-            onPress={() => setMarkSold((v) => !v)}
-          >
-            <View className={`w-5 h-5 rounded-full bg-white ${markSold ? 'self-end' : 'self-start'}`} />
-          </TouchableOpacity>
+          <Switch
+            value={markSold}
+            onValueChange={setMarkSold}
+            trackColor={{ true: colors.success, false: colors.neutral[300] }}
+            accessibilityLabel="Mark livestock as sold"
+          />
         </View>
       )}
 
@@ -233,7 +228,7 @@ export default function IncomeFormScreen() {
         <TextInput
           className={`${inputClass} border-border`}
           placeholder="Optional notes..."
-          placeholderTextColor={colors.neutral[400]}
+          placeholderTextColor={colors.neutral[500]}
           value={notes}
           onChangeText={setNotes}
         />
@@ -242,20 +237,14 @@ export default function IncomeFormScreen() {
 
       <View className="flex-row gap-3 mt-4">
         {isEdit && (
-          <TouchableOpacity className="w-14 py-4 rounded-lg border border-error items-center" onPress={handleDelete} disabled={deleting}>
+          <TouchableOpacity className="w-14 py-4 rounded-lg border border-error items-center" onPress={handleDelete} disabled={deleting} accessibilityRole="button" accessibilityLabel="Delete">
             {deleting ? <ActivityIndicator size="small" color={colors.error} /> : <Ionicons name="trash-outline" size={18} color={colors.error} />}
           </TouchableOpacity>
         )}
-        <TouchableOpacity className="flex-1 py-4 rounded-lg border border-border items-center" onPress={() => router.back()} disabled={saving}>
-          <Text className="text-base font-semibold text-neutral-600">Cancel</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="flex-[2] flex-row items-center justify-center gap-2 py-4 rounded-lg bg-primary-600" onPress={handleSave} disabled={saving}>
-          {saving ? <ActivityIndicator color={colors.white} /> : <Ionicons name="checkmark-outline" size={20} color={colors.white} />}
-          <Text className="text-base font-semibold text-white">{saving ? 'Saving...' : isEdit ? 'Save' : 'Record'}</Text>
-        </TouchableOpacity>
+        <Button title="Cancel" variant="neutral" size="lg" className="flex-1" onPress={() => router.back()} disabled={saving} />
+        <Button title={saving ? 'Saving...' : isEdit ? 'Save' : 'Record'} variant="primary" size="lg" className="flex-[2]" icon="checkmark-outline" loading={saving} onPress={handleSave} disabled={saving} />
       </View>
-
-      <View className="h-8" />
+
     </FormScroll>
   );
 }

@@ -39,7 +39,7 @@ export const StatCard: React.FC<StatCardProps> = ({
       <Text className="text-2xl font-bold mt-1" style={{ color: accent }}>
         {value}
       </Text>
-      {subtitle && <Text className="text-xs text-neutral-400 mt-1">{subtitle}</Text>}
+      {subtitle && <Text className="text-xs text-neutral-500 mt-1">{subtitle}</Text>}
     </Card>
   );
 };

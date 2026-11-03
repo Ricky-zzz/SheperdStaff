@@ -5,6 +5,7 @@ import { Task } from '../features/tasks/types';
 import { AnimalType } from '../features/animalTypes/types';
 import { Location } from '../features/locations/types';
 import { Income } from '../features/income/types';
+import { InventoryItem } from '../features/inventory/types';
 
 function isoDaysFromNow(days: number): string {
   const d = new Date();
@@ -33,6 +34,7 @@ export const mockLocations: Location[] = [
 export const mockLivestock: Livestock[] = [
   {
     id: 'cow-betty',
+    code: 'CAT-A0001',
     name: 'Betty',
     category: 'cattle',
     type: 'individual',
@@ -54,6 +56,7 @@ export const mockLivestock: Livestock[] = [
   },
   {
     id: 'cow-barry',
+    code: 'CAT-A0002',
     name: 'Barry',
     category: 'cattle',
     type: 'individual',
@@ -73,6 +76,7 @@ export const mockLivestock: Livestock[] = [
   },
   {
     id: 'chicken-broiler',
+    code: 'CHK-B0001',
     name: '30-Day Broilers',
     category: 'chicken',
     type: 'group',
@@ -94,6 +98,7 @@ export const mockLivestock: Livestock[] = [
   },
   {
     id: 'chicken-native',
+    code: 'CHK-B0002',
     name: 'Native Layers',
     category: 'chicken',
     type: 'group',
@@ -113,6 +118,7 @@ export const mockLivestock: Livestock[] = [
   },
   {
     id: 'goat-herd-1',
+    code: 'GOT-B0001',
     name: 'Doe Herd',
     category: 'goat',
     type: 'group',
@@ -134,6 +140,7 @@ export const mockLivestock: Livestock[] = [
   },
   {
     id: 'goat-herd-2',
+    code: 'GOT-B0002',
     name: 'Kids & Bucks',
     category: 'goat',
     type: 'group',
@@ -153,6 +160,7 @@ export const mockLivestock: Livestock[] = [
   },
   {
     id: 'pig-piglets',
+    code: 'PIG-B0001',
     name: 'Piglets',
     category: 'pig',
     type: 'group',
@@ -172,6 +180,7 @@ export const mockLivestock: Livestock[] = [
   },
   {
     id: 'pig-sold',
+    code: 'PIG-B0002',
     name: 'Fatteners (Sold)',
     category: 'pig',
     type: 'group',
@@ -277,6 +286,14 @@ export const mockTasks: Task[] = [
     createdAt: isoDaysFromNow(-2),
     completedAt: isoDaysFromNow(-1),
   },
+];
+
+export const mockInventory: InventoryItem[] = [
+  { id: 'inv-broiler', name: 'Broiler Finisher Pellets', animalTypeIds: ['chicken'], unit: 'kg', quantity: 40, unitCost: 55, notes: 'For the 30-day broiler batch', createdAt: '2025-01-01' },
+  { id: 'inv-native', name: 'Corn + Rice Bran Mix', animalTypeIds: ['chicken'], unit: 'kg', quantity: 25, unitCost: 28, notes: 'Native layers and free-range birds', createdAt: '2025-01-01' },
+  { id: 'inv-cattle', name: 'Cattle Pellets', animalTypeIds: ['cattle'], unit: 'kg', quantity: 30, unitCost: 45, createdAt: '2025-01-01' },
+  { id: 'inv-goat', name: 'Goat Pellets', animalTypeIds: ['goat'], unit: 'kg', quantity: 18, unitCost: 38, createdAt: '2025-01-01' },
+  { id: 'inv-pig', name: 'Piglet Starter Feed', animalTypeIds: ['pig'], unit: 'kg', quantity: 20, unitCost: 62, createdAt: '2025-01-01' },
 ];
 
 export const mockPens: Pen[] = [

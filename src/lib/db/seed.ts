@@ -1,13 +1,14 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
-import { mockLivestock, mockPens, mockExpenses, mockActivities, mockTasks, mockAnimalTypes, mockLocations, mockIncome } from '../../data/mock';
+import { mockLivestock, mockPens, mockExpenses, mockActivities, mockTasks, mockAnimalTypes, mockLocations, mockIncome, mockInventory } from '../../data/mock';
 
 export async function seedIfNeeded(database: SQLiteDatabase): Promise<boolean> {
-  const [lv, at, loc] = await Promise.all([
+  const [lv, at, loc, inv] = await Promise.all([
     database.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM livestock'),
     database.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM animal_types'),
     database.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM locations'),
+    database.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM inventory_items'),
   ]);
-  if ((lv?.c ?? 0) > 0 && (at?.c ?? 0) > 0 && (loc?.c ?? 0) > 0) return false;
+  if ((lv?.c ?? 0) > 0 && (at?.c ?? 0) > 0 && (loc?.c ?? 0) > 0 && (inv?.c ?? 0) > 0) return false;
 
   await database.withTransactionAsync(async () => {
     if ((at?.c ?? 0) === 0) {
@@ -30,14 +31,30 @@ export async function seedIfNeeded(database: SQLiteDatabase): Promise<boolean> {
       }
     }
 
+    if ((inv?.c ?? 0) === 0) {
+      for (const item of mockInventory) {
+        await database.runAsync(
+          `INSERT INTO inventory_items (id, name, animalTypeIds, unit, quantity, unitCost, notes, createdAt)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [item.id, item.name, JSON.stringify(item.animalTypeIds), item.unit, item.quantity, item.unitCost, item.notes ?? null, item.createdAt]
+        );
+        await database.runAsync(
+          `INSERT INTO inventory_transactions (id, inventoryId, date, type, quantity, unitCost, livestockId, feedingId, notes, createdAt)
+           VALUES (?, ?, ?, 'restock', ?, ?, NULL, NULL, ?, ?)`,
+          [`tx-open-${item.id}`, item.id, item.createdAt, item.quantity, item.unitCost, 'Opening stock', new Date().toISOString()]
+        );
+      }
+    }
+
     if ((lv?.c ?? 0) > 0) return;
 
     for (const l of mockLivestock) {
       await database.runAsync(
-        `INSERT INTO livestock (id, name, category, type, quantity, breed, sex, startDate, location, purpose, status, notes, imageUrl, healthNotes, feedings, expenseIds)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO livestock (id, code, name, category, type, quantity, breed, sex, startDate, location, purpose, status, notes, imageUrl, healthNotes, feedings, expenseIds)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           l.id,
+          l.code,
           l.name,
           l.category,
           l.type,
@@ -114,7 +131,7 @@ export async function seedIfNeeded(database: SQLiteDatabase): Promise<boolean> {
 }
 
 export async function clearAll(database: SQLiteDatabase): Promise<void> {
-  await database.execAsync('DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM animal_types; DELETE FROM locations; DELETE FROM income;');
+  await database.execAsync('DELETE FROM inventory_transactions; DELETE FROM inventory_items; DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM animal_types; DELETE FROM locations; DELETE FROM income;');
 }
 
 export async function reseed(database: SQLiteDatabase): Promise<void> {

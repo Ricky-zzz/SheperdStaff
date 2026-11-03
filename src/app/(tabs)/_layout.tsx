@@ -1,21 +1,25 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../lib/theme/ThemeContext';
+import { ProfileMenuButton } from '../../features/profile/components/ProfileMenuButton';
 
 export default function TabLayout() {
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.primary[600],
-        tabBarInactiveTintColor: colors.neutral[400],
+        tabBarInactiveTintColor: colors.neutral[500],
         tabBarStyle: {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
-          height: 60,
-          paddingBottom: 8,
+          height: 60 + insets.bottom,
+          paddingBottom: 8 + insets.bottom,
           paddingTop: 4,
         },
+        tabBarAllowFontScaling: false,
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500',
@@ -28,6 +32,7 @@ export default function TabLayout() {
           fontWeight: '700',
           fontSize: 17,
         },
+        headerRight: () => <ProfileMenuButton />,
         headerShadowVisible: false,
       }}
     >

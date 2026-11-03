@@ -78,7 +78,12 @@ export default function HomeScreen() {
           <Text className="text-2xl font-bold text-neutral-900">Good morning!</Text>
           <Text className="text-base text-neutral-500 mt-1">{'Here\u2019s your farm overview'}</Text>
         </View>
-        <TouchableOpacity className="w-11 h-11 rounded-full bg-primary-50 justify-center items-center" onPress={() => router.push('/activity')}>
+        <TouchableOpacity
+          className="w-11 h-11 rounded-full bg-primary-50 justify-center items-center"
+          onPress={() => router.push('/activity')}
+          accessibilityRole="button"
+          accessibilityLabel="Activity and notifications"
+        >
           <Ionicons name="notifications-outline" size={22} color={colors.primary[700]} />
         </TouchableOpacity>
       </View>
@@ -92,7 +97,7 @@ export default function HomeScreen() {
         <StatCard title="Total Spent" value={`₱${totalExpenses.toFixed(0)}`} icon="wallet-outline" color={accent(colors.category.cattle)} subtitle="All time" />
       </View>
 
-      <TouchableOpacity onPress={() => router.push('/tasks')}>
+      <TouchableOpacity onPress={() => router.push('/tasks')} accessibilityRole="button" accessibilityLabel="Today's tasks, view all">
         <Card className="mb-5 flex-row items-center">
           <View className="w-11 h-11 rounded-lg justify-center items-center mr-3" style={{ backgroundColor: colorMode === 'uniform' ? colors.neutral[100] : colors.earth[100] }}>
             <Ionicons name="checkbox-outline" size={22} color={colorMode === 'uniform' ? colors.neutral[600] : colors.earth[600]} />
@@ -109,34 +114,34 @@ export default function HomeScreen() {
                 : 'No pending tasks'}
             </Text>
           </View>
-          <Ionicons name="chevron-forward-outline" size={18} color={colors.neutral[300]} />
+          <Ionicons name="chevron-forward-outline" size={18} color={colors.neutral[500]} />
         </Card>
       </TouchableOpacity>
 
       <SectionHeader title="Quick Actions" />
 
       <View className="flex-row gap-3">
-        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/livestock/new')}>
+        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/livestock/new')} accessibilityRole="button" accessibilityLabel="Add animal">
           <View className="w-[52px] h-[52px] rounded-lg justify-center items-center" style={{ backgroundColor: colors.primary[100] }}>
             <Ionicons name="add-circle-outline" size={24} color={colors.primary[600]} />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">Add Animal</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/expenses/new')}>
+        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/expenses/new')} accessibilityRole="button" accessibilityLabel="Add expense">
           <View className="w-[52px] h-[52px] rounded-lg justify-center items-center" style={{ backgroundColor: colors.earth[100] }}>
             <Ionicons name="cash-outline" size={24} color={colors.earth[600]} />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">Add Expense</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/(tabs)/livestock')}>
-          <View className="w-[52px] h-[52px] rounded-lg justify-center items-center bg-purple-100">
-            <Ionicons name="list-outline" size={24} color="#7C3AED" />
+        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/(tabs)/livestock')} accessibilityRole="button" accessibilityLabel="View all livestock">
+          <View className="w-[52px] h-[52px] rounded-lg justify-center items-center" style={{ backgroundColor: (colorMode === 'uniform' ? colors.neutral[500] : colors.category.sheep) + '15' }}>
+            <Ionicons name="list-outline" size={24} color={colorMode === 'uniform' ? colors.neutral[600] : colors.category.sheep} />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">View All</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/(tabs)/reports')}>
-          <View className="w-[52px] h-[52px] rounded-lg justify-center items-center bg-blue-100">
-            <Ionicons name="bar-chart-outline" size={24} color="#2563EB" />
+        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/(tabs)/reports')} accessibilityRole="button" accessibilityLabel="Reports">
+          <View className="w-[52px] h-[52px] rounded-lg justify-center items-center" style={{ backgroundColor: (colorMode === 'uniform' ? colors.neutral[500] : colors.category.duck) + '15' }}>
+            <Ionicons name="bar-chart-outline" size={24} color={colorMode === 'uniform' ? colors.neutral[600] : colors.category.duck} />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">Reports</Text>
         </TouchableOpacity>
@@ -147,7 +152,7 @@ export default function HomeScreen() {
       <Card className="p-0 mb-5">
         {recentActivities.length === 0 ? (
           <View className="p-4">
-            <Text className="text-sm text-neutral-400 text-center">No recent activity</Text>
+            <Text className="text-sm text-neutral-500 text-center">No recent activity</Text>
           </View>
         ) : (
           recentActivities.map((activity, index) => (

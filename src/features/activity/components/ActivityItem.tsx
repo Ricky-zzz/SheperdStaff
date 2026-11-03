@@ -31,11 +31,11 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
         <Text className="text-base text-neutral-700 font-medium" numberOfLines={1}>
           {activity.description}
         </Text>
-        <Text className="text-xs text-neutral-400 mt-0.5">
+        <Text className="text-xs text-neutral-500 mt-0.5">
           {getActivityLabel(activity.type)} • {activity.date}
         </Text>
       </View>
-      {onPress && <Ionicons name="chevron-forward-outline" size={16} color={colors.neutral[300]} />}
+      {onPress && <Ionicons name="chevron-forward-outline" size={16} color={colors.neutral[500]} />}
     </>
   );
 
@@ -43,7 +43,12 @@ export const ActivityItem: React.FC<ActivityItemProps> = ({
 
   if (onPress) {
     return (
-      <TouchableOpacity className={containerClass} onPress={onPress}>
+      <TouchableOpacity
+        className={containerClass}
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={`${activity.description}, ${getActivityLabel(activity.type)}, ${activity.date}`}
+      >
         {content}
       </TouchableOpacity>
     );

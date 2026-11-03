@@ -2,6 +2,11 @@ export function formatCurrency(amount: number, decimals = 2): string {
   return `₱${amount.toFixed(decimals)}`;
 }
 
+export function formatQuantity(quantity: number): string {
+  if (Number.isInteger(quantity)) return String(quantity);
+  return quantity.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+}
+
 export function formatDate(date: string): string {
   return date;
 }

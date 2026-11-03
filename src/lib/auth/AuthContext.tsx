@@ -1,12 +1,14 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { UserProfile, ColorMode } from '../../features/profile/types';
+import { UserProfile, ColorMode, Appearance } from '../../features/profile/types';
 import {
   createProfile,
   getProfile,
   updatePassword,
   updateProfileNameEmail,
   updateTheme,
+  updateAppearance,
   updateColorMode,
+  updateAvatar as updateProfileAvatar,
 } from '../../features/profile/services/profileService';
 import { generateSalt, hashPassword, verifyPassword } from '../utils/password';
 import { initDb } from '../db/client';
@@ -18,7 +20,7 @@ export interface OnboardingDraft {
   email: string;
   password: string;
   themeKey: string;
-  darkMode: boolean;
+  appearance: Appearance;
   colorMode: ColorMode;
 }
 
@@ -29,11 +31,14 @@ interface AuthContextValue {
   setDraft: (patch: Partial<OnboardingDraft>) => void;
   completeOnboarding: () => Promise<void>;
   unlock: (password: string) => Promise<boolean>;
+  lock: () => void;
   reload: () => Promise<void>;
   updateNameEmail: (name: string, email: string) => Promise<void>;
   changePassword: (current: string, next: string) => Promise<boolean>;
-  setTheme: (themeKey: string, darkMode: boolean) => Promise<void>;
+  setTheme: (themeKey: string) => Promise<void>;
+  setAppearance: (appearance: Appearance) => Promise<void>;
   setColorMode: (colorMode: ColorMode) => Promise<void>;
+  updateAvatar: (avatarUri: string | null) => Promise<void>;
   resetDemo: () => Promise<void>;
 }
 
@@ -47,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: '',
     password: '',
     themeKey: 'earth',
-    darkMode: false,
+    appearance: 'system',
     colorMode: 'colorful',
   });
 
@@ -87,7 +92,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       passwordHash,
       salt,
       themeKey: draft.themeKey,
-      darkMode: draft.darkMode,
+      darkMode: draft.appearance === 'dark',
+      appearance: draft.appearance,
       colorMode: draft.colorMode,
     });
     try {
@@ -110,6 +116,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [profile]
   );
+
+  const lock = useCallback(() => {
+    setState('locked');
+  }, []);
 
   const updateNameEmail = useCallback(
     async (name: string, email: string) => {
@@ -135,10 +145,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const setTheme = useCallback(
-    async (themeKey: string, darkMode: boolean) => {
+    async (themeKey: string) => {
       if (!profile) return;
-      await updateTheme(profile.id, themeKey, darkMode);
-      setProfile({ ...profile, themeKey, darkMode });
+      await updateTheme(profile.id, themeKey);
+      setProfile({ ...profile, themeKey });
+    },
+    [profile]
+  );
+
+  const setAppearance = useCallback(
+    async (appearance: Appearance) => {
+      if (!profile) return;
+      await updateAppearance(profile.id, appearance);
+      setProfile({ ...profile, appearance, darkMode: appearance === 'dark' });
     },
     [profile]
   );
@@ -152,20 +171,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [profile]
   );
 
+  const updateAvatar = useCallback(
+    async (avatarUri: string | null) => {
+      if (!profile) return;
+      await updateProfileAvatar(profile.id, avatarUri);
+      setProfile({ ...profile, avatarUri: avatarUri ?? undefined });
+    },
+    [profile]
+  );
+
   const resetDemo = useCallback(async () => {
     const { getDb } = await import('../db/client');
     const db = await getDb();
     await db.execAsync(
-      'DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM animal_types; DELETE FROM locations; DELETE FROM income; DELETE FROM user_profile;'
+      'DELETE FROM inventory_transactions; DELETE FROM inventory_items; DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM animal_types; DELETE FROM locations; DELETE FROM income; DELETE FROM user_profile;'
     );
     setProfile(null);
-    setDraftState({ name: '', email: '', password: '', themeKey: 'earth', darkMode: false, colorMode: 'colorful' });
+    setDraftState({ name: '', email: '', password: '', themeKey: 'earth', appearance: 'system', colorMode: 'colorful' });
     setState('onboarding');
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ state, profile, draft, setDraft, completeOnboarding, unlock, reload, updateNameEmail, changePassword, setTheme, setColorMode, resetDemo }),
-    [state, profile, draft, setDraft, completeOnboarding, unlock, reload, updateNameEmail, changePassword, setTheme, setColorMode, resetDemo]
+    () => ({ state, profile, draft, setDraft, completeOnboarding, unlock, lock, reload, updateNameEmail, changePassword, setTheme, setAppearance, setColorMode, updateAvatar, resetDemo }),
+    [state, profile, draft, setDraft, completeOnboarding, unlock, lock, reload, updateNameEmail, changePassword, setTheme, setAppearance, setColorMode, updateAvatar, resetDemo]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

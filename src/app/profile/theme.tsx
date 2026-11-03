@@ -2,21 +2,23 @@ import React, { useState } from 'react';
 import { View } from 'react-native';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { ThemePicker } from '../../components/ui/ThemePicker';
-import { ColorMode } from '../../features/profile/types';
+import { Appearance, ColorMode } from '../../features/profile/types';
 
 export default function ChangeThemeScreen() {
-  const { profile, setTheme, setColorMode } = useAuth();
+  const { profile, setTheme, setAppearance, setColorMode } = useAuth();
   const [themeKey, setThemeKey] = useState(profile?.themeKey ?? 'earth');
-  const [darkMode, setDarkMode] = useState(profile?.darkMode ?? false);
+  const [appearance, setLocalAppearance] = useState<Appearance>(
+    profile?.appearance ?? (profile?.darkMode ? 'dark' : 'light')
+  );
 
   const handleChange = (key: string) => {
     setThemeKey(key);
-    setTheme(key, darkMode);
+    setTheme(key);
   };
 
-  const handleDarkMode = (value: boolean) => {
-    setDarkMode(value);
-    setTheme(themeKey, value);
+  const handleAppearance = (value: Appearance) => {
+    setLocalAppearance(value);
+    setAppearance(value);
   };
 
   const handleColorMode = (value: ColorMode) => {
@@ -28,8 +30,8 @@ export default function ChangeThemeScreen() {
       <ThemePicker
         selected={themeKey}
         onSelect={handleChange}
-        darkMode={darkMode}
-        onDarkModeChange={handleDarkMode}
+        appearance={appearance}
+        onAppearanceChange={handleAppearance}
         colorMode={profile?.colorMode ?? 'colorful'}
         onColorModeChange={handleColorMode}
       />

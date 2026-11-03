@@ -16,18 +16,25 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 }) => {
   const { colors } = useTheme();
   return (
-    <View className="flex-1 flex-row items-center bg-card rounded-lg px-3 h-11 shadow-sm">
-      <Ionicons name="search-outline" size={18} color={colors.neutral[400]} />
+    <View className="flex-1 flex-row items-center bg-card rounded-lg px-3 min-h-11 py-2 shadow-sm">
+      <Ionicons name="search-outline" size={18} color={colors.neutral[500]} />
       <TextInput
         className="flex-1 ml-2 text-base text-neutral-800"
         placeholder={placeholder}
-        placeholderTextColor={colors.neutral[400]}
+        placeholderTextColor={colors.neutral[500]}
+        accessibilityLabel={placeholder}
         value={value}
         onChangeText={onChangeText}
       />
       {value !== '' && (
-        <TouchableOpacity onPress={() => onChangeText('')}>
-          <Ionicons name="close-circle-outline" size={18} color={colors.neutral[400]} />
+        <TouchableOpacity
+          onPress={() => onChangeText('')}
+          className="p-2 -mr-2"
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel="Clear search"
+        >
+          <Ionicons name="close-circle-outline" size={18} color={colors.neutral[500]} />
         </TouchableOpacity>
       )}
     </View>

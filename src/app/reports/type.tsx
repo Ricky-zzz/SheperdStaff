@@ -84,6 +84,14 @@ export default function TypeLedgerScreen() {
       rows.push({ id: `exp-${exp.id}`, date: exp.date, description: exp.description, entityName: exp.livestockId ? nameById[exp.livestockId] : undefined, kind: 'expense', amount: attributed });
     }
   }
+  for (const l of livestock) {
+    if (!entityIds.has(l.id)) continue;
+    for (const f of l.feedings) {
+      const cost = f.cost ?? 0;
+      if (cost <= 0 || !inRange(f.date, range.from, range.to)) continue;
+      rows.push({ id: `feed-${f.id}`, date: f.date, description: `Feed: ${f.feedType}`, entityName: l.name, kind: 'expense', amount: cost });
+    }
+  }
   rows.sort((a, b) => b.date.localeCompare(a.date));
 
   const totalIncome = rows.filter((r) => r.kind === 'income').reduce((s, r) => s + r.amount, 0);
@@ -148,7 +156,7 @@ export default function TypeLedgerScreen() {
                 </View>
                 <View className="flex-1">
                   <Text className="text-base text-neutral-800" numberOfLines={1}>{row.description}</Text>
-                  <Text className="text-xs text-neutral-400 mt-0.5" numberOfLines={1}>
+                  <Text className="text-xs text-neutral-500 mt-0.5" numberOfLines={1}>
                     {row.entityName ? `${row.entityName} · ` : ''}{row.date}
                   </Text>
                 </View>
