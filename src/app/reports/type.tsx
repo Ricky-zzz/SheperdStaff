@@ -74,6 +74,9 @@ export default function TypeLedgerScreen() {
   }
   for (const exp of expenses) {
     if (!inRange(exp.date, range.from, range.to)) continue;
+    // Feed purchases are farm-wide cash expenses; an animal's feed cost here
+    // comes from what it consumed (below), so purchases are never counted twice.
+    if (exp.category === 'feed') continue;
     let attributed = 0;
     if (exp.allocations && exp.allocations.length > 0) {
       for (const a of exp.allocations) if (entityIds.has(a.livestockId)) attributed += a.amount;
@@ -97,6 +100,11 @@ export default function TypeLedgerScreen() {
   const totalIncome = rows.filter((r) => r.kind === 'income').reduce((s, r) => s + r.amount, 0);
   const totalExpense = rows.filter((r) => r.kind === 'expense').reduce((s, r) => s + r.amount, 0);
   const net = totalIncome - totalExpense;
+  // Feed purchases are counted once as farm-wide cash expenses instead, so
+  // surface the amount here rather than silently hiding it from the user.
+  const feedPurchasesInRange = expenses
+    .filter((e) => e.category === 'feed' && inRange(e.date, range.from, range.to))
+    .reduce((s, e) => s + e.amount, 0);
 
   if (loading) {
     return (
@@ -138,6 +146,13 @@ export default function TypeLedgerScreen() {
           </Text>
         </View>
       </Card>
+
+      {feedPurchasesInRange > 0 ? (
+        <Text className="text-xs text-neutral-500 mb-4 -mt-2">
+          Feed purchases of ₱{feedPurchasesInRange.toFixed(2)} in this range are counted as farm-wide
+          expenses; the feed these animals consumed is already listed above.
+        </Text>
+      ) : null}
 
       {rows.length === 0 ? (
         <EmptyState icon="list-outline" title="No transactions" subtitle="No income or expenses for this type in the selected range" />

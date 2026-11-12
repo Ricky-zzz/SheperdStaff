@@ -72,4 +72,4 @@ activity log, effect-based auth redirects, rounded-lg formal styling.
 
 - Profit per entity is added in §2 — no longer deferred.
 - Multi-user / sync: out of scope (offline-first single user).
-- Real password recovery: current reset is destructive by design.
+- Real password recovery: **done** — recovery code set in Settings, reset from the lock screen without losing data (see PRD 6.9).

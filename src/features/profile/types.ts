@@ -12,6 +12,10 @@ export interface UserProfile {
   appearance?: Appearance;
   colorMode: ColorMode;
   avatarUri?: string;
+  /** Salted hash of the lock-recovery code. The code itself is never stored. */
+  recoveryHash?: string;
+  recoverySalt?: string;
+  recoverySetAt?: string;
   createdAt: string;
   updatedAt: string;
 }

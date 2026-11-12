@@ -10,4 +10,4 @@ make the location a drop down rather than choices
 note whan i was typing in expo i couold not see the letters is this because i was in expo or is there some trick to put the textbox above the phone keyboard
 adjust icons to be more minimalistic 
 
-make the backup functional 
+make the backup functional (done: More → Backup & Restore — backup, email, restore, recovery code)

@@ -10,6 +10,7 @@ import * as inventoryService from '../../features/inventory/services/inventorySe
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { DateInput } from '../../components/ui/DateInput';
 import { formatQuantity } from '../../lib/utils/format';
+import { toUserMessage } from '../../lib/utils/errors';
 
 const inputClass = 'bg-card border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-1';
 
@@ -83,8 +84,8 @@ export default function RestockScreen() {
         });
       }
       router.back();
-    } catch (err: any) {
-      setErrors({ form: String(err?.message ?? 'Failed to save') });
+    } catch (err) {
+      setErrors({ form: toUserMessage(err, 'Could not record the restock.') });
     } finally {
       setSaving(false);
     }

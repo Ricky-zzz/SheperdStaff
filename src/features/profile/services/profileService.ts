@@ -12,6 +12,9 @@ type ProfileRow = {
   appearance: string | null;
   colorMode: string | null;
   avatarUri: string | null;
+  recoveryHash: string | null;
+  recoverySalt: string | null;
+  recoverySetAt: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -28,10 +31,14 @@ function parseRow(row: ProfileRow): UserProfile {
     appearance: parseAppearance(row.appearance, row.darkMode),
     colorMode: (row.colorMode === 'uniform' ? 'uniform' : 'colorful') as ColorMode,
     avatarUri: row.avatarUri ?? undefined,
+    recoveryHash: row.recoveryHash ?? undefined,
+    recoverySalt: row.recoverySalt ?? undefined,
+    recoverySetAt: row.recoverySetAt ?? undefined,
   };
 }
 
-const SELECT_COLUMNS = 'id, name, email, passwordHash, salt, themeKey, darkMode, appearance, colorMode, avatarUri, createdAt, updatedAt';
+const SELECT_COLUMNS =
+  'id, name, email, passwordHash, salt, themeKey, darkMode, appearance, colorMode, avatarUri, recoveryHash, recoverySalt, recoverySetAt, createdAt, updatedAt';
 
 export async function getProfile(): Promise<UserProfile | null> {
   const db = await getDb();
@@ -67,6 +74,30 @@ export async function updatePassword(id: number, passwordHash: string, salt: str
   await db.runAsync(
     'UPDATE user_profile SET passwordHash = ?, salt = ?, updatedAt = ? WHERE id = ?',
     [passwordHash, salt, new Date().toISOString(), id]
+  );
+}
+
+/** Store the salted hash of the recovery code (the code itself is never saved). */
+export async function updateRecoveryCode(
+  id: number,
+  recoveryHash: string,
+  recoverySalt: string
+): Promise<void> {
+  const db = await getDb();
+  const now = new Date().toISOString();
+  await db.runAsync(
+    'UPDATE user_profile SET recoveryHash = ?, recoverySalt = ?, recoverySetAt = ?, updatedAt = ? WHERE id = ?',
+    [recoveryHash, recoverySalt, now, now, id]
+  );
+}
+
+/** Drop the recovery code (leaves the password untouched). */
+export async function clearRecoveryCode(id: number): Promise<void> {
+  const db = await getDb();
+  const now = new Date().toISOString();
+  await db.runAsync(
+    'UPDATE user_profile SET recoveryHash = NULL, recoverySalt = NULL, recoverySetAt = NULL, updatedAt = ? WHERE id = ?',
+    [now, id]
   );
 }
 

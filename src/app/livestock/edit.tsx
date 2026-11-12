@@ -13,6 +13,7 @@ import { Location } from '../../features/locations/types';
 import { getAll as getAllLocations } from '../../features/locations/services/locationService';
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { validateLivestock } from '../../lib/utils/validate';
+import { toUserMessage } from '../../lib/utils/errors';
 import { getCodeLabel } from '../../lib/utils/livestockCode';
 import { DateInput } from '../../components/ui/DateInput';
 import { Select } from '../../components/ui/Select';
@@ -126,7 +127,7 @@ export default function EditLivestockScreen() {
       });
       router.back();
     } catch (err: any) {
-      setErrors({ form: String(err?.message ?? 'Failed to save') });
+      setErrors({ form: toUserMessage(err, 'Could not save the changes.') });
     } finally {
       setSaving(false);
     }

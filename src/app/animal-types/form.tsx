@@ -8,6 +8,7 @@ import { useTheme } from '../../lib/theme/ThemeContext';
 import { ANIMAL_TYPE_COLORS } from '../../features/animalTypes/types';
 import * as animalTypeService from '../../features/animalTypes/services/animalTypeService';
 import { validateAnimalType } from '../../lib/utils/validate';
+import { toUserMessage } from '../../lib/utils/errors';
 
 const inputClass = 'bg-card border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-1';
 
@@ -51,8 +52,8 @@ export default function AnimalTypeFormScreen() {
         await animalTypeService.create({ id: slug, name: name.trim(), color });
       }
       router.back();
-    } catch (err: any) {
-      setErrors({ form: String(err?.message ?? 'Failed to save') });
+    } catch (err) {
+      setErrors({ form: toUserMessage(err, 'Could not save the type.') });
     } finally {
       setSaving(false);
     }
@@ -69,8 +70,8 @@ export default function AnimalTypeFormScreen() {
           try {
             await animalTypeService.remove(id as string);
             router.back();
-          } catch (err: any) {
-            Alert.alert('Cannot delete', String(err?.message ?? 'Failed to delete'));
+          } catch (err) {
+            Alert.alert('Cannot delete', toUserMessage(err, 'Could not delete this type.'));
             setDeleting(false);
           }
         },

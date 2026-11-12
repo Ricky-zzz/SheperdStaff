@@ -29,9 +29,13 @@ function RootNavigator() {
     const root = segments[0];
     if (state === 'onboarding' && root !== 'onboarding') {
       router.replace('/onboarding');
-    } else if (state === 'locked' && root !== 'lock') {
+    } else if (state === 'locked' && root !== 'lock' && root !== 'reset-password') {
+      // `/reset-password` is the one screen reachable from the lock gate.
       router.replace('/lock');
-    } else if (state === 'unlocked' && (root === 'onboarding' || root === 'lock' || root === undefined)) {
+    } else if (
+      state === 'unlocked' &&
+      (root === 'onboarding' || root === 'lock' || root === 'reset-password' || root === undefined)
+    ) {
       router.replace('/(tabs)');
     }
   }, [state, segments, navState?.key, router]);
@@ -84,6 +88,7 @@ function RootNavigator() {
           />
           <Stack.Screen name="profile/edit" options={{ ...modalOptions, title: 'Edit Profile' }} />
           <Stack.Screen name="profile/password" options={{ ...modalOptions, title: 'Change Password' }} />
+          <Stack.Screen name="profile/recovery" options={{ ...headerOptions, title: 'Recovery Code' }} />
           <Stack.Screen name="profile/theme" options={{ ...modalOptions, title: 'Theme' }} />
           <Stack.Screen
             name="tasks"
@@ -101,6 +106,7 @@ function RootNavigator() {
             options={{ ...headerOptions, title: 'Animal Types' }}
           />
           <Stack.Screen name="animal-types/form" options={{ ...modalOptions, title: 'Animal Type' }} />
+          <Stack.Screen name="backup" options={{ ...headerOptions, title: 'Backup & Restore' }} />
           <Stack.Screen
             name="inventory"
             options={{ ...headerOptions, title: 'Feed Inventory' }}
@@ -108,10 +114,12 @@ function RootNavigator() {
           <Stack.Screen name="inventory/[id]" options={{ ...headerOptions, title: 'Feed Details' }} />
           <Stack.Screen name="inventory/form" options={{ ...modalOptions, title: 'Feed Item' }} />
           <Stack.Screen name="inventory/restock" options={{ ...modalOptions, title: 'Restock Feed' }} />
+          <Stack.Screen name="inventory/adjust" options={{ ...modalOptions, title: 'Adjust Stock' }} />
         </Stack.Protected>
 
         <Stack.Protected guard={state === 'locked'}>
           <Stack.Screen name="lock" />
+          <Stack.Screen name="reset-password" options={{ ...headerOptions, title: 'Reset Password' }} />
         </Stack.Protected>
 
       </Stack>

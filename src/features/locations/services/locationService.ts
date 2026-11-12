@@ -40,11 +40,20 @@ export async function update(id: string, patch: Partial<Pick<Location, 'name' | 
   const existing = await getById(id);
   if (!existing) throw new Error(`Location ${id} not found`);
   const next = { ...existing, ...patch, id };
-  await (await getDb()).runAsync('UPDATE locations SET name=?, notes=? WHERE id=?', [
-    next.name,
-    next.notes ?? null,
-    id,
-  ]);
+  const db = await getDb();
+  // Livestock stores the location name as free text, so a rename must follow
+  // it everywhere — otherwise records strand on the old name and the renamed
+  // location looks unused (and deletable) while still being referenced.
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('UPDATE locations SET name=?, notes=? WHERE id=?', [
+      next.name,
+      next.notes ?? null,
+      id,
+    ]);
+    if (next.name !== existing.name) {
+      await db.runAsync('UPDATE livestock SET location = ? WHERE location = ?', [next.name, existing.name]);
+    }
+  });
 }
 
 export async function isUsed(name: string): Promise<boolean> {
@@ -56,6 +65,15 @@ export async function isUsed(name: string): Promise<boolean> {
 export async function remove(id: string): Promise<void> {
   const existing = await getById(id);
   if (!existing) return;
-  if (await isUsed(existing.name)) throw new Error('This location is used by livestock and cannot be deleted.');
-  await (await getDb()).runAsync('DELETE FROM locations WHERE id = ?', [id]);
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM livestock WHERE location = ?', [
+    existing.name,
+  ]);
+  const count = row?.c ?? 0;
+  if (count > 0) {
+    throw new Error(
+      `This location is used by ${count} livestock record${count === 1 ? '' : 's'}. Move those records to another location first.`
+    );
+  }
+  await db.runAsync('DELETE FROM locations WHERE id = ?', [id]);
 }

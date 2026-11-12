@@ -10,8 +10,9 @@ import { getById, update, remove } from '../../features/expenses/services/expens
 import { getAll as getAllLivestock } from '../../features/livestock/services/livestockService';
 import { Livestock } from '../../features/livestock/types';
 import { LivestockPicker } from '../../components/ui/LivestockPicker';
-import { log as logActivity } from '../../features/activity/services/activityService';
+import { safeLog } from '../../features/activity/services/activityService';
 import { validateExpense } from '../../lib/utils/validate';
+import { toUserMessage } from '../../lib/utils/errors';
 import { DateInput } from '../../components/ui/DateInput';
 
 const CATEGORIES: { label: string; value: ExpenseCategory; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -89,7 +90,7 @@ export default function EditExpenseScreen() {
       };
       if (!legacyAllocations) patch.allocations = undefined;
       await update(id as string, patch);
-      await logActivity({
+      await safeLog({
         id: `act-${Date.now()}`,
         date: new Date().toISOString().slice(0, 10),
         type: 'expense_added',
@@ -97,15 +98,15 @@ export default function EditExpenseScreen() {
         expenseId: id as string,
       });
       router.back();
-    } catch (err: any) {
-      setErrors({ form: String(err?.message ?? 'Failed') });
+    } catch (err) {
+      setErrors({ form: toUserMessage(err, 'Could not save the expense.') });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = () => {
-    Alert.alert('Delete expense?', 'This cannot be undone.', [
+    Alert.alert('Delete expense?', 'This cannot be undone. The activity log will note the deletion.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -115,17 +116,16 @@ export default function EditExpenseScreen() {
           try {
             const desc = description.trim() || 'Expense';
             await remove(id as string);
-            await logActivity({
+            // Log without the deleted id so the FK can't fail after the row is gone.
+            await safeLog({
               id: `act-${Date.now()}`,
               date: new Date().toISOString().slice(0, 10),
-              type: 'expense_added',
+              type: 'expense_deleted',
               description: `Expense deleted: ${desc}`,
-              expenseId: id as string,
             });
             router.replace('/(tabs)/expenses');
-          } catch (err: any) {
-            Alert.alert('Error', String(err?.message ?? 'Failed'));
-          } finally {
+          } catch (err) {
+            Alert.alert('Could not delete', toUserMessage(err, 'Could not delete this expense.'));
             setDeleting(false);
           }
         },

@@ -177,7 +177,10 @@ export default function ReportsScreen() {
     }
   }
 
-  const netProfit = totalEarned - totalSpent - totalFeedUsed;
+  // Cash basis: feed purchases already sit inside expenses, so profit is
+  // income − expenses. Feed used is reported separately, not subtracted again
+  // (that would double-count every kilo of feed purchased and consumed).
+  const netProfit = totalEarned - totalSpent;
 
   const expensesByCategoryMap = filteredExpenses.reduce<Record<string, number>>((acc, e) => {
     acc[e.category] = (acc[e.category] || 0) + e.amount;
@@ -186,6 +189,9 @@ export default function ReportsScreen() {
 
   const expenseByEntity: Record<string, number> = {};
   for (const e of filteredExpenses) {
+    // Feed purchases stay at farm level (cash expenses). An animal's feed cost
+    // is what it actually consumed, so it is never counted twice.
+    if (e.category === 'feed') continue;
     if (e.allocations && e.allocations.length > 0) {
       for (const a of e.allocations) expenseByEntity[a.livestockId] = (expenseByEntity[a.livestockId] || 0) + a.amount;
     } else if (e.livestockId) {
@@ -200,8 +206,9 @@ export default function ReportsScreen() {
   const entityRows = allLivestock
     .map((l) => {
       const income = incomeByEntity[l.id] || 0;
-      const expenses = (expenseByEntity[l.id] || 0) + (feedUsedByEntity[l.id] || 0);
-      return { id: l.id, name: l.name, category: l.category, categoryLabel: getCategoryLabel(l.category, types), income, expenses, profit: income - expenses };
+      const feed = feedUsedByEntity[l.id] || 0;
+      const expenses = (expenseByEntity[l.id] || 0) + feed;
+      return { id: l.id, name: l.name, category: l.category, categoryLabel: getCategoryLabel(l.category, types), income, expenses, feed, profit: income - expenses };
     })
     .sort((a, b) => b.profit - a.profit);
 
@@ -304,7 +311,9 @@ export default function ReportsScreen() {
         </Card>
       </View>
       <Text className="text-xs text-neutral-500 -mt-1 mb-3 text-center">
-        Profit = Income − Expenses{totalFeedUsed > 0 ? ` − Feed used ₱${totalFeedUsed.toFixed(0)}` : ''} · {txCount} transactions · {allLivestock.length} records
+        Cash profit = Income − Expenses
+        {totalFeedUsed > 0 ? ` · Feed used ₱${totalFeedUsed.toFixed(0)} (counted inside expenses when purchased)` : ''}
+        {' · '}{txCount} transactions · {allLivestock.length} records
       </Text>
 
       <SectionHeader title="Profit by Animal Type" />
@@ -349,7 +358,10 @@ export default function ReportsScreen() {
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
                 <Text className="text-base font-medium text-neutral-800" numberOfLines={1}>{row.name}</Text>
-                <Text className="text-xs text-neutral-500 mt-0.5">{row.categoryLabel} · Income ₱{row.income.toFixed(0)} · Expenses ₱{row.expenses.toFixed(0)}</Text>
+                <Text className="text-xs text-neutral-500 mt-0.5" numberOfLines={1}>
+                  {row.categoryLabel} · Income ₱{row.income.toFixed(0)} · Expenses ₱{row.expenses.toFixed(0)}
+                  {row.feed > 0 ? ` (feed ₱${row.feed.toFixed(0)})` : ''}
+                </Text>
               </View>
               <Text className="text-base font-bold ml-3" style={{ color: row.profit >= 0 ? colors.success : colors.error }}>
                 {row.profit >= 0 ? '+' : ''}₱{row.profit.toFixed(0)}

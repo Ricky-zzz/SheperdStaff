@@ -11,6 +11,7 @@ import * as inventoryService from '../../features/inventory/services/inventorySe
 import { AnimalType } from '../../features/animalTypes/types';
 import { getAll as getAllTypes } from '../../features/animalTypes/services/animalTypeService';
 import { log as logActivity } from '../../features/activity/services/activityService';
+import { toUserMessage } from '../../lib/utils/errors';
 
 const inputClass = 'bg-card border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-1';
 
@@ -93,8 +94,8 @@ export default function InventoryFormScreen() {
         });
       }
       router.back();
-    } catch (err: any) {
-      setErrors({ form: String(err?.message ?? 'Failed to save') });
+    } catch (err) {
+      setErrors({ form: toUserMessage(err, 'Could not save the feed item.') });
     } finally {
       setSaving(false);
     }
@@ -111,8 +112,8 @@ export default function InventoryFormScreen() {
           try {
             await inventoryService.remove(id as string);
             router.replace('/inventory');
-          } catch (err: any) {
-            Alert.alert('Error', String(err?.message ?? 'Failed to delete'));
+          } catch (err) {
+            Alert.alert('Could not delete', toUserMessage(err, 'Could not delete this feed item.'));
             setDeleting(false);
           }
         },

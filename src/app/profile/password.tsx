@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { validateNewPassword } from '../../lib/utils/validate';
+import { toUserMessage } from '../../lib/utils/errors';
 import { generatePassword, passwordStrength } from '../../lib/utils/password';
 
 export default function ChangePasswordScreen() {
@@ -53,7 +54,7 @@ export default function ChangePasswordScreen() {
       }
       router.back();
     } catch (err: any) {
-      setErrors({ form: String(err?.message ?? 'Failed to save') });
+      setErrors({ form: toUserMessage(err, 'Could not save the password.') });
     } finally {
       setSaving(false);
     }

@@ -10,6 +10,7 @@ import { useTheme } from '../../lib/theme/ThemeContext';
 import { useAuth } from '../../lib/auth/AuthContext';
 import { ProfileAvatar } from '../../features/profile/components/ProfileAvatar';
 import { validateProfile } from '../../lib/utils/validate';
+import { toUserMessage } from '../../lib/utils/errors';
 
 export default function EditProfileScreen() {
   const { colors } = useTheme();
@@ -67,7 +68,7 @@ export default function EditProfileScreen() {
       }
       router.back();
     } catch (err: any) {
-      setErrors({ form: String(err?.message ?? 'Failed to save') });
+      setErrors({ form: toUserMessage(err, 'Could not save the profile.') });
     } finally {
       setSaving(false);
     }

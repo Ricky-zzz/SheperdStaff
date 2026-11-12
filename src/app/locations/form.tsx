@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
 import * as locationService from '../../features/locations/services/locationService';
 import { validateLocation } from '../../lib/utils/validate';
+import { toUserMessage } from '../../lib/utils/errors';
 
 const inputClass = 'bg-card border border-border rounded-lg px-4 py-3 text-base text-neutral-800 mb-1';
 
@@ -49,8 +50,8 @@ export default function LocationFormScreen() {
         await locationService.create({ id: `loc-${Date.now()}`, name: name.trim(), notes: notes.trim() || undefined });
       }
       router.back();
-    } catch (err: any) {
-      setErrors({ form: String(err?.message ?? 'Failed to save') });
+    } catch (err) {
+      setErrors({ form: toUserMessage(err, 'Could not save the location.') });
     } finally {
       setSaving(false);
     }
@@ -67,8 +68,8 @@ export default function LocationFormScreen() {
           try {
             await locationService.remove(id as string);
             router.back();
-          } catch (err: any) {
-            Alert.alert('Cannot delete', String(err?.message ?? 'Failed to delete'));
+          } catch (err) {
+            Alert.alert('Cannot delete', toUserMessage(err, 'Could not delete this location.'));
             setDeleting(false);
           }
         },

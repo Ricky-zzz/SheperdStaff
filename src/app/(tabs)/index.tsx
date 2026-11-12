@@ -20,6 +20,8 @@ export default function HomeScreen() {
   const { colors, colorMode } = useTheme();
   const accent = (c: string) => (colorMode === 'uniform' ? colors.neutral[600] : c);
   const router = useRouter();
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning!' : hour < 18 ? 'Good afternoon!' : 'Good evening!';
   const [loading, setLoading] = useState(true);
   const [totalLivestock, setTotalLivestock] = useState(0);
   const [totalGroups, setTotalGroups] = useState(0);
@@ -75,16 +77,16 @@ export default function HomeScreen() {
     <Screen>
       <View className="flex-row justify-between items-center mb-5">
         <View>
-          <Text className="text-2xl font-bold text-neutral-900">Good morning!</Text>
+          <Text className="text-2xl font-bold text-neutral-900">{greeting}</Text>
           <Text className="text-base text-neutral-500 mt-1">{'Here\u2019s your farm overview'}</Text>
         </View>
         <TouchableOpacity
           className="w-11 h-11 rounded-full bg-primary-50 justify-center items-center"
           onPress={() => router.push('/activity')}
           accessibilityRole="button"
-          accessibilityLabel="Activity and notifications"
+          accessibilityLabel="Activity history"
         >
-          <Ionicons name="notifications-outline" size={22} color={colors.primary[700]} />
+          <Ionicons name="time-outline" size={22} color={colors.primary[700]} />
         </TouchableOpacity>
       </View>
 

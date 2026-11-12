@@ -14,7 +14,7 @@ import { ExpenseItem } from '../../features/expenses/components/ExpenseItem';
 import { Select } from '../../components/ui/Select';
 import { InventoryItem } from '../../features/inventory/types';
 import { UNIT_LABELS } from '../../features/inventory/inventoryMeta';
-import { getCompatible, consume as consumeFeed } from '../../features/inventory/services/inventoryService';
+import { getCompatible, consume as consumeFeed, undoFeeding } from '../../features/inventory/services/inventoryService';
 import { formatQuantity } from '../../lib/utils/format';
 import { getStatusLabel, getCategoryLabel } from '../../features/livestock/livestockMeta';
 import { getCodeLabel } from '../../lib/utils/livestockCode';
@@ -23,12 +23,13 @@ import { getByLivestockId as getExpensesForLivestock } from '../../features/expe
 import { getByLivestockId as getByLivestockIdIncome } from '../../features/income/services/incomeService';
 import { IncomeItem } from '../../features/income/components/IncomeItem';
 import { Income } from '../../features/income/types';
-import { getById as getLivestockById, remove, updateStatus, addHealthNote } from '../../features/livestock/services/livestockService';
+import { getById as getLivestockById, remove, updateStatus, addHealthNote, getDeletionBlockers, describeDeletionBlockers } from '../../features/livestock/services/livestockService';
 import { AnimalType } from '../../features/animalTypes/types';
 import { getAll as getAllTypes } from '../../features/animalTypes/services/animalTypeService';
-import { log as logActivity } from '../../features/activity/services/activityService';
-import { Livestock, HealthNoteType } from '../../features/livestock/types';
+import { log as logActivity, safeLog } from '../../features/activity/services/activityService';
+import { Livestock, HealthNoteType, FeedingRecord } from '../../features/livestock/types';
 import { Expense } from '../../features/expenses/types';
+import { toUserMessage } from '../../lib/utils/errors';
 import { useTheme } from '../../lib/theme/ThemeContext';
 
 const STATUSES = [
@@ -104,29 +105,48 @@ export default function LivestockDetailScreen() {
     }, [load])
   );
 
-  const handleDelete = () => {
-    Alert.alert('Delete', `Delete ${animal?.name}? This cannot be undone.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await remove(id as string);
-            await logActivity({
-              id: `act-${Date.now()}`,
-              date: new Date().toISOString().slice(0, 10),
-              type: 'status_change',
-              description: `${animal?.name} deleted`,
-              livestockId: id as string,
-            });
-            router.replace('/(tabs)/livestock');
-          } catch (e: any) {
-            Alert.alert('Error', String(e?.message ?? 'Failed to delete'));
-          }
-        },
-      },
-    ]);
+  const handleDelete = async () => {
+    if (!animal) return;
+    const name = animal.name;
+    try {
+      const blockers = await getDeletionBlockers(animal.id);
+      if (blockers.total > 0) {
+        Alert.alert(
+          `Cannot delete ${name}`,
+          `This animal already has ${describeDeletionBlockers(blockers)} recorded on the farm.\n\nUndo its feedings or delete/unlink those records first — removing it now would leave them without an owner.`
+        );
+        return;
+      }
+      Alert.alert(
+        'Delete',
+        `Delete ${name}? This cannot be undone. Nothing is recorded against it yet, so no history is left behind.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await remove(id as string);
+                // The animal is already gone, so this log must not reference it —
+                // a stale foreign key would fail the delete's error path.
+                await safeLog({
+                  id: `act-${Date.now()}`,
+                  date: new Date().toISOString().slice(0, 10),
+                  type: 'livestock_deleted',
+                  description: `${name} deleted`,
+                });
+                router.replace('/(tabs)/livestock');
+              } catch (err) {
+                Alert.alert('Could not delete', toUserMessage(err, 'Could not delete this record.'));
+              }
+            },
+          },
+        ]
+      );
+    } catch (err) {
+      Alert.alert('Could not delete', toUserMessage(err, 'Could not delete this record.'));
+    }
   };
 
   const handleStatus = async (newStatus: Livestock['status']) => {
@@ -142,8 +162,8 @@ export default function LivestockDetailScreen() {
         livestockId: animal.id,
       });
       await load();
-    } catch (e: any) {
-      Alert.alert('Error', String(e?.message ?? 'Failed'));
+    } catch (err) {
+      Alert.alert('Could not update', toUserMessage(err, 'Could not update the status.'));
     } finally {
       setStatusSaving(false);
     }
@@ -173,8 +193,8 @@ export default function LivestockDetailScreen() {
       setHealthNote('');
       setShowHealth(false);
       await load();
-    } catch (e: any) {
-      Alert.alert('Error', String(e?.message ?? 'Failed'));
+    } catch (err) {
+      Alert.alert('Could not save', toUserMessage(err, 'Could not add the health note.'));
     } finally {
       setHealthSaving(false);
     }
@@ -223,11 +243,55 @@ export default function LivestockDetailScreen() {
       setFeedNotes('');
       setShowFeeding(false);
       await load();
-    } catch (e: any) {
-      Alert.alert('Error', String(e?.message ?? 'Failed'));
+    } catch (err) {
+      Alert.alert('Could not save', toUserMessage(err, 'Could not record the feeding.'));
     } finally {
       setFeedingSaving(false);
     }
+  };
+
+  const handleUndoFeeding = (feeding: FeedingRecord) => {
+    if (!animal) return;
+    const amountLabel =
+      feeding.quantity !== undefined && feeding.unit
+        ? `${formatQuantity(feeding.quantity)} ${feeding.unit}`
+        : feeding.amount;
+    const stockNote = feeding.inventoryId
+      ? `${amountLabel} will go back on the feed shelf.`
+      : 'This feeding was recorded before inventory tracking, so no stock will be returned.';
+    const costNote = feeding.cost ? ` ₱${feeding.cost.toFixed(2)} will be removed from this record's feed cost.` : '';
+    Alert.alert(
+      'Undo feeding?',
+      `Remove the ${feeding.date} feeding of ${feeding.feedType} (${amountLabel}). ${stockNote}${costNote}`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Undo',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const result = await undoFeeding(animal.id, feeding.id);
+              await safeLog({
+                id: `act-${Date.now()}`,
+                date: new Date().toISOString().slice(0, 10),
+                type: 'feeding_undone',
+                description: `Feeding undone for ${animal.name}: ${result.feedName} ${feeding.date}`,
+                livestockId: animal.id,
+              });
+              await load();
+              Alert.alert(
+                'Feeding undone',
+                result.stockRestored
+                  ? `${formatQuantity(result.restoredQuantity ?? 0)} ${result.restoredUnit ?? ''} returned to ${result.feedName} stock and the feeding was removed from ${animal.name}.`
+                  : `The feeding was removed from ${animal.name}. No stock was returned because that feed item no longer exists.`
+              );
+            } catch (err) {
+              Alert.alert('Could not undo', toUserMessage(err, 'Could not undo this feeding.'));
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (loading) {
@@ -328,7 +392,9 @@ const statusColors = getStatusBadgeColor(animal.status, colors, colorMode, darkM
 
         <SectionHeader title="Recent Feedings" actionLabel="Feed" onAction={openFeedingModal} />
         {animal.feedings.length > 0 ? (
-          animal.feedings.map((feeding) => <FeedingItem key={feeding.id} feeding={feeding} />)
+          animal.feedings.map((feeding) => (
+            <FeedingItem key={feeding.id} feeding={feeding} onUndo={() => handleUndoFeeding(feeding)} />
+          ))
         ) : (
           <EmptyState icon="restaurant-outline" title="No feeding records" />
         )}

@@ -21,15 +21,19 @@ function parseRow(row: ActivityRow): Activity {
   };
 }
 
+// Newest first; `rowid` breaks same-day ties by insertion order so the list
+// is stable across reloads.
+export const ACTIVITY_ORDER = 'ORDER BY date DESC, rowid DESC';
+
 export async function getAll(): Promise<Activity[]> {
   const db = await getDb();
-  const rows = await db.getAllAsync<ActivityRow>('SELECT * FROM activities ORDER BY date DESC');
+  const rows = await db.getAllAsync<ActivityRow>(`SELECT * FROM activities ${ACTIVITY_ORDER}`);
   return rows.map(parseRow);
 }
 
 export async function getRecent(limit: number): Promise<Activity[]> {
   const db = await getDb();
-  const rows = await db.getAllAsync<ActivityRow>('SELECT * FROM activities ORDER BY date DESC LIMIT ?', [limit]);
+  const rows = await db.getAllAsync<ActivityRow>(`SELECT * FROM activities ${ACTIVITY_ORDER} LIMIT ?`, [limit]);
   return rows.map(parseRow);
 }
 
@@ -50,6 +54,21 @@ export async function log(entry: Activity): Promise<void> {
      VALUES (?, ?, ?, ?, ?, ?)`,
     [entry.id, entry.date, entry.type, entry.description, entry.livestockId ?? null, entry.expenseId ?? null]
   );
+}
+
+/**
+ * Log an entry but never let it break the caller's flow.
+ *
+ * Activity history is a convenience, not the source of truth. Using this
+ * after a destructive action means a stale foreign key (or any other write
+ * failure) can't turn a successful delete into an error alert.
+ */
+export async function safeLog(entry: Activity): Promise<void> {
+  try {
+    await log(entry);
+  } catch {
+    // Intentionally ignored — the caller's action already succeeded.
+  }
 }
 
 export async function clear(): Promise<void> {

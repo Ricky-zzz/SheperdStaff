@@ -7,6 +7,8 @@ import {
   ConsumeResult,
 } from '../types';
 import { getDb } from '../../../lib/db/client';
+import { formatQuantity } from '../../../lib/utils/format';
+import type { FeedingRecord } from '../../livestock/types';
 
 type ItemRow = {
   id: string;
@@ -289,5 +291,144 @@ export async function consume(id: string, input: ConsumeInput): Promise<ConsumeR
     quantity: input.quantity,
     unitCost: existing.unitCost,
     cost,
+  };
+}
+
+export type AdjustDirection = 'add' | 'remove';
+
+export interface AdjustInput {
+  date: string;
+  /** Positive amount combined with `direction`. */
+  quantity: number;
+  direction: AdjustDirection;
+  notes?: string;
+}
+
+export interface AdjustResult {
+  itemId: string;
+  delta: number;
+  newQuantity: number;
+}
+
+/**
+ * Manual stock correction (spillage, count fix, units bought without a
+ * receipt). Unlike a restock this never creates an expense — it only moves
+ * stock and records an `adjustment` transaction for the audit trail.
+ */
+export async function adjust(id: string, input: AdjustInput): Promise<AdjustResult> {
+  const db = await getDb();
+  const existing = await getById(id);
+  if (!existing) throw new Error('Inventory item not found');
+  if (!Number.isFinite(input.quantity) || input.quantity <= 0) {
+    throw new Error('Quantity must be greater than zero');
+  }
+
+  const delta = input.direction === 'add' ? input.quantity : -input.quantity;
+  const newQuantity = round2(existing.quantity + delta);
+  if (newQuantity < 0) {
+    throw new Error(
+      `Cannot remove ${round2(input.quantity)} ${existing.unit} — only ${formatQuantity(existing.quantity)} ${existing.unit} on hand.`
+    );
+  }
+
+  const now = new Date().toISOString();
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('UPDATE inventory_items SET quantity = ? WHERE id = ?', [newQuantity, id]);
+    await db.runAsync(
+      `INSERT INTO inventory_transactions (id, inventoryId, date, type, quantity, unitCost, livestockId, feedingId, notes, createdAt)
+       VALUES (?, ?, ?, 'adjustment', ?, ?, NULL, NULL, ?, ?)`,
+      [
+        `tx-${Date.now()}`,
+        id,
+        input.date,
+        delta,
+        existing.unitCost,
+        input.notes ?? (delta > 0 ? 'Stock added' : 'Stock removed'),
+        now,
+      ]
+    );
+  });
+
+  return { itemId: id, delta, newQuantity };
+}
+
+export interface UndoFeedingResult {
+  feedingDate: string;
+  feedName: string;
+  cost: number;
+  /** False when the feed item no longer exists, so no stock came back. */
+  stockRestored: boolean;
+  restoredQuantity?: number;
+  restoredUnit?: string;
+}
+
+/**
+ * Undo a feeding: remove it from the animal and, when the feed still exists,
+ * put the quantity back on the shelf as an `adjustment` so history stays
+ * auditable (the original consume row is never rewritten).
+ */
+export async function undoFeeding(livestockId: string, feedingId: string): Promise<UndoFeedingResult> {
+  const db = await getDb();
+  const row = await db.getFirstAsync<{ feedings: string }>('SELECT feedings FROM livestock WHERE id = ?', [
+    livestockId,
+  ]);
+  if (!row) throw new Error('Livestock not found');
+
+  let feedings: FeedingRecord[] = [];
+  try {
+    feedings = JSON.parse(row.feedings || '[]');
+  } catch {
+    feedings = [];
+  }
+  const feeding = feedings.find((f) => f.id === feedingId);
+  if (!feeding) throw new Error('That feeding record was not found.');
+
+  const remaining = feedings.filter((f) => f.id !== feedingId);
+  const now = new Date().toISOString();
+  let stockRestored = false;
+  let restoredQuantity: number | undefined;
+  let restoredUnit: string | undefined;
+  let feedName = feeding.feedType;
+
+  await db.withTransactionAsync(async () => {
+    await db.runAsync('UPDATE livestock SET feedings = ? WHERE id = ?', [JSON.stringify(remaining), livestockId]);
+
+    if (feeding.inventoryId && feeding.quantity && feeding.quantity > 0) {
+      const item = await db.getFirstAsync<ItemRow>('SELECT * FROM inventory_items WHERE id = ?', [
+        feeding.inventoryId,
+      ]);
+      if (item) {
+        const newQuantity = round2(item.quantity + feeding.quantity);
+        await db.runAsync('UPDATE inventory_items SET quantity = ? WHERE id = ?', [newQuantity, item.id]);
+        await db.runAsync(
+          `INSERT INTO inventory_transactions (id, inventoryId, date, type, quantity, unitCost, livestockId, feedingId, notes, createdAt)
+           VALUES (?, ?, ?, 'adjustment', ?, ?, ?, ?, ?, ?)`,
+          [
+            `tx-${Date.now()}`,
+            item.id,
+            now.slice(0, 10),
+            feeding.quantity,
+            feeding.unitCost ?? item.unitCost,
+            livestockId,
+            feedingId,
+            'Feeding undone — stock returned',
+            now,
+          ]
+        );
+        stockRestored = true;
+        restoredQuantity = feeding.quantity;
+        restoredUnit = item.unit;
+        feedName = item.name;
+      }
+    }
+  });
+
+  return {
+    feedingDate: feeding.date,
+    feedName,
+    cost: feeding.cost ?? 0,
+    stockRestored,
+    restoredQuantity,
+    restoredUnit,
   };
 }

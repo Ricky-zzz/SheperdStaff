@@ -53,3 +53,35 @@ export function passwordStrength(password: string, colors: { error: string; warn
   const color = score <= 1 ? colors.error : score <= 3 ? colors.warning : colors.success;
   return { score, label, color };
 }
+
+/** 32 unambiguous characters (no 0/O, 1/I/L) so codes are easy to retype. */
+const RECOVERY_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+
+/**
+ * A 12-character code (≈60 bits) shown as `XXXX-XXXX-XXXX`.
+ * Used to unlock after a forgotten password — no email or server required.
+ */
+export async function generateRecoveryCode(): Promise<string> {
+  const bytes = await Crypto.getRandomBytesAsync(12);
+  const chars = Array.from(bytes, (b) => RECOVERY_ALPHABET[b % RECOVERY_ALPHABET.length]);
+  return [chars.slice(0, 4).join(''), chars.slice(4, 8).join(''), chars.slice(8, 12).join('')].join('-');
+}
+
+/**
+ * Canonical form of a typed code: uppercase, separators ignored, so
+ * `shpr-abcd-efgh-jkln` matches `ABCD-EFGH-JKLN`.
+ */
+export function normalizeRecoveryCode(code: string): string {
+  return code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+export async function verifyRecoveryCode(
+  code: string,
+  recoveryHash: string,
+  recoverySalt: string
+): Promise<boolean> {
+  const normalized = normalizeRecoveryCode(code);
+  if (normalized.length !== 12) return false;
+  const hash = await hashPassword(normalized, recoverySalt);
+  return hash === recoveryHash;
+}

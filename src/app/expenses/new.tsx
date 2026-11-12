@@ -12,6 +12,7 @@ import { Livestock } from '../../features/livestock/types';
 import { LivestockPicker } from '../../components/ui/LivestockPicker';
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { validateExpense } from '../../lib/utils/validate';
+import { toUserMessage } from '../../lib/utils/errors';
 import { DateInput } from '../../components/ui/DateInput';
 
 const CATEGORIES: { label: string; value: ExpenseCategory; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -75,8 +76,8 @@ export default function AddExpenseScreen() {
         livestockId: selectedDirectId || undefined,
       });
       router.back();
-    } catch (err: any) {
-      setErrors({ form: String(err?.message ?? 'Failed to save') });
+    } catch (err) {
+      setErrors({ form: toUserMessage(err, 'Could not save the expense.') });
     } finally {
       setSaving(false);
     }

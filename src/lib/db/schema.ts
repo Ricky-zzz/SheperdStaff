@@ -98,6 +98,9 @@ CREATE TABLE IF NOT EXISTS user_profile (
   appearance TEXT NOT NULL DEFAULT 'system',
   colorMode TEXT NOT NULL DEFAULT 'colorful',
   avatarUri TEXT,
+  recoveryHash TEXT,
+  recoverySalt TEXT,
+  recoverySetAt TEXT,
   createdAt TEXT NOT NULL,
   updatedAt TEXT NOT NULL
 );
@@ -170,6 +173,19 @@ export async function ensureSchema(database: SQLiteDatabase): Promise<void> {
     'ALTER TABLE tasks ADD COLUMN dueTime TEXT',
     "ALTER TABLE tasks ADD COLUMN recurrence TEXT NOT NULL DEFAULT 'none'",
     'ALTER TABLE tasks ADD COLUMN seriesId TEXT',
+  ]) {
+    try {
+      await database.execAsync(ddl);
+    } catch {
+      // column already exists
+    }
+  }
+  // Migration: lock recovery code (older installs). The code itself is never
+  // stored — only a salted hash, like the password.
+  for (const ddl of [
+    'ALTER TABLE user_profile ADD COLUMN recoveryHash TEXT',
+    'ALTER TABLE user_profile ADD COLUMN recoverySalt TEXT',
+    'ALTER TABLE user_profile ADD COLUMN recoverySetAt TEXT',
   ]) {
     try {
       await database.execAsync(ddl);

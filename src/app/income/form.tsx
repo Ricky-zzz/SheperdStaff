@@ -8,11 +8,12 @@ import { useTheme } from '../../lib/theme/ThemeContext';
 import { Livestock } from '../../features/livestock/types';
 import { LivestockPicker } from '../../components/ui/LivestockPicker';
 import { getAll as getAllLivestock, updateStatus } from '../../features/livestock/services/livestockService';
-import { log as logActivity } from '../../features/activity/services/activityService';
+import { log as logActivity, safeLog } from '../../features/activity/services/activityService';
 import type { IncomeCategory } from '../../features/income/types';
 import { getIncomeCategoryMeta } from '../../features/income/incomeMeta';
 import * as incomeService from '../../features/income/services/incomeService';
 import { required, dateValid } from '../../lib/utils/validate';
+import { toUserMessage } from '../../lib/utils/errors';
 import { DateInput } from '../../components/ui/DateInput';
 
 const CATEGORIES: IncomeCategory[] = ['sale', 'milk', 'eggs', 'other'];
@@ -103,8 +104,8 @@ export default function IncomeFormScreen() {
         }
       }
       router.back();
-    } catch (err: any) {
-      setErrors({ form: String(err?.message ?? 'Failed to save') });
+    } catch (err) {
+      setErrors({ form: toUserMessage(err, 'Could not save the income entry.') });
     } finally {
       setSaving(false);
     }
@@ -120,9 +121,15 @@ export default function IncomeFormScreen() {
           setDeleting(true);
           try {
             await incomeService.remove(id as string);
+            await safeLog({
+              id: `act-${Date.now()}`,
+              date: new Date().toISOString().slice(0, 10),
+              type: 'income',
+              description: `Income deleted: ${description.trim() || 'entry'}`,
+            });
             router.back();
-          } catch (err: any) {
-            setErrors({ form: String(err?.message ?? 'Failed to delete') });
+          } catch (err) {
+            setErrors({ form: toUserMessage(err, 'Could not delete this income entry.') });
             setDeleting(false);
           }
         },

@@ -9,9 +9,13 @@ import {
   updateAppearance,
   updateColorMode,
   updateAvatar as updateProfileAvatar,
+  updateRecoveryCode as updateProfileRecoveryCode,
+  clearRecoveryCode as clearProfileRecoveryCode,
 } from '../../features/profile/services/profileService';
-import { generateSalt, hashPassword, verifyPassword } from '../utils/password';
+import { generateSalt, hashPassword, verifyPassword, verifyRecoveryCode, normalizeRecoveryCode } from '../utils/password';
 import { initDb } from '../db/client';
+import { restoreFromUri } from '../../features/backup/services/backupService';
+import type { RestoreSummary } from '../../features/backup/types';
 
 export type AuthState = 'loading' | 'onboarding' | 'locked' | 'unlocked';
 
@@ -23,6 +27,15 @@ export interface OnboardingDraft {
   appearance: Appearance;
   colorMode: ColorMode;
 }
+
+const EMPTY_DRAFT: OnboardingDraft = {
+  name: '',
+  email: '',
+  password: '',
+  themeKey: 'earth',
+  appearance: 'system',
+  colorMode: 'colorful',
+};
 
 interface AuthContextValue {
   state: AuthState;
@@ -39,7 +52,15 @@ interface AuthContextValue {
   setAppearance: (appearance: Appearance) => Promise<void>;
   setColorMode: (colorMode: ColorMode) => Promise<void>;
   updateAvatar: (avatarUri: string | null) => Promise<void>;
-  resetDemo: () => Promise<void>;
+  /** True once the user has stored a recovery code for a forgotten password. */
+  recoveryConfigured: boolean;
+  setRecoveryCode: (code: string) => Promise<void>;
+  removeRecoveryCode: () => Promise<void>;
+  resetPasswordWithRecovery: (code: string, nextPassword: string) => Promise<boolean>;
+  /** Replace all app data with a backup file, then reload the session. */
+  restoreFromBackup: (uri: string) => Promise<RestoreSummary>;
+  /** Delete every farm record, the profile and settings. */
+  eraseAllData: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -47,14 +68,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>('loading');
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [draft, setDraftState] = useState<OnboardingDraft>({
-    name: '',
-    email: '',
-    password: '',
-    themeKey: 'earth',
-    appearance: 'system',
-    colorMode: 'colorful',
-  });
+  const [draft, setDraftState] = useState<OnboardingDraft>({ ...EMPTY_DRAFT });
 
   const bootstrap = useCallback(async () => {
     try {
@@ -180,20 +194,118 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [profile]
   );
 
-  const resetDemo = useCallback(async () => {
+  const setRecoveryCode = useCallback(
+    async (code: string) => {
+      if (!profile) return;
+      const salt = await generateSalt();
+      const recoveryHash = await hashPassword(normalizeRecoveryCode(code), salt);
+      await updateProfileRecoveryCode(profile.id, recoveryHash, salt);
+      setProfile({
+        ...profile,
+        recoveryHash,
+        recoverySalt: salt,
+        recoverySetAt: new Date().toISOString(),
+      });
+    },
+    [profile]
+  );
+
+  const removeRecoveryCode = useCallback(async () => {
+    if (!profile) return;
+    await clearProfileRecoveryCode(profile.id);
+    setProfile({ ...profile, recoveryHash: undefined, recoverySalt: undefined, recoverySetAt: undefined });
+  }, [profile]);
+
+  const resetPasswordWithRecovery = useCallback(
+    async (code: string, nextPassword: string): Promise<boolean> => {
+      if (!profile || !profile.recoveryHash || !profile.recoverySalt) return false;
+      const ok = await verifyRecoveryCode(code, profile.recoveryHash, profile.recoverySalt);
+      if (!ok) return false;
+      const salt = await generateSalt();
+      const passwordHash = await hashPassword(nextPassword, salt);
+      await updatePassword(profile.id, passwordHash, salt);
+      setProfile({ ...profile, passwordHash, salt });
+      setState('unlocked');
+      return true;
+    },
+    [profile]
+  );
+
+  const restoreFromBackup = useCallback(async (uri: string): Promise<RestoreSummary> => {
+    const summary = await restoreFromUri(uri);
+    const p = await getProfile();
+    setProfile(p);
+    setDraftState({ ...EMPTY_DRAFT });
+    // The restored data carries its own profile, password and recovery code,
+    // so the session must close and be reopened with those credentials.
+    setState(p ? 'locked' : 'onboarding');
+    return summary;
+  }, []);
+
+  const eraseAllData = useCallback(async () => {
     const { getDb } = await import('../db/client');
     const db = await getDb();
     await db.execAsync(
       'DELETE FROM inventory_transactions; DELETE FROM inventory_items; DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM animal_types; DELETE FROM locations; DELETE FROM income; DELETE FROM user_profile;'
     );
+    const avatarUri = profile?.avatarUri;
+    if (avatarUri?.startsWith('file')) {
+      try {
+        const { deleteAsync } = await import('expo-file-system/legacy');
+        await deleteAsync(avatarUri, { idempotent: true });
+      } catch {
+        // A leftover photo must not block the reset.
+      }
+    }
     setProfile(null);
-    setDraftState({ name: '', email: '', password: '', themeKey: 'earth', appearance: 'system', colorMode: 'colorful' });
+    setDraftState({ ...EMPTY_DRAFT });
     setState('onboarding');
-  }, []);
+  }, [profile]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ state, profile, draft, setDraft, completeOnboarding, unlock, lock, reload, updateNameEmail, changePassword, setTheme, setAppearance, setColorMode, updateAvatar, resetDemo }),
-    [state, profile, draft, setDraft, completeOnboarding, unlock, lock, reload, updateNameEmail, changePassword, setTheme, setAppearance, setColorMode, updateAvatar, resetDemo]
+    () => ({
+      state,
+      profile,
+      draft,
+      setDraft,
+      completeOnboarding,
+      unlock,
+      lock,
+      reload,
+      updateNameEmail,
+      changePassword,
+      setTheme,
+      setAppearance,
+      setColorMode,
+      updateAvatar,
+      recoveryConfigured: !!profile?.recoveryHash,
+      setRecoveryCode,
+      removeRecoveryCode,
+      resetPasswordWithRecovery,
+      restoreFromBackup,
+      eraseAllData,
+    }),
+    [
+      state,
+      profile,
+      draft,
+      setDraft,
+      completeOnboarding,
+      unlock,
+      lock,
+      reload,
+      updateNameEmail,
+      changePassword,
+      setTheme,
+      setAppearance,
+      setColorMode,
+      updateAvatar,
+      setRecoveryCode,
+      removeRecoveryCode,
+      resetPasswordWithRecovery,
+      restoreFromBackup,
+      eraseAllData,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

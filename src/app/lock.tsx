@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../lib/auth/AuthContext';
 import { useTheme } from '../lib/theme/ThemeContext';
 
 export default function LockScreen() {
-  const { profile, unlock, resetDemo } = useAuth();
+  const { profile, unlock } = useAuth();
+  const router = useRouter();
   const { colors, darkMode } = useTheme();
   const backgroundColor = darkMode ? colors.primary[50] : colors.primary[900];
   const mutedTextColor = darkMode ? colors.neutral[600] : colors.primary[200];
@@ -84,24 +86,12 @@ export default function LockScreen() {
         className="mt-3 p-3"
         hitSlop={8}
         accessibilityRole="button"
-        onPress={() =>
-          Alert.alert('Start over?', 'This deletes the profile and all data on this device so you can create a fresh account.', [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Delete & restart',
-              style: 'destructive',
-              onPress: async () => {
-                try {
-                  await resetDemo();
-                } catch {
-                  Alert.alert('Failed', 'Could not reset. Clear the app data instead.');
-                }
-              },
-            },
-          ])
-        }
+        accessibilityLabel="Forgot password, reset without losing data"
+        onPress={() => router.push('/reset-password')}
       >
-        <Text className="text-sm underline" style={{ color: mutedTextColor }}>Forgot password? Start over</Text>
+        <Text className="text-sm underline" style={{ color: mutedTextColor }}>
+          Forgot password?
+        </Text>
       </TouchableOpacity>
     </View>
   );

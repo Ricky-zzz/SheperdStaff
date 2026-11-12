@@ -10,6 +10,7 @@ import { LivestockPicker } from '../../components/ui/LivestockPicker';
 import { getAll as getAllLivestock } from '../../features/livestock/services/livestockService';
 import * as taskService from '../../features/tasks/services/taskService';
 import { required, dateValid } from '../../lib/utils/validate';
+import { toUserMessage } from '../../lib/utils/errors';
 import { DateInput } from '../../components/ui/DateInput';
 import { TimeInput } from '../../components/ui/TimeInput';
 import { TaskRecurrence } from '../../features/tasks/types';
@@ -77,8 +78,8 @@ export default function TaskFormScreen() {
         await taskService.create({ id: `task-${Date.now()}`, ...payload });
       }
       router.back();
-    } catch (err: any) {
-      setErrors({ form: String(err?.message ?? 'Failed to save') });
+    } catch (err) {
+      setErrors({ form: toUserMessage(err, 'Could not save the task.') });
     } finally {
       setSaving(false);
     }
@@ -95,7 +96,8 @@ export default function TaskFormScreen() {
           try {
             await taskService.remove(id as string);
             router.back();
-          } catch {
+          } catch (err) {
+            Alert.alert('Could not delete', toUserMessage(err, 'Could not delete this task.'));
             setDeleting(false);
           }
         },

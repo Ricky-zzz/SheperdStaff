@@ -12,6 +12,7 @@ import { getTaskBucketLabel } from '../features/tasks/taskMeta';
 import { TaskItem } from '../features/tasks/components/TaskItem';
 import * as livestockService from '../features/livestock/services/livestockService';
 import * as activityService from '../features/activity/services/activityService';
+import { toUserMessage } from '../lib/utils/errors';
 
 type Bucket = 'overdue' | 'today' | 'upcoming' | 'done';
 const BUCKETS: Bucket[] = ['overdue', 'today', 'upcoming', 'done'];
@@ -97,7 +98,11 @@ export default function TasksScreen() {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
-          await taskService.remove(task.id);
+          try {
+            await taskService.remove(task.id);
+          } catch (err) {
+            Alert.alert('Could not delete', toUserMessage(err, 'Could not delete this task.'));
+          }
           await load();
         },
       },

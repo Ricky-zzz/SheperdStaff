@@ -6,6 +6,7 @@ import { Screen } from '../../components/ui/Screen';
 import { Card } from '../../components/ui/Card';
 import { ListItem } from '../../components/ui/ListItem';
 import { useTheme } from '../../lib/theme/ThemeContext';
+import { useAuth } from '../../lib/auth/AuthContext';
 
 interface MenuItem {
   icon: keyof typeof Ionicons.glyphMap;
@@ -18,6 +19,7 @@ interface MenuItem {
 
 export default function MoreScreen() {
   const router = useRouter();
+  const { recoveryConfigured } = useAuth();
   const { colors, colorMode } = useTheme();
   const menuColor = (c: string) => (colorMode === 'uniform' ? colors.neutral[500] : c);
 
@@ -43,6 +45,30 @@ export default function MoreScreen() {
     ]);
   };
 
+  const handleHelp = () =>
+    Alert.alert(
+      'Help & Support',
+      [
+        'Shepherd Staff keeps everything on this device — no account, no cloud.',
+        '',
+        '· Back up often: More → Backup & Restore.',
+        '· Set a recovery code so a forgotten password never costs your data.',
+        '· Manage daily work from Home, Livestock, Expenses and Tasks.',
+        '· Share a farm report as a PDF from the Reports tab.',
+      ].join('\n')
+    );
+
+  const handleAbout = () =>
+    Alert.alert(
+      'About Shepherd Staff',
+      [
+        'Version 1.0.0 — mobile livestock management for small farms.',
+        '',
+        'Records, inventory and reports are stored offline in a local database.',
+        'Your password and recovery code only guard this device; nothing is uploaded unless you back up or export.',
+      ].join('\n')
+    );
+
   const MENU_SECTIONS: { title: string; items: MenuItem[] }[] = [
     {
       title: 'Farm Management',
@@ -56,19 +82,26 @@ export default function MoreScreen() {
     {
       title: 'Data & Reports',
       items: [
+        { icon: 'cloud-upload-outline', label: 'Backup & Restore', subtitle: 'Save, email or restore your data', route: '/backup', color: menuColor(colors.category.goat) },
         { icon: 'flask-outline', label: 'Load Sample Data', subtitle: 'Add demo records (only if empty)', color: menuColor(colors.category.duck), onPress: handleLoadSampleData },
-        { icon: 'download-outline', label: 'Export Data', subtitle: 'Download farm records', color: menuColor(colors.category.chicken) },
-        { icon: 'cloud-upload-outline', label: 'Backup', subtitle: 'Save your data', color: menuColor(colors.category.goat) },
       ],
     },
     {
       title: 'Settings',
       items: [
+        {
+          icon: 'shield-checkmark-outline',
+          label: 'Recovery Code',
+          subtitle: recoveryConfigured
+            ? 'Set up — unlocks the app after a forgotten password'
+            : 'Not set up — recommended so you never lose your data',
+          route: '/profile/recovery',
+          color: menuColor(recoveryConfigured ? colors.success : colors.warning),
+        },
         { icon: 'key-outline', label: 'Change Password', subtitle: 'Update your lock password', route: '/profile/password', color: menuColor(colors.earth[600]) },
         { icon: 'moon-outline', label: 'Appearance', subtitle: 'Theme settings', route: '/profile/theme', color: menuColor(colors.neutral[600]) },
-        { icon: 'notifications-outline', label: 'Notifications', subtitle: 'Manage alerts', color: menuColor(colors.category.sheep) },
-        { icon: 'help-circle-outline', label: 'Help & Support', subtitle: 'Get assistance', color: menuColor(colors.category.duck) },
-        { icon: 'information-circle-outline', label: 'About', subtitle: 'Shepherd Staff v1.0', color: menuColor(colors.neutral[500]) },
+        { icon: 'help-circle-outline', label: 'Help & Support', subtitle: 'Get assistance', color: menuColor(colors.category.duck), onPress: handleHelp },
+        { icon: 'information-circle-outline', label: 'About', subtitle: 'Shepherd Staff v1.0', color: menuColor(colors.neutral[500]), onPress: handleAbout },
       ],
     },
   ];

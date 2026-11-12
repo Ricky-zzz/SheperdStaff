@@ -175,7 +175,115 @@ export async function update(id: string, patch: Partial<Livestock>): Promise<voi
 }
 
 export async function remove(id: string): Promise<void> {
-  await (await getDb()).runAsync('DELETE FROM livestock WHERE id = ?', [id]);
+  const db = await getDb();
+  const blockers = await getDeletionBlockers(id);
+  if (blockers.total > 0) {
+    throw new Error(deletionBlockedMessage(blockers));
+  }
+  // Nothing references the animal any more. The only row still pointing at it
+  // is its own automatic `livestock_added` bookkeeping entry — removing it in
+  // the same transaction keeps the activity log free of parentless links.
+  await db.withTransactionAsync(async () => {
+    await db.runAsync("DELETE FROM activities WHERE livestockId = ? AND type = 'livestock_added'", [id]);
+    await db.runAsync('DELETE FROM livestock WHERE id = ?', [id]);
+  });
+}
+
+/**
+ * Everything recorded against an animal that would be orphaned (or lost) by a
+ * delete. Zero means the record is still untouched and can be removed as a
+ * mistake.
+ *
+ * The automatic `livestock_added` entry is deliberately excluded: creating an
+ * animal writes one, so counting it would make every animal undeletable.
+ */
+export interface DeletionBlockers {
+  feedings: number;
+  healthNotes: number;
+  expenses: number;
+  income: number;
+  tasks: number;
+  stockMovements: number;
+  activities: number;
+  total: number;
+}
+
+export async function getDeletionBlockers(id: string): Promise<DeletionBlockers> {
+  const db = await getDb();
+  const animal = await getById(id);
+  const empty: DeletionBlockers = {
+    feedings: 0,
+    healthNotes: 0,
+    expenses: 0,
+    income: 0,
+    tasks: 0,
+    stockMovements: 0,
+    activities: 0,
+    total: 0,
+  };
+  if (!animal) return empty;
+
+  const count = async (sql: string, params: string[]): Promise<number> => {
+    const row = await db.getFirstAsync<{ c: number }>(sql, params);
+    return row?.c ?? 0;
+  };
+
+  // Expenses linked directly, through the legacy bulk split, or listed in the
+  // animal's own expenseIds — de-duplicated by expense id.
+  const expenseIds = new Set<string>();
+  const allExpenses = await db.getAllAsync<{ id: string; livestockId: string | null; allocations: string | null }>(
+    'SELECT id, livestockId, allocations FROM expenses'
+  );
+  for (const expense of allExpenses) {
+    let hit = expense.livestockId === id || animal.expenseIds.includes(expense.id);
+    if (!hit && expense.allocations) {
+      try {
+        const allocations = JSON.parse(expense.allocations);
+        hit = Array.isArray(allocations) && allocations.some((a) => a?.livestockId === id);
+      } catch {
+        hit = false;
+      }
+    }
+    if (hit) expenseIds.add(expense.id);
+  }
+
+  const blockers: DeletionBlockers = {
+    feedings: animal.feedings.length,
+    healthNotes: animal.healthNotes.length,
+    expenses: expenseIds.size,
+    income: await count('SELECT COUNT(*) as c FROM income WHERE livestockId = ?', [id]),
+    tasks: await count('SELECT COUNT(*) as c FROM tasks WHERE livestockId = ?', [id]),
+    stockMovements: await count('SELECT COUNT(*) as c FROM inventory_transactions WHERE livestockId = ?', [id]),
+    activities: await count("SELECT COUNT(*) as c FROM activities WHERE livestockId = ? AND type != 'livestock_added'", [id]),
+    total: 0,
+  };
+  blockers.total =
+    blockers.feedings +
+    blockers.healthNotes +
+    blockers.expenses +
+    blockers.income +
+    blockers.tasks +
+    blockers.stockMovements +
+    blockers.activities;
+  return blockers;
+}
+
+/** Comma list of what is blocking, e.g. "4 feeding records, 2 expenses". */
+export function describeDeletionBlockers(b: DeletionBlockers): string {
+  const parts: string[] = [];
+  const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+  if (b.feedings) parts.push(plural(b.feedings, 'feeding record', 'feeding records'));
+  if (b.healthNotes) parts.push(plural(b.healthNotes, 'health note', 'health notes'));
+  if (b.expenses) parts.push(plural(b.expenses, 'linked expense', 'linked expenses'));
+  if (b.income) parts.push(plural(b.income, 'income entry', 'income entries'));
+  if (b.tasks) parts.push(plural(b.tasks, 'task', 'tasks'));
+  if (b.stockMovements) parts.push(plural(b.stockMovements, 'feed-stock movement', 'feed-stock movements'));
+  if (b.activities) parts.push(plural(b.activities, 'activity', 'activities'));
+  return parts.join(', ');
+}
+
+export function deletionBlockedMessage(b: DeletionBlockers): string {
+  return `This animal has ${describeDeletionBlockers(b)} recorded on the farm. Undo, delete or unlink those first so nothing is left without an owner.`;
 }
 
 export async function addHealthNote(livestockId: string, note: Livestock['healthNotes'][number]): Promise<void> {

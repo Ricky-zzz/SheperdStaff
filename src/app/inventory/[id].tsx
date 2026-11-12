@@ -88,22 +88,33 @@ export default function InventoryDetailScreen() {
         {low ? <Badge label={item.quantity <= 0 ? 'OUT OF STOCK' : 'LOW STOCK'} color={colors.error + '18'} textColor={colors.error} size="md" /> : null}
       </View>
 
-      <View className="flex-row gap-3 mb-4">
+      <View className="flex-row gap-2 mb-4">
         <TouchableOpacity
-          className="flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg bg-primary-600"
+          className="flex-1 flex-row items-center justify-center gap-1.5 py-3 rounded-lg bg-primary-600"
           onPress={() => router.push({ pathname: '/inventory/restock', params: { id: item.id } })}
+          accessibilityRole="button"
+          accessibilityLabel={`Restock ${item.name}`}
         >
-                <Ionicons name="add-outline" size={18} color={colors.onPrimary} />
-                <Text className="text-sm font-semibold text-onPrimary">Restock</Text>
+          <Ionicons name="add-outline" size={16} color={colors.onPrimary} />
+          <Text className="text-xs font-semibold text-onPrimary">Restock</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="flex-1 flex-row items-center justify-center gap-2 py-3 rounded-lg border border-border bg-card"
+          className="flex-1 flex-row items-center justify-center gap-1.5 py-3 rounded-lg border border-border bg-card"
+          onPress={() => router.push({ pathname: '/inventory/adjust', params: { id: item.id } })}
+          accessibilityRole="button"
+          accessibilityLabel={`Adjust stock for ${item.name}`}
+        >
+          <Ionicons name="swap-horizontal-outline" size={16} color={colors.primary[600]} />
+          <Text className="text-xs font-semibold" style={{ color: colors.primary[600] }}>Adjust</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="flex-1 flex-row items-center justify-center gap-1.5 py-3 rounded-lg border border-border bg-card"
           onPress={() => router.push({ pathname: '/inventory/form', params: { id: item.id } })}
           accessibilityRole="button"
           accessibilityLabel={`Edit ${item.name}`}
         >
-          <Ionicons name="create-outline" size={18} color={colors.primary[600]} />
-          <Text className="text-sm font-semibold" style={{ color: colors.primary[600] }}>Edit</Text>
+          <Ionicons name="create-outline" size={16} color={colors.primary[600]} />
+          <Text className="text-xs font-semibold" style={{ color: colors.primary[600] }}>Edit</Text>
         </TouchableOpacity>
       </View>
 

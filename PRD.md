@@ -20,7 +20,7 @@ Shepherd Staff (proposal name AgriTrack) is a mobile livestock-management app fo
 
 ## 3. Non-Goals (for this prototype)
 
-- Backend, multi-user sync, roles, or cloud backup.
+- Backend, multi-user sync, roles, or cloud-hosted backup (local file backup, share/email and restore are in scope — see 6.9).
 - Real authentication (the lock is a local convenience gate, not security).
 - Push notifications, offline sync, or analytics.
 - Complex accounting, invoicing, or marketplace integration.
@@ -59,6 +59,7 @@ Key invariants:
 ### 6.1 Onboarding & Lock
 - First run: name, email, password (strength meter), theme + dark mode + color mode choice; seeds sample data.
 - App unlocks with the password; "Log out" in the profile menu locks (data is kept).
+- Forgotten password → recovery code (set up in Settings) sets a new password and keeps every record; only "Erase everything" clears data.
 
 ### 6.2 Dashboard (Home)
 - Greeting + stats: total head, group count, month expenses, active count, all-time spend.
@@ -70,6 +71,7 @@ Key invariants:
 - Card per record: name, code, breed/qty, status + type badges, location/age/purpose.
 - Detail: badges, info grid (code, qty, age, location, purpose, sex, since, notes), health notes, feeding records (amount + cost + "from inventory"), linked expenses + total cost (including feed), income, net profit.
 - Add/edit form; code is generated on save (read-only afterwards). Status quick-switch chips.
+- **Delete guard:** an animal can only be deleted while it is effectively untouched — no feeding records, health notes, linked/allocated expenses, income, tasks, feed-stock movements, or activities. Anything recorded blocks the delete with a message listing what is there and to undo, delete or unlink it first, so no record or activity is ever left without an owner. The automatic "X added" log entry is bookkeeping (it is written at creation, so counting it would block every delete); it is removed together with the animal in the same transaction.
 
 ### 6.4 Feed Inventory
 - List with search and total stock value; low-stock badges (threshold 5).
@@ -77,6 +79,8 @@ Key invariants:
 - Item form: name, suitable animal types, unit, opening stock + cost (create only), notes. Deleting keeps recorded purchase expenses.
 - Restock: quantity, total purchase cost (optional), date, notes; updates weighted-average cost and records a feed expense + activity.
 - Feeding (from livestock detail): pick compatible feed, amount; validates remaining stock, deducts, appends the feeding to the livestock record with its cost, logs activity.
+- Adjust: add or remove stock for a count fix (spillage, miscount) with a reason; never creates an expense, records an `adjustment` transaction.
+- Undo feeding: removes the feeding, returns the quantity to the feed item (as an `adjustment` row, so history stays auditable) and drops its cost from the animal.
 
 ### 6.5 Expenses & Income
 - Expenses: total card + count, category grid filter, newest-first list, add/edit form with optional livestock link; auto-created feed expenses from inventory. Legacy bulk-split expenses display their saved shares read-only.
@@ -87,13 +91,23 @@ Key invariants:
 
 ### 6.7 Reports
 - Range presets (7 days / 30 days / this month / all time / custom).
-- Summary cards: total animals, expenses (purchases), income, net profit. Profit = Income − Expenses − Feed used.
-- Profit by animal type and by animal/group (tap through to detail); livestock by type/status; expenses by category.
+- Summary cards: total animals, expenses (purchases), income, net profit. **Profit is cash basis: Profit = Income − Expenses** (feed purchases are already inside expenses; "Feed used" is shown separately as an informational figure, never subtracted again).
+- Profit by animal type and by animal/group (tap through to detail); livestock by type/status; expenses by category. Per-animal profit allocates cost: linked non-feed expenses + feed actually consumed.
 - Share as PDF (expo-print + share sheet).
 
 ### 6.8 Activity & More
-- Activity History grouped by date.
-- More: profile card (avatar, name, email), Farm Management (animal types, locations, feed inventory, activity), Data & Reports (sample data, reset), Appearance (theme), password change, log out.
+- Activity History grouped by date (newest first, stable within a day).
+- More: Farm Management (animal types, locations, feed inventory, activity), Data & Reports (backup & restore, sample data), Settings (recovery code, password change, appearance, help, about).
+- Every More row navigates, acts, or shows an alert — no dead taps.
+
+### 6.9 Backup, Restore & Recovery
+- Back up now → writes a timestamped `.sqlite` snapshot (whole database, WAL checkpointed) and opens the share sheet.
+- Email backup → attaches the same file to a new message in the device's mail app. No server, no background sending.
+- Restore → pick a file (or a local backup), validate the SQLite header, tables and integrity, save a safety copy of the current data first, then swap the database and verify row counts. The session returns to the lock screen.
+- Local backups: the newest five copies are kept on device and restorable from the list.
+- Export data (JSON) → readable, spreadsheet-friendly copy that excludes the profile and password hash. Not restorable.
+- Recovery code (Settings): a 12-character code, shown once and optionally emailed to yourself; only a salted hash is stored. The lock screen's "Forgot password?" verifies that code and sets a new password **without touching farm data**.
+- Erase everything remains available as an explicit, double-confirmed last resort.
 
 ## 7. User Flows (happy paths for the demo)
 
@@ -110,7 +124,8 @@ Every card/button that looks interactive navigates or shows an alert; no dead ta
 
 - SQLite via `expo-sqlite`; schema + guarded migrations in `src/lib/db/schema.ts`.
 - First run seeds sample data from `src/data/mock.ts` (livestock, expenses, activities, income, tasks, types, locations, inventory) through `src/lib/db/seed.ts`; skipped if data exists.
-- More → "Load sample data" / "Reset demo" can re-seed or clear everything (including the profile, returning to onboarding).
+- More → "Load sample data" re-seeds only when empty; Backup & Restore holds the destructive "Erase everything" (clears the profile too, returning to onboarding).
+- Lock screen "Forgot password?" resets the password with a recovery code and keeps all data (see 6.9).
 - Screens never touch the DB directly: they call `features/*/services/`.
 
 ## 9. Success Criteria (prototype)

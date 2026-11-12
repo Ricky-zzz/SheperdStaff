@@ -8,11 +8,12 @@ import { SearchBar } from '../../components/ui/SearchBar';
 import { FilterChip } from '../../components/ui/FilterChip';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { LivestockCard } from '../../features/livestock/components/LivestockCard';
-import { getAll, updateStatus, remove } from '../../features/livestock/services/livestockService';
+import { getAll, updateStatus, remove, getDeletionBlockers, describeDeletionBlockers } from '../../features/livestock/services/livestockService';
 import { Livestock, LivestockCategory } from '../../features/livestock/types';
 import { AnimalType } from '../../features/animalTypes/types';
 import { getAll as getAllTypes } from '../../features/animalTypes/services/animalTypeService';
-import { log as logActivity } from '../../features/activity/services/activityService';
+import { log as logActivity, safeLog } from '../../features/activity/services/activityService';
+import { toUserMessage } from '../../lib/utils/errors';
 import { useTheme } from '../../lib/theme/ThemeContext';
 
 export default function LivestockScreen() {
@@ -61,7 +62,13 @@ export default function LivestockScreen() {
   );
 
   const filteredLivestock = livestock.filter((animal) => {
-    const matchesSearch = search === '' || animal.name.toLowerCase().includes(search.toLowerCase()) || animal.breed?.toLowerCase().includes(search.toLowerCase()) || animal.location.toLowerCase().includes(search.toLowerCase());
+    const q = search.trim().toLowerCase();
+    const matchesSearch =
+      q === '' ||
+      animal.name.toLowerCase().includes(q) ||
+      animal.breed?.toLowerCase().includes(q) ||
+      animal.location.toLowerCase().includes(q) ||
+      (animal.code ?? '').toLowerCase().includes(q);
     const matchesFilter = selectedFilter === 'all' || animal.category === selectedFilter;
     return matchesSearch && matchesFilter;
   });
@@ -79,38 +86,55 @@ export default function LivestockScreen() {
       });
       setMenuAnimal(null);
       await load();
-    } catch {
-      Alert.alert('Failed', 'Could not update the status.');
+    } catch (err) {
+      Alert.alert('Could not update', toUserMessage(err, 'Could not update the status.'));
     }
   };
 
-  const handleDeleteAnimal = () => {
+  const handleDeleteAnimal = async () => {
     if (!menuAnimal) return;
     const name = menuAnimal.name;
     const id = menuAnimal.id;
-    Alert.alert('Delete livestock?', `${name} and its linked records will be removed.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await remove(id);
-            await logActivity({
-              id: `act-${Date.now()}`,
-              date: new Date().toISOString().slice(0, 10),
-              type: 'status_change',
-              description: `${name} deleted`,
-              livestockId: id,
-            });
-            setMenuAnimal(null);
-            await load();
-          } catch {
-            Alert.alert('Failed', 'Could not delete this record.');
-          }
-        },
-      },
-    ]);
+    try {
+      const blockers = await getDeletionBlockers(id);
+      if (blockers.total > 0) {
+        Alert.alert(
+          `Cannot delete ${name}`,
+          `This animal already has ${describeDeletionBlockers(blockers)} recorded on the farm.\n\nUndo its feedings or delete/unlink those records first — removing it now would leave them without an owner.`
+        );
+        return;
+      }
+      Alert.alert(
+        'Delete livestock?',
+        `${name} will be removed. Nothing is recorded against it yet, so no history is left behind.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Delete',
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                await remove(id);
+                // The animal is already gone, so this log must not reference it —
+                // a stale foreign key would fail the delete's error path.
+                await safeLog({
+                  id: `act-${Date.now()}`,
+                  date: new Date().toISOString().slice(0, 10),
+                  type: 'livestock_deleted',
+                  description: `${name} deleted`,
+                });
+                setMenuAnimal(null);
+                await load();
+              } catch (err) {
+                Alert.alert('Could not delete', toUserMessage(err, 'Could not delete this record.'));
+              }
+            },
+          },
+        ]
+      );
+    } catch (err) {
+      Alert.alert('Could not delete', toUserMessage(err, 'Could not delete this record.'));
+    }
   };
 
   const menuRow = (
@@ -136,7 +160,7 @@ export default function LivestockScreen() {
     <>
     <Screen refreshing={refreshing} onRefresh={refresh}>
       <View className="flex-row gap-2 mb-4">
-        <SearchBar value={search} onChangeText={setSearch} placeholder="Search livestock..." />
+        <SearchBar value={search} onChangeText={setSearch} placeholder="Search name, breed, location or ID..." />
         <TouchableOpacity
           className="w-11 h-11 rounded-lg bg-primary-600 justify-center items-center shadow-sm"
           onPress={() => router.push('/livestock/new')}
