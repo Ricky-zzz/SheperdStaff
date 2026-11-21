@@ -6,6 +6,7 @@ import { Stack, useRouter, useSegments, useRootNavigationState } from 'expo-rout
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '../lib/auth/AuthContext';
 import { ThemeProvider, useTheme } from '../lib/theme/ThemeContext';
+import { ToastProvider } from '../components/ui/Toast';
 
 function LoadingView({ darkMode }: { darkMode: boolean }) {
   const { colors } = useTheme();
@@ -132,7 +133,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <AuthProvider>
         <ThemeProvider>
-          <RootNavigator />
+          <ToastProvider>
+            <RootNavigator />
+          </ToastProvider>
         </ThemeProvider>
       </AuthProvider>
     </GestureHandlerRootView>

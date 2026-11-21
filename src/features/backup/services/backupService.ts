@@ -220,13 +220,8 @@ export async function restoreFromBytes(bytes: Uint8Array): Promise<RestoreSummar
     // report failure, so we verify the copy actually landed before succeeding.
     const countSource = async (table: string) =>
       (await source.getFirstAsync<{ c: number }>(`SELECT COUNT(*) as c FROM ${table}`))?.c ?? 0;
-    const expected = {
-      livestock: await countSource('livestock'),
-      expenses: await countSource('expenses'),
-      income: await countSource('income'),
-      inventory_items: await countSource('inventory_items'),
-      user_profile: await countSource('user_profile'),
-    };
+    const expected: Record<string, number> = {};
+    for (const t of REQUIRED_TABLES) expected[t] = await countSource(t);
 
     await createBackup();
 
@@ -236,7 +231,7 @@ export async function restoreFromBytes(bytes: Uint8Array): Promise<RestoreSummar
 
     const count = async (table: string) =>
       (await db.getFirstAsync<{ c: number }>(`SELECT COUNT(*) as c FROM ${table}`))?.c ?? 0;
-    for (const table of Object.keys(expected) as (keyof typeof expected)[]) {
+    for (const table of REQUIRED_TABLES) {
       const actual = await count(table);
       if (actual !== expected[table]) {
         throw new Error(

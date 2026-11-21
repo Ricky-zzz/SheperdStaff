@@ -48,7 +48,7 @@ export function resolveRange(preset: DatePreset, customFrom: string, customTo: s
     case 'custom':
       return {
         from: customFrom,
-        to: customTo,
+        to: customTo || toISODate(new Date()),
         label: customFrom || customTo ? `${customFrom || '…'} → ${customTo || 'today'}` : 'Custom range',
       };
   }

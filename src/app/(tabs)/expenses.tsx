@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, RefreshControl } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui/Screen';
@@ -8,6 +8,7 @@ import { EmptyState } from '../../components/ui/EmptyState';
 import { SectionHeader } from '../../components/ui/SectionHeader';
 import { RangeSelector } from '../../components/ui/RangeSelector';
 import { MiniBarChart } from '../../components/ui/MiniBarChart';
+import { SkeletonList } from '../../components/ui/Skeleton';
 import { ExpenseItem } from '../../features/expenses/components/ExpenseItem';
 import { IncomeItem } from '../../features/income/components/IncomeItem';
 import { getExpenseCategoryMeta } from '../../features/expenses/expenseMeta';
@@ -19,6 +20,8 @@ import { Income } from '../../features/income/types';
 import { Livestock } from '../../features/livestock/types';
 import { useTheme } from '../../lib/theme/ThemeContext';
 import { DatePreset, resolveRange, inRange, lastMonths } from '../../lib/utils/dateRange';
+import { toUserMessage } from '../../lib/utils/errors';
+import { lightHaptic } from '../../lib/utils/haptics';
 
 const CATEGORIES: ExpenseCategory[] = ['feed', 'medicine', 'supplies', 'maintenance', 'labor', 'other'];
 type Segment = 'expenses' | 'income';
@@ -36,13 +39,18 @@ export default function ExpensesScreen() {
   const [livestock, setLivestock] = useState<Livestock[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
       const [exp, inc, ls] = await Promise.all([getAllExpenses(), getAllIncome(), getAllLivestock()]);
       setAllExpenses(exp);
       setAllIncome(inc);
       setLivestock(ls);
+    } catch (err) {
+      setLoadError(toUserMessage(err, 'Could not load finances.'));
     } finally {
       setLoading(false);
     }
@@ -55,6 +63,9 @@ export default function ExpensesScreen() {
       setAllExpenses(exp);
       setAllIncome(inc);
       setLivestock(ls);
+      setLoadError(null);
+    } catch (err) {
+      setLoadError(toUserMessage(err, 'Could not refresh.'));
     } finally {
       setRefreshing(false);
     }
@@ -119,19 +130,24 @@ export default function ExpensesScreen() {
   if (loading) {
     return (
       <Screen>
-        <View className="flex-1 items-center justify-center py-20">
-          <ActivityIndicator color={colors.primary[600]} />
-        </View>
+        <SkeletonList rows={4} />
       </Screen>
     );
   }
 
-  return (
-    <Screen refreshing={refreshing} onRefresh={refresh}>
+  const listRefresh = (
+    <RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={colors.primary[600]} colors={[colors.primary[600]]} />
+  );
+
+  const listHeader = (
+    <View>
       <View className="flex-row gap-2 mb-4">
         <TouchableOpacity
           className={`flex-1 py-2.5 rounded-lg border ${segment === 'expenses' ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
-          onPress={() => setSegment('expenses')}
+          onPress={() => {
+            void lightHaptic();
+            setSegment('expenses');
+          }}
           accessibilityRole="radio"
           accessibilityState={{ selected: segment === 'expenses' }}
           accessibilityLabel="Expenses"
@@ -140,7 +156,10 @@ export default function ExpensesScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           className={`flex-1 py-2.5 rounded-lg border ${segment === 'income' ? 'bg-primary-600 border-primary-600' : 'bg-card border-border'}`}
-          onPress={() => setSegment('income')}
+          onPress={() => {
+            void lightHaptic();
+            setSegment('income');
+          }}
           accessibilityRole="radio"
           accessibilityState={{ selected: segment === 'income' }}
           accessibilityLabel="Income"
@@ -159,7 +178,7 @@ export default function ExpensesScreen() {
       />
 
       {segment === 'expenses' ? (
-        <>
+        <View>
           <Card className={`mt-4 mb-4 items-center ${colorMode === 'uniform' ? 'border border-neutral-300' : 'bg-primary-700'}`}>
             <Text className={`text-sm font-medium ${colorMode === 'uniform' ? 'text-neutral-600' : 'text-primary-200'}`}>Total Expenses · {range.label}</Text>
             <Text className="text-3xl font-bold mt-1" style={{ color: colorMode === 'uniform' ? colors.error : colors.onPrimary }}>₱{totalExpenses.toFixed(2)}</Text>
@@ -240,23 +259,9 @@ export default function ExpensesScreen() {
               </TouchableOpacity>
             </View>
           </View>
-
-          {recentExpenses.map((expense) => (
-            <TouchableOpacity
-              key={expense.id}
-              activeOpacity={0.7}
-              onPress={() => router.push({ pathname: '/expenses/edit', params: { id: expense.id } })}
-              accessibilityRole="button"
-              accessibilityLabel={`Expense ${expense.description}`}
-            >
-              <ExpenseItem expense={expense} />
-            </TouchableOpacity>
-          ))}
-
-          {recentExpenses.length === 0 && <EmptyState icon="wallet-outline" title="No expenses found" subtitle="No expenses in this range" />}
-        </>
+        </View>
       ) : (
-        <>
+        <View>
           <Card className={`mt-4 mb-4 items-center ${colorMode === 'uniform' ? 'border border-neutral-300' : 'bg-success'}`}>
             <Text className={`text-sm font-medium ${colorMode === 'uniform' ? 'text-neutral-600' : 'text-onSuccess'}`}>Total Income · {range.label}</Text>
             <Text className="text-3xl font-bold mt-1" style={{ color: colorMode === 'uniform' ? colors.success : colors.onSuccess }}>₱{totalInc.toFixed(2)}</Text>
@@ -315,10 +320,48 @@ export default function ExpensesScreen() {
               </TouchableOpacity>
             </View>
           </View>
+        </View>
+      )}
+    </View>
+  );
 
-          {recentIncome.map((inc) => (
+  const listProps = {
+    ListHeaderComponent: listHeader,
+    initialNumToRender: 8,
+    maxToRenderPerBatch: 8,
+    windowSize: 5,
+    removeClippedSubviews: true,
+    showsVerticalScrollIndicator: false,
+    refreshControl: listRefresh,
+    contentContainerStyle: { padding: 16, paddingBottom: 32 },
+  } as const;
+
+  return (
+    <Screen scrollable={false} padded={false} error={loadError} onRetry={load}>
+      {segment === 'expenses' ? (
+        <FlatList
+          {...listProps}
+          data={recentExpenses}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item: expense }) => (
             <TouchableOpacity
-              key={inc.id}
+              activeOpacity={0.7}
+              onPress={() => router.push({ pathname: '/expenses/edit', params: { id: expense.id } })}
+              accessibilityRole="button"
+              accessibilityLabel={`Expense ${expense.description}`}
+            >
+              <ExpenseItem expense={expense} />
+            </TouchableOpacity>
+          )}
+          ListEmptyComponent={<EmptyState icon="wallet-outline" title="No expenses found" subtitle="No expenses in this range" />}
+        />
+      ) : (
+        <FlatList
+          {...listProps}
+          data={recentIncome}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item: inc }) => (
+            <TouchableOpacity
               activeOpacity={0.7}
               onPress={() => router.push({ pathname: '/income/form', params: { id: inc.id } })}
               accessibilityRole="button"
@@ -326,10 +369,9 @@ export default function ExpensesScreen() {
             >
               <IncomeItem income={inc} />
             </TouchableOpacity>
-          ))}
-
-          {recentIncome.length === 0 && <EmptyState icon="trending-up-outline" title="No income yet" subtitle="Record a sale or other farm income" />}
-        </>
+          )}
+          ListEmptyComponent={<EmptyState icon="trending-up-outline" title="No income yet" subtitle="Record a sale or other farm income" />}
+        />
       )}
     </Screen>
   );

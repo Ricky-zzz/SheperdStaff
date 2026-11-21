@@ -1,7 +1,8 @@
 import React from 'react';
-import { TouchableOpacity, Text, ActivityIndicator, StyleProp, ViewStyle } from 'react-native';
+import { Pressable, Text, ActivityIndicator, StyleProp, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
+import { lightHaptic } from '../../lib/utils/haptics';
 
 interface ButtonProps {
   title: string;
@@ -68,12 +69,17 @@ export const Button: React.FC<ButtonProps> = ({
   const iconSize = size === 'sm' ? 16 : size === 'lg' ? 22 : 18;
 
   return (
-    <TouchableOpacity
+    <Pressable
       className={`min-h-11 flex-row items-center justify-center rounded-lg ${VARIANT_CLASS[variant]} ${SIZE_CLASS[size]} ${disabled ? 'opacity-50' : ''} ${className ?? ''}`}
-      style={style}
-      onPress={onPress}
+      style={({ pressed }) => [
+        style,
+        pressed && !disabled && !loading ? { transform: [{ scale: 0.97 }], opacity: 0.85 } : null,
+      ]}
+      onPress={() => {
+        void lightHaptic();
+        onPress();
+      }}
       disabled={disabled || loading}
-      activeOpacity={0.7}
       accessibilityRole="button"
       accessibilityLabel={title}
       accessibilityState={{ disabled: disabled || loading }}
@@ -93,6 +99,6 @@ export const Button: React.FC<ButtonProps> = ({
           )}
         </>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };

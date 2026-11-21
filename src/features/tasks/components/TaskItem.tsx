@@ -1,8 +1,9 @@
 import React, { useRef } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Pressable } from 'react-native';
 import { Swipeable } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../lib/theme/ThemeContext';
+import { lightHaptic, successHaptic } from '../../../lib/utils/haptics';
 import { Task } from '../types';
 import { todayISO } from '../services/taskService';
 import { formatDueTime, getRecurrenceLabel } from '../taskMeta';
@@ -60,20 +61,26 @@ export const TaskItem: React.FC<TaskItemProps> = ({ task, livestockName, onPress
       friction={2}
     >
       <View className={`flex-row items-center p-4 ${showBorder ? 'border-b border-neutral-100' : ''}`}>
-      <TouchableOpacity
+      <Pressable
         className="w-9 h-9 rounded-full justify-center items-center mr-3 border"
-        style={{
-          borderColor: isDone ? colors.success : isOverdue ? colors.error : colors.border,
-          backgroundColor: isDone ? colors.success + '22' : 'transparent',
+        style={({ pressed }) => [
+          {
+            borderColor: isDone ? colors.success : isOverdue ? colors.error : colors.border,
+            backgroundColor: isDone ? colors.success + '22' : 'transparent',
+          },
+          pressed ? { transform: [{ scale: 0.88 }], opacity: 0.8 } : null,
+        ]}
+        onPress={() => {
+          void (isDone ? lightHaptic() : successHaptic());
+          onToggle();
         }}
-        onPress={onToggle}
         hitSlop={8}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: isDone }}
         accessibilityLabel={`Mark ${task.title} as ${isDone ? 'not done' : 'done'}`}
       >
         {isDone && <Ionicons name="checkmark-outline" size={18} color={colors.success} />}
-      </TouchableOpacity>
+      </Pressable>
 
       <TouchableOpacity
         className="flex-1"

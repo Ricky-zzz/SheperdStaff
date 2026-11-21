@@ -246,13 +246,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { getDb } = await import('../db/client');
     const db = await getDb();
     await db.execAsync(
-      'DELETE FROM inventory_transactions; DELETE FROM inventory_items; DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM animal_types; DELETE FROM locations; DELETE FROM income; DELETE FROM user_profile;'
+      'DELETE FROM inventory_transactions; DELETE FROM inventory_items; DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM animal_types; DELETE FROM locations; DELETE FROM income; DELETE FROM user_profile; DELETE FROM sqlite_sequence;'
     );
+    // Remove local backup copies so a reset really starts clean.
+    try {
+      const { Directory, Paths, File: FsFile } = await import('expo-file-system');
+      const dir = new Directory(Paths.document, 'backups');
+      if (dir.exists) {
+        for (const e of dir.list()) {
+          try {
+            new FsFile(e.uri).delete();
+          } catch {
+            // best effort
+          }
+        }
+      }
+    } catch {
+      // best effort
+    }
     const avatarUri = profile?.avatarUri;
     if (avatarUri?.startsWith('file')) {
       try {
-        const { deleteAsync } = await import('expo-file-system/legacy');
-        await deleteAsync(avatarUri, { idempotent: true });
+        const { File: FsFile } = await import('expo-file-system');
+        new FsFile(avatarUri).delete();
       } catch {
         // A leftover photo must not block the reset.
       }

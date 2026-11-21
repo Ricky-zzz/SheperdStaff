@@ -6,7 +6,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../lib/theme/ThemeContext';
 import { ExpenseCategory, ExpenseAllocation } from '../../features/expenses/types';
-import { getById, update, remove } from '../../features/expenses/services/expenseService';
+import { getById, update, remove, create } from '../../features/expenses/services/expenseService';
 import { getAll as getAllLivestock } from '../../features/livestock/services/livestockService';
 import { Livestock } from '../../features/livestock/types';
 import { LivestockPicker } from '../../components/ui/LivestockPicker';
@@ -14,6 +14,8 @@ import { safeLog } from '../../features/activity/services/activityService';
 import { validateExpense } from '../../lib/utils/validate';
 import { toUserMessage } from '../../lib/utils/errors';
 import { DateInput } from '../../components/ui/DateInput';
+import { useToast } from '../../components/ui/Toast';
+import { generateId } from '../../lib/utils/ids';
 
 const CATEGORIES: { label: string; value: ExpenseCategory; icon: keyof typeof Ionicons.glyphMap }[] = [
   { label: 'Feed', value: 'feed', icon: 'restaurant-outline' },
@@ -29,6 +31,7 @@ const inputClass = 'bg-card border border-border rounded-lg px-4 py-3 text-base 
 export default function EditExpenseScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { show, showUndo } = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [description, setDescription] = useState('');
@@ -91,7 +94,7 @@ export default function EditExpenseScreen() {
       if (!legacyAllocations) patch.allocations = undefined;
       await update(id as string, patch);
       await safeLog({
-        id: `act-${Date.now()}`,
+        id: generateId('act'),
         date: new Date().toISOString().slice(0, 10),
         type: 'expense_added',
         description: `Expense updated: ${description.trim()}`,
@@ -106,7 +109,7 @@ export default function EditExpenseScreen() {
   };
 
   const handleDelete = () => {
-    Alert.alert('Delete expense?', 'This cannot be undone. The activity log will note the deletion.', [
+    Alert.alert('Delete expense?', 'You can undo this right after deleting. The activity log will note the change.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -115,15 +118,28 @@ export default function EditExpenseScreen() {
           setDeleting(true);
           try {
             const desc = description.trim() || 'Expense';
+            const snapshot = await getById(id as string);
             await remove(id as string);
             // Log without the deleted id so the FK can't fail after the row is gone.
             await safeLog({
-              id: `act-${Date.now()}`,
+              id: generateId('act'),
               date: new Date().toISOString().slice(0, 10),
               type: 'expense_deleted',
               description: `Expense deleted: ${desc}`,
             });
             router.replace('/(tabs)/expenses');
+            if (snapshot) {
+              showUndo(`Deleted “${desc}”`, () => {
+                // DB-level undo: re-insert the exact row.
+                void (async () => {
+                  try {
+                    await create(snapshot);
+                  } catch (err) {
+                    show(toUserMessage(err, 'Could not restore the expense.'));
+                  }
+                })();
+              });
+            }
           } catch (err) {
             Alert.alert('Could not delete', toUserMessage(err, 'Could not delete this expense.'));
             setDeleting(false);

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Image, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, Text, View } from 'react-native';
 import { useTheme } from '../../../lib/theme/ThemeContext';
 
 interface ProfileAvatarProps {
@@ -18,10 +18,14 @@ export function getInitials(name?: string): string {
 export const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ name, uri, size = 40, className }) => {
   const { colors } = useTheme();
   const [failed, setFailed] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const fade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     setFailed(false);
-  }, [uri]);
+    setLoaded(false);
+    fade.setValue(0);
+  }, [uri, fade]);
 
   const style = {
     width: size,
@@ -33,7 +37,24 @@ export const ProfileAvatar: React.FC<ProfileAvatarProps> = ({ name, uri, size = 
   return (
     <View className={`overflow-hidden items-center justify-center ${className ?? ''}`} style={style}>
       {uri && !failed ? (
-        <Image source={{ uri }} style={{ width: size, height: size }} resizeMode="cover" onError={() => setFailed(true)} />
+        <>
+          {/* Progressive placeholder: initials stay visible until the photo fades in. */}
+          {!loaded && (
+            <Text style={{ color: colors.primary[700], fontSize: Math.round(size * 0.38), fontWeight: '700' }}>
+              {getInitials(name)}
+            </Text>
+          )}
+          <Animated.Image
+            source={{ uri }}
+            style={{ width: size, height: size, position: loaded ? 'relative' : 'absolute', opacity: fade }}
+            resizeMode="cover"
+            onError={() => setFailed(true)}
+            onLoad={() => {
+              setLoaded(true);
+              Animated.timing(fade, { toValue: 1, duration: 250, useNativeDriver: true }).start();
+            }}
+          />
+        </>
       ) : (
         <Text style={{ color: colors.primary[700], fontSize: Math.round(size * 0.38), fontWeight: '700' }}>
           {getInitials(name)}

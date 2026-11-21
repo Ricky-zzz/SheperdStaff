@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui/Screen';
 import { Card } from '../../components/ui/Card';
 import { StatCard } from '../../components/ui/StatCard';
 import { SectionHeader } from '../../components/ui/SectionHeader';
+import { Skeleton } from '../../components/ui/Skeleton';
 import { ActivityItem } from '../../features/activity/components/ActivityItem';
 import * as livestockService from '../../features/livestock/services/livestockService';
 import * as activityService from '../../features/activity/services/activityService';
@@ -15,6 +16,8 @@ import { Task } from '../../features/tasks/types';
 import { formatDueTime } from '../../features/tasks/taskMeta';
 import { Activity } from '../../features/activity/types';
 import { useTheme } from '../../lib/theme/ThemeContext';
+import { toUserMessage } from '../../lib/utils/errors';
+import { lightHaptic } from '../../lib/utils/haptics';
 
 export default function HomeScreen() {
   const { colors, colorMode } = useTheme();
@@ -31,8 +34,39 @@ export default function HomeScreen() {
   const [recentActivities, setRecentActivities] = useState<Activity[]>([]);
   const [taskCounts, setTaskCounts] = useState({ overdue: 0, today: 0, upcoming: 0, done: 0 });
   const [nextDue, setNextDue] = useState<Task | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    try {
+      setLoadError(null);
+      const [tl, tg, te, me, rec, all, tc, nd] = await Promise.all([
+        livestockService.count(),
+        livestockService.countGroups(),
+        expenseService.total(),
+        expenseService.thisMonth(),
+        activityService.getRecent(5),
+        livestockService.getAll(),
+        taskService.counts(),
+        taskService.nextDue(),
+      ]);
+      setTotalLivestock(tl);
+      setTotalGroups(tg);
+      setTotalExpenses(te);
+      setMonthExpenses(me);
+      setRecentActivities(rec);
+      setActiveCount(all.filter((l) => l.status === 'active' || l.status === 'growing').length);
+      setTaskCounts(tc);
+      setNextDue(nd ?? null);
+    } catch (err) {
+      setLoadError(toUserMessage(err, 'Could not load overview.'));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const refresh = useCallback(async () => {
+    setRefreshing(true);
     try {
       const [tl, tg, te, me, rec, all, tc, nd] = await Promise.all([
         livestockService.count(),
@@ -52,8 +86,11 @@ export default function HomeScreen() {
       setActiveCount(all.filter((l) => l.status === 'active' || l.status === 'growing').length);
       setTaskCounts(tc);
       setNextDue(nd ?? null);
+      setLoadError(null);
+    } catch (err) {
+      setLoadError(toUserMessage(err, 'Could not refresh.'));
     } finally {
-      setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
@@ -66,15 +103,23 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <Screen>
-        <View className="flex-1 items-center justify-center py-20">
-          <ActivityIndicator color={colors.primary[600]} />
+        <Skeleton className="h-7 w-40 mb-2" />
+        <Skeleton className="h-4 w-56 mb-5" />
+        <View className="flex-row gap-3 mb-3">
+          <Skeleton className="flex-1 h-24" />
+          <Skeleton className="flex-1 h-24" />
         </View>
+        <View className="flex-row gap-3 mb-5">
+          <Skeleton className="flex-1 h-24" />
+          <Skeleton className="flex-1 h-24" />
+        </View>
+        <Skeleton className="h-20 w-full mb-5" />
       </Screen>
     );
   }
 
   return (
-    <Screen>
+    <Screen refreshing={refreshing} onRefresh={refresh} error={loadError} onRetry={load}>
       <View className="flex-row justify-between items-center mb-5">
         <View>
           <Text className="text-2xl font-bold text-neutral-900">{greeting}</Text>
@@ -82,7 +127,10 @@ export default function HomeScreen() {
         </View>
         <TouchableOpacity
           className="w-11 h-11 rounded-full bg-primary-50 justify-center items-center"
-          onPress={() => router.push('/activity')}
+          onPress={() => {
+            void lightHaptic();
+            router.push('/activity');
+          }}
           accessibilityRole="button"
           accessibilityLabel="Activity history"
         >
@@ -99,7 +147,7 @@ export default function HomeScreen() {
         <StatCard title="Total Spent" value={`₱${totalExpenses.toFixed(0)}`} icon="wallet-outline" color={accent(colors.category.cattle)} subtitle="All time" />
       </View>
 
-      <TouchableOpacity onPress={() => router.push('/tasks')} accessibilityRole="button" accessibilityLabel="Today's tasks, view all">
+      <TouchableOpacity onPress={() => { void lightHaptic(); router.push('/tasks'); }} accessibilityRole="button" accessibilityLabel="Today's tasks, view all">
         <Card className="mb-5 flex-row items-center">
           <View className="w-11 h-11 rounded-lg justify-center items-center mr-3" style={{ backgroundColor: colorMode === 'uniform' ? colors.neutral[100] : colors.earth[100] }}>
             <Ionicons name="checkbox-outline" size={22} color={colorMode === 'uniform' ? colors.neutral[600] : colors.earth[600]} />
@@ -123,13 +171,13 @@ export default function HomeScreen() {
       <SectionHeader title="Quick Actions" />
 
       <View className="flex-row gap-3">
-        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/livestock/new')} accessibilityRole="button" accessibilityLabel="Add animal">
+        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => { void lightHaptic(); router.push('/livestock/new'); }} accessibilityRole="button" accessibilityLabel="Add animal">
           <View className="w-[52px] h-[52px] rounded-lg justify-center items-center" style={{ backgroundColor: colors.primary[100] }}>
             <Ionicons name="add-circle-outline" size={24} color={colors.primary[600]} />
           </View>
           <Text className="text-xs font-medium text-neutral-600 text-center">Add Animal</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => router.push('/expenses/new')} accessibilityRole="button" accessibilityLabel="Add expense">
+        <TouchableOpacity className="flex-1 items-center gap-2" onPress={() => { void lightHaptic(); router.push('/expenses/new'); }} accessibilityRole="button" accessibilityLabel="Add expense">
           <View className="w-[52px] h-[52px] rounded-lg justify-center items-center" style={{ backgroundColor: colors.earth[100] }}>
             <Ionicons name="cash-outline" size={24} color={colors.earth[600]} />
           </View>

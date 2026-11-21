@@ -8,6 +8,7 @@ import {
 } from '../types';
 import { getDb } from '../../../lib/db/client';
 import { formatQuantity } from '../../../lib/utils/format';
+import { generateId } from '../../../lib/utils/ids';
 import type { FeedingRecord } from '../../livestock/types';
 
 type ItemRow = {
@@ -118,10 +119,10 @@ export interface CreateInventoryInput {
 
 export async function create(input: CreateInventoryInput): Promise<InventoryItem> {
   const db = await getDb();
-  const id = input.id ?? `inv-${Date.now()}`;
+  const id = input.id ?? generateId('inv');
   const now = new Date().toISOString();
-  const opening = Math.max(0, input.openingQuantity ?? 0);
-  const unitCost = Math.max(0, input.unitCost);
+  const opening = round2(Math.max(0, input.openingQuantity ?? 0));
+  const unitCost = round2(Math.max(0, input.unitCost));
 
   await db.withTransactionAsync(async () => {
     await db.runAsync(
@@ -133,7 +134,7 @@ export async function create(input: CreateInventoryInput): Promise<InventoryItem
       await db.runAsync(
         `INSERT INTO inventory_transactions (id, inventoryId, date, type, quantity, unitCost, livestockId, feedingId, notes, createdAt)
          VALUES (?, ?, ?, 'restock', ?, ?, NULL, NULL, ?, ?)`,
-        [`tx-${Date.now()}`, id, now.slice(0, 10), opening, unitCost, 'Opening stock', now]
+        [generateId('tx'), id, now.slice(0, 10), opening, unitCost, 'Opening stock', now]
       );
     }
     if (opening > 0 && unitCost > 0) {
@@ -141,7 +142,7 @@ export async function create(input: CreateInventoryInput): Promise<InventoryItem
       await db.runAsync(
         `INSERT INTO expenses (id, date, category, description, amount, livestockId, allocations, notes)
          VALUES (?, ?, 'feed', ?, ?, NULL, NULL, ?)`,
-        [`exp-${Date.now()}`, now.slice(0, 10), `Opening stock: ${input.name} ${opening} ${input.unit}`, total, 'Recorded from inventory']
+        [generateId('exp'), now.slice(0, 10), `Opening stock: ${input.name} ${opening} ${input.unit}`, total, 'Recorded from inventory']
       );
     }
   });
@@ -182,7 +183,8 @@ export async function restock(id: string, input: RestockInput): Promise<{ expens
   if (input.quantity <= 0) throw new Error('Quantity must be greater than zero');
 
   const now = new Date().toISOString();
-  const newQuantity = existing.quantity + input.quantity;
+  const qty = round2(input.quantity);
+  const newQuantity = round2(existing.quantity + qty);
   const avgCost =
     input.totalCost > 0
       ? Math.round(((existing.quantity * existing.unitCost + input.totalCost) / newQuantity) * 10000) / 10000
@@ -200,18 +202,18 @@ export async function restock(id: string, input: RestockInput): Promise<{ expens
     await db.runAsync(
       `INSERT INTO inventory_transactions (id, inventoryId, date, type, quantity, unitCost, livestockId, feedingId, notes, createdAt)
        VALUES (?, ?, ?, 'restock', ?, ?, NULL, NULL, ?, ?)`,
-      [`tx-${Date.now()}`, id, input.date, input.quantity, unitCost, input.notes ?? null, now]
+      [generateId('tx'), id, input.date, qty, unitCost, input.notes ?? null, now]
     );
 
     if (input.totalCost > 0) {
-      expenseId = `exp-${Date.now()}`;
+      expenseId = generateId('exp');
       await db.runAsync(
         `INSERT INTO expenses (id, date, category, description, amount, livestockId, allocations, notes)
          VALUES (?, ?, 'feed', ?, ?, NULL, NULL, ?)`,
         [
           expenseId,
           input.date,
-          `Feed restock: ${existing.name} (${input.quantity} ${existing.unit})`,
+          `Feed restock: ${existing.name} (${qty} ${existing.unit})`,
           round2(input.totalCost),
           input.notes ?? 'Recorded from inventory',
         ]
@@ -232,15 +234,16 @@ export async function consume(id: string, input: ConsumeInput): Promise<ConsumeR
   }
 
   const now = new Date().toISOString();
-  const cost = round2(input.quantity * existing.unitCost);
-  const feedingId = `f-${Date.now()}`;
+  const qty = round2(input.quantity);
+  const cost = round2(qty * existing.unitCost);
+  const feedingId = generateId('f');
   const feeding = {
     id: feedingId,
     date: input.date,
     feedType: existing.name,
-    amount: `${input.quantity} ${existing.unit}`,
+    amount: `${qty} ${existing.unit}`,
     inventoryId: id,
-    quantity: input.quantity,
+    quantity: qty,
     unit: existing.unit,
     unitCost: existing.unitCost,
     cost,
@@ -253,7 +256,7 @@ export async function consume(id: string, input: ConsumeInput): Promise<ConsumeR
     ]);
     if (!row) throw new Error('Livestock not found');
 
-    await db.runAsync('UPDATE inventory_items SET quantity = quantity - ? WHERE id = ?', [input.quantity, id]);
+    await db.runAsync('UPDATE inventory_items SET quantity = round(quantity - ?, 2) WHERE id = ?', [qty, id]);
 
     let feedings: unknown[] = [];
     try {
@@ -271,10 +274,10 @@ export async function consume(id: string, input: ConsumeInput): Promise<ConsumeR
       `INSERT INTO inventory_transactions (id, inventoryId, date, type, quantity, unitCost, livestockId, feedingId, notes, createdAt)
        VALUES (?, ?, ?, 'consume', ?, ?, ?, ?, ?, ?)`,
       [
-        `tx-${Date.now()}`,
+        generateId('tx'),
         id,
         input.date,
-        -input.quantity,
+        -qty,
         existing.unitCost,
         input.livestockId,
         feedingId,
@@ -288,7 +291,7 @@ export async function consume(id: string, input: ConsumeInput): Promise<ConsumeR
     feedingId,
     feedName: existing.name,
     unit: existing.unit,
-    quantity: input.quantity,
+    quantity: qty,
     unitCost: existing.unitCost,
     cost,
   };
@@ -323,7 +326,8 @@ export async function adjust(id: string, input: AdjustInput): Promise<AdjustResu
     throw new Error('Quantity must be greater than zero');
   }
 
-  const delta = input.direction === 'add' ? input.quantity : -input.quantity;
+  const qty = round2(input.quantity);
+  const delta = input.direction === 'add' ? qty : -qty;
   const newQuantity = round2(existing.quantity + delta);
   if (newQuantity < 0) {
     throw new Error(
@@ -338,7 +342,7 @@ export async function adjust(id: string, input: AdjustInput): Promise<AdjustResu
       `INSERT INTO inventory_transactions (id, inventoryId, date, type, quantity, unitCost, livestockId, feedingId, notes, createdAt)
        VALUES (?, ?, ?, 'adjustment', ?, ?, NULL, NULL, ?, ?)`,
       [
-        `tx-${Date.now()}`,
+        generateId('tx'),
         id,
         input.date,
         delta,
@@ -404,7 +408,7 @@ export async function undoFeeding(livestockId: string, feedingId: string): Promi
           `INSERT INTO inventory_transactions (id, inventoryId, date, type, quantity, unitCost, livestockId, feedingId, notes, createdAt)
            VALUES (?, ?, ?, 'adjustment', ?, ?, ?, ?, ?, ?)`,
           [
-            `tx-${Date.now()}`,
+            generateId('tx'),
             item.id,
             now.slice(0, 10),
             feeding.quantity,

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, Text, ActivityIndicator, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../../components/ui/Screen';
@@ -7,6 +7,7 @@ import { Card } from '../../components/ui/Card';
 import { SectionHeader } from '../../components/ui/SectionHeader';
 import { FilterChip } from '../../components/ui/FilterChip';
 import { DateInput } from '../../components/ui/DateInput';
+import { SkeletonList } from '../../components/ui/Skeleton';
 import {
   getAll as getAllLivestock,
   count as countLivestock,
@@ -25,6 +26,7 @@ import { getAll as getAllTypes } from '../../features/animalTypes/services/anima
 import { getCategoryLabel } from '../../features/livestock/livestockMeta';
 import { useTheme } from '../../lib/theme/ThemeContext';
 import { useAuth } from '../../lib/auth/AuthContext';
+import { toUserMessage } from '../../lib/utils/errors';
 
 type Preset = '7d' | '30d' | 'month' | 'all' | 'custom';
 
@@ -84,9 +86,11 @@ export default function ReportsScreen() {
   const [statusCounts, setStatusCounts] = useState<Record<string, number>>({});
   const [totalLivestock, setTotalLivestock] = useState(0);
   const [types, setTypes] = useState<AnimalType[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const [lByCat, sCounts, tL, allL, allE, allI, t] = await Promise.all([
         livestockByCategory(),
@@ -104,6 +108,8 @@ export default function ReportsScreen() {
       setAllExpenses(allE);
       setAllIncome(allI);
       setTypes(t);
+    } catch (err) {
+      setLoadError(toUserMessage(err, 'Could not load report.'));
     } finally {
       setLoading(false);
     }
@@ -128,6 +134,9 @@ export default function ReportsScreen() {
       setAllExpenses(allE);
       setAllIncome(allI);
       setTypes(t);
+      setLoadError(null);
+    } catch (err) {
+      setLoadError(toUserMessage(err, 'Could not refresh report.'));
     } finally {
       setRefreshing(false);
     }
@@ -151,8 +160,8 @@ export default function ReportsScreen() {
       case 'month': return { from: monthStartISO(), to: today, label: 'This month' };
       case 'all': return { from: '', to: '', label: 'All time' };
       case 'custom': {
-        const label = customFrom || customTo ? `${customFrom || '…'} → ${customTo || 'today'}` : 'Custom range';
-        return { from: customFrom, to: customTo, label };
+        const label = customFrom || customTo ? `${customFrom || '…'} → ${customTo || today}` : 'Custom range';
+        return { from: customFrom, to: customTo || today, label };
       }
     }
   }, [preset, customFrom, customTo, today]);
@@ -164,7 +173,7 @@ export default function ReportsScreen() {
 
   const totalSpent = filteredExpenses.reduce((s, e) => s + e.amount, 0);
   const totalEarned = filteredIncome.reduce((s, i) => s + i.amount, 0);
-  const txCount = filteredExpenses.length;
+  const txCount = filteredExpenses.length + filteredIncome.length;
 
   const feedUsedByEntity: Record<string, number> = {};
   let totalFeedUsed = 0;
@@ -255,15 +264,13 @@ export default function ReportsScreen() {
   if (loading) {
     return (
       <Screen>
-        <View className="flex-1 items-center justify-center py-20">
-          <ActivityIndicator color={colors.primary[600]} />
-        </View>
+        <SkeletonList rows={4} />
       </Screen>
     );
   }
 
   return (
-    <Screen refreshing={refreshing} onRefresh={refresh}>
+    <Screen refreshing={refreshing} onRefresh={refresh} error={loadError} onRetry={load}>
       <View className="flex-row justify-between items-center mb-3">
         <View>
           <Text className="text-lg font-semibold text-neutral-800">Farm Report</Text>

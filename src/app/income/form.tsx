@@ -15,6 +15,8 @@ import * as incomeService from '../../features/income/services/incomeService';
 import { required, dateValid } from '../../lib/utils/validate';
 import { toUserMessage } from '../../lib/utils/errors';
 import { DateInput } from '../../components/ui/DateInput';
+import { useToast } from '../../components/ui/Toast';
+import { generateId } from '../../lib/utils/ids';
 
 const CATEGORIES: IncomeCategory[] = ['sale', 'milk', 'eggs', 'other'];
 
@@ -23,6 +25,7 @@ const inputClass = 'bg-card border border-border rounded-lg px-4 py-3 text-base 
 export default function IncomeFormScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { show, showUndo } = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const isEdit = !!id;
   const [loading, setLoading] = useState(isEdit);
@@ -83,11 +86,11 @@ export default function IncomeFormScreen() {
       if (isEdit) {
         await incomeService.update(id, payload);
       } else {
-        await incomeService.create({ id: `inc-${Date.now()}`, ...payload });
+        await incomeService.create({ id: generateId('inc'), ...payload });
         if (markSold && livestockId) {
           await updateStatus(livestockId, 'sold');
           await logActivity({
-            id: `act-${Date.now()}`,
+            id: generateId('act'),
             date,
             type: 'sale',
             description: `Sold for ₱${numericAmount.toFixed(2)}: ${description.trim()}`,
@@ -95,7 +98,7 @@ export default function IncomeFormScreen() {
           });
         } else {
           await logActivity({
-            id: `act-${Date.now()}`,
+            id: generateId('act'),
             date,
             type: 'income',
             description: `${meta.label} income: ${description.trim()} ₱${numericAmount.toFixed(2)}`,
@@ -112,7 +115,7 @@ export default function IncomeFormScreen() {
   };
 
   const handleDelete = () => {
-    Alert.alert('Delete income?', 'This cannot be undone.', [
+    Alert.alert('Delete income?', 'You can undo this right after deleting.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Delete',
@@ -120,14 +123,27 @@ export default function IncomeFormScreen() {
         onPress: async () => {
           setDeleting(true);
           try {
+            const snapshot = await incomeService.getById(id as string);
             await incomeService.remove(id as string);
             await safeLog({
-              id: `act-${Date.now()}`,
+              id: generateId('act'),
               date: new Date().toISOString().slice(0, 10),
               type: 'income',
               description: `Income deleted: ${description.trim() || 'entry'}`,
             });
             router.back();
+            if (snapshot) {
+              showUndo(`Deleted “${snapshot.description}”`, () => {
+                // DB-level undo: re-insert the exact row.
+                void (async () => {
+                  try {
+                    await incomeService.create(snapshot);
+                  } catch (err) {
+                    show(toUserMessage(err, 'Could not restore the income entry.'));
+                  }
+                })();
+              });
+            }
           } catch (err) {
             setErrors({ form: toUserMessage(err, 'Could not delete this income entry.') });
             setDeleting(false);

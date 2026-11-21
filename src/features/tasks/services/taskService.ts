@@ -1,5 +1,6 @@
 import { Task, TaskRecurrence, TaskStatus, CreateTaskInput } from '../types';
 import { getDb } from '../../../lib/db/client';
+import { generateId } from '../../../lib/utils/ids';
 
 type TaskRow = {
   id: string;
@@ -122,15 +123,18 @@ async function spawnNext(task: Task): Promise<void> {
   if (task.recurrence === 'none') return;
   const db = await getDb();
   const seriesId = task.seriesId ?? task.id;
+  const nextDate = advanceDueDate(task.dueDate, task.recurrence);
+  // Guard against completing overdue tasks out of order: only skip when the
+  // exact next occurrence already exists as pending.
   const alreadySpawned = await db.getFirstAsync<{ id: string }>(
-    'SELECT id FROM tasks WHERE seriesId = ? AND status = ? AND dueDate > ? LIMIT 1',
-    [seriesId, 'pending', task.dueDate]
+    'SELECT id FROM tasks WHERE seriesId = ? AND status = ? AND dueDate = ? LIMIT 1',
+    [seriesId, 'pending', nextDate]
   );
   if (alreadySpawned) return;
   await create({
-    id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    id: generateId('task'),
     title: task.title,
-    dueDate: advanceDueDate(task.dueDate, task.recurrence),
+    dueDate: nextDate,
     dueTime: task.dueTime,
     notes: task.notes,
     livestockId: task.livestockId,
@@ -158,6 +162,33 @@ export async function toggleDone(id: string): Promise<Task | undefined> {
 
 export async function remove(id: string): Promise<void> {
   await (await getDb()).runAsync('DELETE FROM tasks WHERE id = ?', [id]);
+}
+
+/**
+ * Re-insert a previously deleted task with its original id/timestamps intact.
+ * Powers DB-level Undo: the row comes back exactly as it was (status,
+ * completedAt, createdAt, seriesId), so nothing is lost.
+ */
+export async function restore(task: Task): Promise<Task> {
+  const db = await getDb();
+  await db.runAsync(
+    `INSERT OR REPLACE INTO tasks (id, title, dueDate, dueTime, notes, status, livestockId, recurrence, seriesId, createdAt, completedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      task.id,
+      task.title,
+      task.dueDate,
+      task.dueTime ?? null,
+      task.notes ?? null,
+      task.status,
+      task.livestockId ?? null,
+      task.recurrence,
+      task.seriesId ?? null,
+      task.createdAt,
+      task.completedAt ?? null,
+    ]
+  );
+  return task;
 }
 
 export async function counts(): Promise<{ overdue: number; today: number; upcoming: number; done: number }> {

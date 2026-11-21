@@ -22,6 +22,16 @@ type LivestockRow = {
   expenseIds: string;
 };
 
+function safeParseArray<T>(raw: string | null | undefined, fallback: T): T {
+  if (!raw) return fallback;
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? (v as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function parseRow(row: LivestockRow): Livestock {
   return {
     id: row.id,
@@ -38,9 +48,9 @@ function parseRow(row: LivestockRow): Livestock {
     status: row.status as Livestock['status'],
     notes: row.notes ?? undefined,
     imageUrl: row.imageUrl ?? undefined,
-    healthNotes: JSON.parse(row.healthNotes || '[]'),
-    feedings: JSON.parse(row.feedings || '[]'),
-    expenseIds: JSON.parse(row.expenseIds || '[]'),
+    healthNotes: safeParseArray(row.healthNotes, []),
+    feedings: safeParseArray(row.feedings, []),
+    expenseIds: safeParseArray(row.expenseIds, []),
   };
 }
 
@@ -113,38 +123,54 @@ export async function create(
     Partial<Pick<Livestock, 'code' | 'healthNotes' | 'feedings' | 'expenseIds'>>
 ): Promise<Livestock> {
   const db = await getDb();
-  const code = input.code ?? (await generateLivestockCode(db, input.category, input.type));
-  const row: Livestock = {
-    healthNotes: [],
-    feedings: [],
-    expenseIds: [],
-    ...input,
-    code,
-  } as Livestock;
-  await db.runAsync(
-    `INSERT INTO livestock (id, code, name, category, type, quantity, breed, sex, startDate, location, purpose, status, notes, imageUrl, healthNotes, feedings, expenseIds)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [
-      row.id,
-      row.code,
-      row.name,
-      row.category,
-      row.type,
-      row.quantity,
-      row.breed ?? null,
-      row.sex ?? null,
-      row.startDate,
-      row.location,
-      row.purpose,
-      row.status,
-      row.notes ?? null,
-      row.imageUrl ?? null,
-      JSON.stringify(row.healthNotes),
-      JSON.stringify(row.feedings),
-      JSON.stringify(row.expenseIds),
-    ]
-  );
-  return row;
+  // Retry on UNIQUE(code) collision: two rapid creates can generate the same
+  // sequential code before either row commits.
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const code =
+      attempt === 0 && input.code
+        ? input.code
+        : await generateLivestockCode(db, input.category, input.type);
+    const row: Livestock = {
+      healthNotes: [],
+      feedings: [],
+      expenseIds: [],
+      ...input,
+      code,
+    } as Livestock;
+    try {
+      await db.runAsync(
+        `INSERT INTO livestock (id, code, name, category, type, quantity, breed, sex, startDate, location, purpose, status, notes, imageUrl, healthNotes, feedings, expenseIds)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          row.id,
+          row.code,
+          row.name,
+          row.category,
+          row.type,
+          row.quantity,
+          row.breed ?? null,
+          row.sex ?? null,
+          row.startDate,
+          row.location,
+          row.purpose,
+          row.status,
+          row.notes ?? null,
+          row.imageUrl ?? null,
+          JSON.stringify(row.healthNotes),
+          JSON.stringify(row.feedings),
+          JSON.stringify(row.expenseIds),
+        ]
+      );
+      return row;
+    } catch (e) {
+      lastError = e;
+      const msg = String(e);
+      if (!msg.includes('UNIQUE') || attempt === 2) throw e;
+      // Otherwise loop and generate the next code.
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('Could not create livestock');
 }
 
 export async function update(id: string, patch: Partial<Livestock>): Promise<void> {

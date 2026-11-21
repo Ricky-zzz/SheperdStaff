@@ -46,10 +46,16 @@ export async function getById(id: string): Promise<Expense | undefined> {
 }
 
 export async function getByLivestockId(livestockId: string): Promise<Expense[]> {
-  const all = await getAll();
-  return all.filter(
-    (e) => e.livestockId === livestockId || e.allocations?.some((a) => a.livestockId === livestockId)
+  const db = await getDb();
+  // Indexed pre-filter: direct link OR allocations JSON containing the id.
+  // Still verify allocations exactly in JS (LIKE can false-positive).
+  const rows = await db.getAllAsync<ExpenseRow>(
+    'SELECT * FROM expenses WHERE livestockId = ? OR allocations LIKE ? ORDER BY date DESC',
+    [livestockId, `%${livestockId}%`]
   );
+  return rows
+    .map(parseRow)
+    .filter((e) => e.livestockId === livestockId || e.allocations?.some((a) => a.livestockId === livestockId));
 }
 
 export async function getAllocatedTotal(livestockId: string): Promise<number> {

@@ -1,10 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, Alert } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Screen } from '../components/ui/Screen';
 import { Card } from '../components/ui/Card';
 import { EmptyState } from '../components/ui/EmptyState';
+import { SkeletonList } from '../components/ui/Skeleton';
+import { useToast } from '../components/ui/Toast';
 import { useTheme } from '../lib/theme/ThemeContext';
 import { Task } from '../features/tasks/types';
 import * as taskService from '../features/tasks/services/taskService';
@@ -13,6 +15,7 @@ import { TaskItem } from '../features/tasks/components/TaskItem';
 import * as livestockService from '../features/livestock/services/livestockService';
 import * as activityService from '../features/activity/services/activityService';
 import { toUserMessage } from '../lib/utils/errors';
+import { generateId } from '../lib/utils/ids';
 
 type Bucket = 'overdue' | 'today' | 'upcoming' | 'done';
 const BUCKETS: Bucket[] = ['overdue', 'today', 'upcoming', 'done'];
@@ -20,19 +23,24 @@ const BUCKETS: Bucket[] = ['overdue', 'today', 'upcoming', 'done'];
 export default function TasksScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { show, showUndo } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [livestockNames, setLivestockNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const [all, ls] = await Promise.all([taskService.getAll(), livestockService.getAll()]);
       setTasks(all);
       const map: Record<string, string> = {};
       for (const l of ls) map[l.id] = l.name;
       setLivestockNames(map);
+    } catch (err) {
+      setLoadError(toUserMessage(err, 'Could not load tasks.'));
     } finally {
       setLoading(false);
     }
@@ -46,6 +54,9 @@ export default function TasksScreen() {
       const map: Record<string, string> = {};
       for (const l of ls) map[l.id] = l.name;
       setLivestockNames(map);
+      setLoadError(null);
+    } catch (err) {
+      setLoadError(toUserMessage(err, 'Could not refresh tasks.'));
     } finally {
       setRefreshing(false);
     }
@@ -78,17 +89,31 @@ export default function TasksScreen() {
   const grouped = buckets();
 
   const handleToggle = async (task: Task) => {
-    const next = await taskService.toggleDone(task.id);
-    if (next && next.status === 'done') {
-      await activityService.log({
-        id: `act-${Date.now()}`,
-        date: today,
-        type: 'task_completed',
-        description: `Completed task: ${next.title}`,
-        livestockId: next.livestockId,
-      });
+    // Optimistic: flip immediately, roll back only if the write fails.
+    const prev = tasks;
+    const flipped: Task = {
+      ...task,
+      status: task.status === 'done' ? 'pending' : 'done',
+      completedAt: task.status === 'done' ? undefined : new Date().toISOString(),
+    };
+    setTasks((cur) => cur.map((t) => (t.id === task.id ? flipped : t)));
+    try {
+      const next = await taskService.toggleDone(task.id);
+      if (next && next.status === 'done') {
+        await activityService.safeLog({
+          id: generateId('act'),
+          date: today,
+          type: 'task_completed',
+          description: `Completed task: ${next.title}`,
+          livestockId: next.livestockId,
+        });
+        show(`Done: ${next.title}`);
+      }
+      await load();
+    } catch (err) {
+      setTasks(prev);
+      show(toUserMessage(err, 'Could not update task.'));
     }
-    await load();
   };
 
   const handleDelete = (task: Task) => {
@@ -98,10 +123,26 @@ export default function TasksScreen() {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
+          const snapshot = tasks;
+          const deleted = task;
+          setTasks((cur) => cur.filter((t) => t.id !== task.id));
           try {
             await taskService.remove(task.id);
+            showUndo(`Deleted “${task.title}”`, () => {
+              // DB-level undo: re-insert the exact row, then reload.
+              void (async () => {
+                try {
+                  await taskService.restore(deleted);
+                  await load();
+                } catch (err) {
+                  show(toUserMessage(err, 'Could not restore the task.'));
+                }
+              })();
+            });
           } catch (err) {
+            setTasks(snapshot);
             Alert.alert('Could not delete', toUserMessage(err, 'Could not delete this task.'));
+            return;
           }
           await load();
         },
@@ -112,15 +153,13 @@ export default function TasksScreen() {
   if (loading) {
     return (
       <Screen>
-        <View className="flex-1 items-center justify-center py-20">
-          <ActivityIndicator color={colors.primary[600]} />
-        </View>
+        <SkeletonList rows={5} />
       </Screen>
     );
   }
 
   return (
-    <Screen refreshing={refreshing} onRefresh={refresh}>
+    <Screen refreshing={refreshing} onRefresh={refresh} error={loadError} onRetry={load}>
       <View className="flex-row justify-between items-center mb-4">
         <Text className="text-lg font-semibold text-neutral-800">Task list</Text>
         <TouchableOpacity
@@ -135,7 +174,13 @@ export default function TasksScreen() {
       </View>
 
       {tasks.length === 0 ? (
-        <EmptyState icon="checkbox-outline" title="No tasks yet" subtitle={'Create a dated task like "Vaccinate herd on Mar 1"'} />
+        <EmptyState
+          icon="checkbox-outline"
+          title="No tasks yet"
+          subtitle={'Create a dated task like "Vaccinate herd on Mar 1"'}
+          actionLabel="New Task"
+          onAction={() => router.push('/tasks/form')}
+        />
       ) : (
         BUCKETS.map((bucket) => {
           const items = grouped[bucket];
