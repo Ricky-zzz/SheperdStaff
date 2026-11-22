@@ -13,6 +13,7 @@ import { LivestockPicker } from '../../components/ui/LivestockPicker';
 import { log as logActivity } from '../../features/activity/services/activityService';
 import { validateExpense } from '../../lib/utils/validate';
 import { toUserMessage } from '../../lib/utils/errors';
+import { generateId } from '../../lib/utils/ids';
 import { DateInput } from '../../components/ui/DateInput';
 
 const CATEGORIES: { label: string; value: ExpenseCategory; icon: keyof typeof Ionicons.glyphMap }[] = [
@@ -57,7 +58,7 @@ export default function AddExpenseScreen() {
     setErrors({});
     setSaving(true);
     try {
-      const id = `exp-${Date.now()}`;
+      const id = generateId('exp');
       await createExpense({
         id,
         date,
@@ -68,7 +69,7 @@ export default function AddExpenseScreen() {
         notes: notes.trim() || undefined,
       });
       await logActivity({
-        id: `act-${Date.now()}`,
+        id: generateId('act'),
         date: new Date().toISOString().slice(0, 10),
         type: 'expense_added',
         description: `Expense: ${description.trim()} ₱${numericAmount.toFixed(2)}`,
@@ -125,9 +126,9 @@ export default function AddExpenseScreen() {
         <Text className="text-lg font-semibold text-neutral-800 mb-2">Link to livestock</Text>
         <Text className="text-sm text-neutral-500 mb-3">Optional. Link this expense to one animal or group so it shows in its record.</Text>
         <LivestockPicker livestock={livestock} value={selectedDirectId} onChange={setSelectedDirectId} noneLabel="General" />
-        {livestock.length === 0 && <Text className="text-xs text-neutral-500">No livestock yet — will save as general expense.</Text>}
+        {livestock.length === 0 && <Text className="text-xs text-neutral-500">No livestock yet. This will save as a general expense.</Text>}
         <Text className="text-xs text-neutral-500 mt-2">
-          For feed, restock from Feed Inventory instead so stock and cost stay in sync.
+          Buying feed? Restock it in Feed Inventory so stock and cost stay in sync. Recording a feeding happens on the livestock record.
         </Text>
       </View>
 

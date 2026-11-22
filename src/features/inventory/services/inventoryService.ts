@@ -230,7 +230,7 @@ export async function consume(id: string, input: ConsumeInput): Promise<ConsumeR
   if (!existing) throw new Error('Inventory item not found');
   if (input.quantity <= 0) throw new Error('Quantity must be greater than zero');
   if (input.quantity > existing.quantity) {
-    throw new Error(`Not enough stock — only ${existing.quantity} ${existing.unit} left`);
+    throw new Error(`Not enough stock. Only ${existing.quantity} ${existing.unit} left`);
   }
 
   const now = new Date().toISOString();
@@ -331,7 +331,7 @@ export async function adjust(id: string, input: AdjustInput): Promise<AdjustResu
   const newQuantity = round2(existing.quantity + delta);
   if (newQuantity < 0) {
     throw new Error(
-      `Cannot remove ${round2(input.quantity)} ${existing.unit} — only ${formatQuantity(existing.quantity)} ${existing.unit} on hand.`
+      `Cannot remove ${round2(input.quantity)} ${existing.unit}. Only ${formatQuantity(existing.quantity)} ${existing.unit} on hand.`
     );
   }
 

@@ -50,7 +50,7 @@ function restoreSummaryText(s: RestoreSummary): string {
     `${s.income} income entr${s.income === 1 ? 'y' : 'ies'}`,
     `${s.inventoryItems} feed item${s.inventoryItems === 1 ? '' : 's'}`,
   ];
-  return `${parts.join(', ')} restored. Your current data was replaced — unlock with the password from that backup.`;
+  return `${parts.join(', ')} restored. Your current data was replaced. Unlock with the password from that backup.`;
 }
 
 export default function BackupScreen() {
@@ -128,7 +128,7 @@ export default function BackupScreen() {
     if (!uri) return;
     Alert.alert(
       'Restore this backup?',
-      'Everything currently in the app — records, profile, password and recovery code — will be replaced by the backup. A safety copy of your current data will be saved first.',
+      'Everything currently in the app (records, profile, password and recovery code) will be replaced by the backup. A safety copy of your current data will be saved first.',
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Restore', style: 'destructive', onPress: () => doRestore(uri, 'restore') },
@@ -220,7 +220,7 @@ export default function BackupScreen() {
       </View>
 
       <Text className="text-xs text-neutral-500 mb-4 flex-row flex-wrap">
-        Exports a readable copy for spreadsheets and sharing — it cannot be used to restore. Restoring always
+        Exports a readable copy for spreadsheets and sharing. It cannot be used to restore. Restoring always
         uses a backup file.
       </Text>
 
@@ -234,7 +234,7 @@ export default function BackupScreen() {
         <EmptyState
           icon="save-outline"
           title="No local backups yet"
-          subtitle="Create one with “Back up now” — a copy is also saved here automatically before every restore."
+          subtitle="Create one with “Back up now”. A copy is also saved here automatically before every restore."
         />
       ) : (
         <Card className="p-0 mb-5">

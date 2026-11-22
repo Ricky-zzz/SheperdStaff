@@ -245,9 +245,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const eraseAllData = useCallback(async () => {
     const { getDb } = await import('../db/client');
     const db = await getDb();
-    await db.execAsync(
-      'DELETE FROM inventory_transactions; DELETE FROM inventory_items; DELETE FROM activities; DELETE FROM expenses; DELETE FROM tasks; DELETE FROM livestock; DELETE FROM pens; DELETE FROM animal_types; DELETE FROM locations; DELETE FROM income; DELETE FROM user_profile; DELETE FROM sqlite_sequence;'
-    );
+    // Delete per-table with individual guards: on very old installs some
+    // tables may not exist yet, and one missing table must not abort the reset.
+    for (const table of [
+      'inventory_transactions',
+      'inventory_items',
+      'activities',
+      'expenses',
+      'tasks',
+      'livestock',
+      'pens',
+      'animal_types',
+      'locations',
+      'income',
+      'user_profile',
+    ]) {
+      try {
+        await db.execAsync(`DELETE FROM ${table};`);
+      } catch {
+        // Table missing on old schemas — nothing to clear there.
+      }
+    }
+    try {
+      await db.execAsync('DELETE FROM sqlite_sequence;');
+    } catch {
+      // Harmless on schemas without AUTOINCREMENT tables.
+    }
     // Remove local backup copies so a reset really starts clean.
     try {
       const { Directory, Paths, File: FsFile } = await import('expo-file-system');

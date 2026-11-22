@@ -14,7 +14,7 @@ import { ExpenseItem } from '../../features/expenses/components/ExpenseItem';
 import { Select } from '../../components/ui/Select';
 import { InventoryItem } from '../../features/inventory/types';
 import { UNIT_LABELS } from '../../features/inventory/inventoryMeta';
-import { getCompatible, consume as consumeFeed, undoFeeding } from '../../features/inventory/services/inventoryService';
+import { getAll as getAllFeeds, getCompatible, consume as consumeFeed, undoFeeding } from '../../features/inventory/services/inventoryService';
 import { formatQuantity } from '../../lib/utils/format';
 import { getStatusLabel, getCategoryLabel } from '../../features/livestock/livestockMeta';
 import { getCodeLabel } from '../../lib/utils/livestockCode';
@@ -30,6 +30,7 @@ import { log as logActivity, safeLog } from '../../features/activity/services/ac
 import { Livestock, HealthNoteType, FeedingRecord } from '../../features/livestock/types';
 import { Expense } from '../../features/expenses/types';
 import { toUserMessage } from '../../lib/utils/errors';
+import { generateId } from '../../lib/utils/ids';
 import { useTheme } from '../../lib/theme/ThemeContext';
 
 const STATUSES = [
@@ -68,6 +69,8 @@ export default function LivestockDetailScreen() {
 
   const [showFeeding, setShowFeeding] = useState(false);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [allInventory, setAllInventory] = useState<InventoryItem[]>([]);
+  const [showAllFeeds, setShowAllFeeds] = useState(false);
   const [feedItemId, setFeedItemId] = useState('');
   const [feedQuantity, setFeedQuantity] = useState('');
   const [feedNotes, setFeedNotes] = useState('');
@@ -94,6 +97,7 @@ export default function LivestockDetailScreen() {
       setIncomeList(inc);
       setIncomeTotal(inc.reduce((s, i) => s + i.amount, 0));
       setInventory(a ? await getCompatible(a.category) : []);
+      setAllInventory(await getAllFeeds());
     } finally {
       setLoading(false);
     }
@@ -113,7 +117,7 @@ export default function LivestockDetailScreen() {
       if (blockers.total > 0) {
         Alert.alert(
           `Cannot delete ${name}`,
-          `This animal already has ${describeDeletionBlockers(blockers)} recorded on the farm.\n\nUndo its feedings or delete/unlink those records first — removing it now would leave them without an owner.`
+          `This animal already has ${describeDeletionBlockers(blockers)} recorded on the farm.\n\nUndo its feedings or delete/unlink those records first. Removing it now would leave them without an owner.`
         );
         return;
       }
@@ -131,7 +135,7 @@ export default function LivestockDetailScreen() {
                 // The animal is already gone, so this log must not reference it —
                 // a stale foreign key would fail the delete's error path.
                 await safeLog({
-                  id: `act-${Date.now()}`,
+                  id: generateId('act'),
                   date: new Date().toISOString().slice(0, 10),
                   type: 'livestock_deleted',
                   description: `${name} deleted`,
@@ -155,7 +159,7 @@ export default function LivestockDetailScreen() {
     try {
       await updateStatus(animal.id, newStatus);
       await logActivity({
-        id: `act-${Date.now()}`,
+        id: generateId('act'),
         date: new Date().toISOString().slice(0, 10),
         type: 'status_change',
         description: `${animal.name} status → ${newStatus}`,
@@ -177,14 +181,14 @@ export default function LivestockDetailScreen() {
     setHealthSaving(true);
     try {
       const note = {
-        id: `hn-${Date.now()}`,
+        id: generateId('hn'),
         date: new Date().toISOString().slice(0, 10),
         type: healthType,
         note: healthNote.trim(),
       };
       await addHealthNote(id as string, note);
       await logActivity({
-        id: `act-${Date.now()}`,
+        id: generateId('act'),
         date: note.date,
         type: 'health_note',
         description: `Health note for ${animal?.name}: ${note.note.slice(0, 40)}`,
@@ -200,9 +204,12 @@ export default function LivestockDetailScreen() {
     }
   };
 
-  const selectedFeed = inventory.find((i) => i.id === feedItemId);
+  const feedOptions = showAllFeeds ? allInventory : inventory;
+
+  const selectedFeed = feedOptions.find((i) => i.id === feedItemId);
 
   const openFeedingModal = () => {
+    setShowAllFeeds(false);
     const first = inventory.find((i) => i.quantity > 0) ?? inventory[0];
     setFeedItemId(first?.id ?? '');
     setFeedQuantity('');
@@ -233,7 +240,7 @@ export default function LivestockDetailScreen() {
         notes: feedNotes.trim() || undefined,
       });
       await logActivity({
-        id: `act-${Date.now()}`,
+        id: generateId('act'),
         date: new Date().toISOString().slice(0, 10),
         type: 'feeding',
         description: `Feeding for ${animal?.name}: ${result.feedName} ${formatQuantity(result.quantity)} ${UNIT_LABELS[result.unit]} (₱${result.cost.toFixed(2)})`,
@@ -272,7 +279,7 @@ export default function LivestockDetailScreen() {
             try {
               const result = await undoFeeding(animal.id, feeding.id);
               await safeLog({
-                id: `act-${Date.now()}`,
+                id: generateId('act'),
                 date: new Date().toISOString().slice(0, 10),
                 type: 'feeding_undone',
                 description: `Feeding undone for ${animal.name}: ${result.feedName} ${feeding.date}`,
@@ -508,7 +515,26 @@ const statusColors = getStatusBadgeColor(animal.status, colors, colorMode, darkM
                 accessibilityRole="button"
               ><Ionicons name="close-outline" size={22} color={colors.neutral[500]} /></TouchableOpacity>
             </View>
-            {inventory.length === 0 ? (
+            {feedOptions.length === 0 && !showAllFeeds && allInventory.length > 0 ? (
+              <View className="mb-4">
+                <Text className="text-sm text-neutral-600 mb-3">
+                  No feed in inventory is marked for this animal type.
+                </Text>
+                <TouchableOpacity
+                  className="flex-row items-center justify-center gap-2 py-3 rounded-lg border border-primary-600 mb-3"
+                  onPress={() => {
+                    setShowAllFeeds(true);
+                    const first = allInventory.find((i) => i.quantity > 0) ?? allInventory[0];
+                    setFeedItemId(first?.id ?? '');
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="Show all feeds"
+                >
+                  <Text className="text-sm font-semibold text-primary-600">Show all feeds</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
+            {inventory.length === 0 && allInventory.length === 0 ? (
               <View className="mb-4">
                 <Text className="text-sm text-neutral-600 mb-3">
                   No feed in inventory is suitable for this animal type. Add feed stock first so feeding deducts from inventory.
@@ -526,11 +552,27 @@ const statusColors = getStatusBadgeColor(animal.status, colors, colorMode, darkM
               </View>
             ) : (
               <>
-                <Text className="text-sm font-medium text-neutral-600 mb-2">Feed from inventory *</Text>
+                <View className="flex-row items-center justify-between mb-2">
+                  <Text className="text-sm font-medium text-neutral-600">Feed from inventory *</Text>
+                  {allInventory.length > inventory.length ? (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setShowAllFeeds((v) => !v);
+                        setFeedItemId('');
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={showAllFeeds ? 'Show only suitable feeds' : 'Show all feeds'}
+                    >
+                      <Text className="text-xs font-semibold text-primary-600">
+                        {showAllFeeds ? 'Suitable only' : 'Show all'}
+                      </Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
                 <Select
                   selectedValue={feedItemId}
                   onValueChange={setFeedItemId}
-                  options={inventory.map((item) => ({
+                  options={feedOptions.map((item) => ({
                     label: `${item.name} · ${formatQuantity(item.quantity)} ${UNIT_LABELS[item.unit]} left`,
                     value: item.id,
                   }))}

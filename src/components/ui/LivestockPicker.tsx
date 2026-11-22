@@ -132,7 +132,7 @@ export const LivestockPicker: React.FC<LivestockPickerProps> = ({ livestock, val
             <Text className="text-sm text-neutral-500 px-3 py-3">No matching livestock</Text>
           )}
           {results.length === MAX_RESULTS && livestock.length > MAX_RESULTS ? (
-            <Text className="text-xs text-neutral-500 px-3 pb-2">Showing first {MAX_RESULTS} matches — keep typing to narrow down</Text>
+            <Text className="text-xs text-neutral-500 px-3 pb-2">Showing first {MAX_RESULTS} matches. Keep typing to narrow down</Text>
           ) : null}
         </View>
       )}

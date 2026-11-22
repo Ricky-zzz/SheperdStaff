@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router';
+import { Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../lib/theme/ThemeContext';
@@ -34,6 +35,13 @@ export default function TabLayout() {
         },
         headerRight: () => <ProfileMenuButton />,
         headerShadowVisible: false,
+        headerLeft: () => (
+          <Image
+            source={require('../../../assets/icon.png')}
+            style={{ width: 30, height: 30, borderRadius: 8, marginLeft: 16 }}
+            accessibilityIgnoresInvertColors
+          />
+        ),
       }}
     >
       <Tabs.Screen name="index" options={{ title: 'Home', headerTitle: 'Shepherd Staff', tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} /> }} />

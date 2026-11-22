@@ -104,7 +104,7 @@ export default function ResetPasswordScreen() {
           <Text className="text-sm text-neutral-600 mb-4">
             {profile ? `${profile.name}, you ` : 'You '}
             have not set a recovery code yet, so the forgotten password cannot be verified here. Erasing the
-            app data and starting over is the only remaining option — or go back and unlock with your password
+            only remaining option is to erase all app data and start over, or go back and unlock with your password
             if you remember it.
           </Text>
           <Button

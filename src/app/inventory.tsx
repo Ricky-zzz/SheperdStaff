@@ -95,10 +95,10 @@ export default function InventoryScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         ListHeaderComponent={
           <View>
-            <View className="flex-row gap-2 mb-4">
+            <View className="flex-row gap-2 mb-4 items-center">
               <SearchBar value={search} onChangeText={setSearch} placeholder="Search feed..." />
               <TouchableOpacity
-                className="w-11 h-11 rounded-lg bg-primary-600 justify-center items-center shadow-sm"
+                className="w-12 h-12 rounded-lg bg-primary-600 justify-center items-center shadow-sm"
                 onPress={() => {
                   void lightHaptic();
                   router.push('/inventory/form');
@@ -135,6 +135,7 @@ export default function InventoryScreen() {
             title={items.length === 0 ? 'No feed in inventory' : 'No matching feed'}
             subtitle={items.length === 0 ? 'Add feed items to track stock and feeding costs' : 'Try a different search'}
             actionLabel={items.length === 0 ? 'Add feed' : undefined}
+            actionVariant="plus"
             onAction={items.length === 0 ? () => router.push('/inventory/form') : undefined}
           />
         }

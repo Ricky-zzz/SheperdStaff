@@ -16,7 +16,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 }) => {
   const { colors } = useTheme();
   return (
-    <View className="flex-1 flex-row items-center bg-card rounded-lg px-3 min-h-11 py-2 shadow-sm">
+    <View className="flex-1 flex-row items-center bg-card rounded-lg px-3 h-12 shadow-sm">
       <Ionicons name="search-outline" size={18} color={colors.neutral[500]} />
       <TextInput
         className="flex-1 ml-2 text-base text-neutral-800"

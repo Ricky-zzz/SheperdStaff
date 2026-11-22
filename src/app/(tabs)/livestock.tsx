@@ -123,7 +123,7 @@ export default function LivestockScreen() {
       if (blockers.total > 0) {
         Alert.alert(
           `Cannot delete ${name}`,
-          `This animal already has ${describeDeletionBlockers(blockers)} recorded on the farm.\n\nUndo its feedings or delete/unlink those records first — removing it now would leave them without an owner.`
+          `This animal already has ${describeDeletionBlockers(blockers)} recorded on the farm.\n\nUndo its feedings or delete/unlink those records first. Removing it now would leave them without an owner.`
         );
         return;
       }
@@ -228,10 +228,10 @@ export default function LivestockScreen() {
           contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
           ListHeaderComponent={
             <View>
-              <View className="flex-row gap-2 mb-4">
+              <View className="flex-row gap-2 mb-4 items-center">
                 <SearchBar value={search} onChangeText={setSearch} placeholder="Search name, breed, location or ID..." />
                 <TouchableOpacity
-                  className="w-11 h-11 rounded-lg bg-primary-600 justify-center items-center shadow-sm"
+                  className="w-12 h-12 rounded-lg bg-primary-600 justify-center items-center shadow-sm"
                   onPress={() => {
                     void lightHaptic();
                     router.push('/livestock/new');
@@ -287,6 +287,7 @@ export default function LivestockScreen() {
               title="No livestock found"
               subtitle="Try adjusting your search or filters"
               actionLabel="Add livestock"
+              actionVariant="plus"
               onAction={() => router.push('/livestock/new')}
             />
           }

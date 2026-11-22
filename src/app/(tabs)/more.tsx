@@ -24,7 +24,7 @@ export default function MoreScreen() {
   const menuColor = (c: string) => (colorMode === 'uniform' ? colors.neutral[500] : c);
 
   const handleLoadSampleData = () => {
-    Alert.alert('Load sample data?', 'Adds demo livestock, expenses, and tasks. Only runs if the database is empty — your existing data is never touched.', [
+    Alert.alert('Load sample data?', 'Adds demo livestock, expenses, and tasks. Only runs if the database is empty. Your existing data is never touched.', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Load',

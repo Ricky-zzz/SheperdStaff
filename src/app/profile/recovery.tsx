@@ -61,7 +61,7 @@ export default function RecoveryCodeScreen() {
         ].join('\n'),
       });
     } catch {
-      Alert.alert('Could not open mail', 'Write the code down instead — it is only shown once.');
+      Alert.alert('Could not open mail', 'Write the code down instead. It is only shown once.');
     }
   };
 
@@ -83,7 +83,7 @@ export default function RecoveryCodeScreen() {
         <Text className="text-xl font-bold text-neutral-800 text-center">Lock recovery code</Text>
         <Text className="text-sm text-neutral-500 text-center mt-2">
           If you forget your password, this code lets you set a new one without losing any farm records. Save
-          it somewhere safe — only a salted hash is stored on the device.
+          it somewhere safe. Only a salted hash is stored on the device.
         </Text>
       </View>
 

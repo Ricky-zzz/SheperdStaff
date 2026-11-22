@@ -182,7 +182,7 @@ export default function AdjustStockScreen() {
             </Text>
           </View>
           <Text className="text-xs text-neutral-500 mt-2">
-            Adjustments fix counting mistakes only — they never create an expense.
+            Adjustments fix counting mistakes only. They never create an expense.
           </Text>
         </View>
       ) : null}
